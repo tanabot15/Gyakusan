@@ -6,17 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
+		D9E0686C3010A63900E88132 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* ContentView.swift */; };
+		D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068693010A63900E88132 /* GyakusanApp.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D9E068683010A63900E88132 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D9E068693010A63900E88132 /* GyakusanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanApp.swift; sourceTree = "<group>"; };
+		D9E0686E3010A69900E88132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		D9E0685B3010A55D00E88132 /* Gyakusan */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Gyakusan;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D9E068563010A55D00E88132 /* Frameworks */ = {
@@ -32,7 +34,7 @@
 		D9E068503010A55D00E88132 = {
 			isa = PBXGroup;
 			children = (
-				D9E0685B3010A55D00E88132 /* Gyakusan */,
+				D9E0686A3010A63900E88132 /* Gyakusan */,
 				D9E0685A3010A55D00E88132 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +45,17 @@
 				D9E068593010A55D00E88132 /* Gyakusan.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D9E0686A3010A63900E88132 /* Gyakusan */ = {
+			isa = PBXGroup;
+			children = (
+				D9E0686E3010A69900E88132 /* Info.plist */,
+				D9E068673010A63900E88132 /* Assets.xcassets */,
+				D9E068683010A63900E88132 /* ContentView.swift */,
+				D9E068693010A63900E88132 /* GyakusanApp.swift */,
+			);
+			path = Gyakusan;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -59,9 +72,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				D9E0685B3010A55D00E88132 /* Gyakusan */,
 			);
 			name = Gyakusan;
 			packageProductDependencies = (
@@ -109,6 +119,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +130,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9E0686C3010A63900E88132 /* ContentView.swift in Sources */,
+				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,11 +269,14 @@
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Gyakusan/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -269,12 +285,16 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -288,11 +308,14 @@
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Gyakusan/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -301,12 +324,16 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
