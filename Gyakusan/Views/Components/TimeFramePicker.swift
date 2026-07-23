@@ -8,11 +8,20 @@
 import SwiftUI
 
 struct TimeFramePicker: View {
+    @Binding var selectedTimeFrame: TimeFrame
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Picker("TimeFrame", selection: $selectedTimeFrame) {
+            ForEach(TimeFrame.allCases) { timeFrame in
+                Text(timeFrame.localizedTitle)
+                    .tag(timeFrame)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
     }
 }
 
 #Preview {
-    TimeFramePicker()
+    TimeFramePicker(selectedTimeFrame: .constant(.year))
 }
