@@ -11,7 +11,7 @@ import SwiftUI
 struct GyakusanApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
     }
 }

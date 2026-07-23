@@ -8,16 +8,50 @@
 
 /* Begin PBXBuildFile section */
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
-		D9E0686C3010A63900E88132 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* ContentView.swift */; };
+		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
 		D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068693010A63900E88132 /* GyakusanApp.swift */; };
+		D9E068753010B06900E88132 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D9E068743010B06900E88132 /* Localizable.xcstrings */; };
+		D9E068773010E08C00E88132 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068763010E08C00E88132 /* AppDelegate.swift */; };
+		D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068783010E0CB00E88132 /* LimitTask.swift */; };
+		D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687A3010E0D400E88132 /* UserProfile.swift */; };
+		D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687C3010E0DE00E88132 /* TimeFrame.swift */; };
+		D9E068843010E16400E88132 /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068833010E16400E88132 /* BannerAdView.swift */; };
+		D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068853010E16D00E88132 /* TimeFramePicker.swift */; };
+		D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068873010E17D00E88132 /* TaskRowView.swift */; };
+		D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068893010E19100E88132 /* TodoListView.swift */; };
+		D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */; };
+		D9E0688E3010E1A400E88132 /* LifeGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LifeGridView.swift */; };
+		D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */; };
+		D9E068923010E1C000E88132 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068913010E1C000E88132 /* SettingsView.swift */; };
+		D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068933010E1CA00E88132 /* AddTaskSheet.swift */; };
+		D9E068963010E1DF00E88132 /* TimeCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068953010E1DF00E88132 /* TimeCalculator.swift */; };
+		D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068973010E1E800E88132 /* AdMobManager.swift */; };
+		D9E0689A3010E1F200E88132 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068993010E1F200E88132 /* AppTheme.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D9E068683010A63900E88132 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D9E068683010A63900E88132 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		D9E068693010A63900E88132 /* GyakusanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanApp.swift; sourceTree = "<group>"; };
-		D9E0686E3010A69900E88132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D9E0686E3010A69900E88132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D9E068743010B06900E88132 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		D9E068763010E08C00E88132 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D9E068783010E0CB00E88132 /* LimitTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitTask.swift; sourceTree = "<group>"; };
+		D9E0687A3010E0D400E88132 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		D9E0687C3010E0DE00E88132 /* TimeFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFrame.swift; sourceTree = "<group>"; };
+		D9E068833010E16400E88132 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
+		D9E068853010E16D00E88132 /* TimeFramePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFramePicker.swift; sourceTree = "<group>"; };
+		D9E068873010E17D00E88132 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		D9E068893010E19100E88132 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
+		D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitVisualizerView.swift; sourceTree = "<group>"; };
+		D9E0688D3010E1A400E88132 /* LifeGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeGridView.swift; sourceTree = "<group>"; };
+		D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownHeaderView.swift; sourceTree = "<group>"; };
+		D9E068913010E1C000E88132 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D9E068933010E1CA00E88132 /* AddTaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskSheet.swift; sourceTree = "<group>"; };
+		D9E068953010E1DF00E88132 /* TimeCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeCalculator.swift; sourceTree = "<group>"; };
+		D9E068973010E1E800E88132 /* AdMobManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobManager.swift; sourceTree = "<group>"; };
+		D9E068993010E1F200E88132 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,12 +84,109 @@
 		D9E0686A3010A63900E88132 /* Gyakusan */ = {
 			isa = PBXGroup;
 			children = (
-				D9E0686E3010A69900E88132 /* Info.plist */,
-				D9E068673010A63900E88132 /* Assets.xcassets */,
-				D9E068683010A63900E88132 /* ContentView.swift */,
-				D9E068693010A63900E88132 /* GyakusanApp.swift */,
+				D9E0686F3010AFB900E88132 /* App */,
+				D9E068703010AFC200E88132 /* Models */,
+				D9E068713010AFD200E88132 /* Views */,
+				D9E068723010AFDD00E88132 /* Utilities */,
+				D9E068733010AFE800E88132 /* Resources */,
 			);
 			path = Gyakusan;
+			sourceTree = "<group>";
+		};
+		D9E0686F3010AFB900E88132 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068693010A63900E88132 /* GyakusanApp.swift */,
+				D9E068763010E08C00E88132 /* AppDelegate.swift */,
+				D9E0686E3010A69900E88132 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D9E068703010AFC200E88132 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068783010E0CB00E88132 /* LimitTask.swift */,
+				D9E0687A3010E0D400E88132 /* UserProfile.swift */,
+				D9E0687C3010E0DE00E88132 /* TimeFrame.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D9E068713010AFD200E88132 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068683010A63900E88132 /* MainTabView.swift */,
+				D9E0687E3010E0EE00E88132 /* Components */,
+				D9E0687F3010E10C00E88132 /* TodoTab */,
+				D9E068803010E11500E88132 /* LimitTab */,
+				D9E068813010E11C00E88132 /* SettingsTab */,
+				D9E068823010E12300E88132 /* TaskForm */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D9E068723010AFDD00E88132 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068953010E1DF00E88132 /* TimeCalculator.swift */,
+				D9E068973010E1E800E88132 /* AdMobManager.swift */,
+				D9E068993010E1F200E88132 /* AppTheme.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		D9E068733010AFE800E88132 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068743010B06900E88132 /* Localizable.xcstrings */,
+				D9E068673010A63900E88132 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D9E0687E3010E0EE00E88132 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068833010E16400E88132 /* BannerAdView.swift */,
+				D9E068853010E16D00E88132 /* TimeFramePicker.swift */,
+				D9E068873010E17D00E88132 /* TaskRowView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		D9E0687F3010E10C00E88132 /* TodoTab */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068893010E19100E88132 /* TodoListView.swift */,
+			);
+			path = TodoTab;
+			sourceTree = "<group>";
+		};
+		D9E068803010E11500E88132 /* LimitTab */ = {
+			isa = PBXGroup;
+			children = (
+				D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */,
+				D9E0688D3010E1A400E88132 /* LifeGridView.swift */,
+				D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */,
+			);
+			path = LimitTab;
+			sourceTree = "<group>";
+		};
+		D9E068813010E11C00E88132 /* SettingsTab */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068913010E1C000E88132 /* SettingsView.swift */,
+			);
+			path = SettingsTab;
+			sourceTree = "<group>";
+		};
+		D9E068823010E12300E88132 /* TaskForm */ = {
+			isa = PBXGroup;
+			children = (
+				D9E068933010E1CA00E88132 /* AddTaskSheet.swift */,
+			);
+			path = TaskForm;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,6 +250,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9E068753010B06900E88132 /* Localizable.xcstrings in Resources */,
 				D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,8 +262,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9E0686C3010A63900E88132 /* ContentView.swift in Sources */,
+				D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */,
+				D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */,
+				D9E0688E3010E1A400E88132 /* LifeGridView.swift in Sources */,
+				D9E0689A3010E1F200E88132 /* AppTheme.swift in Sources */,
+				D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */,
+				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
+				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
+				D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */,
+				D9E068923010E1C000E88132 /* SettingsView.swift in Sources */,
+				D9E068963010E1DF00E88132 /* TimeCalculator.swift in Sources */,
+				D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */,
+				D9E068773010E08C00E88132 /* AppDelegate.swift in Sources */,
+				D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */,
+				D9E068843010E16400E88132 /* BannerAdView.swift in Sources */,
+				D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */,
+				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
 				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
+				D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -198,6 +346,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -255,6 +404,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -269,7 +419,7 @@
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gyakusan/Info.plist;
+				INFOPLIST_FILE = Gyakusan/App/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -308,7 +458,7 @@
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gyakusan/Info.plist;
+				INFOPLIST_FILE = Gyakusan/App/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
