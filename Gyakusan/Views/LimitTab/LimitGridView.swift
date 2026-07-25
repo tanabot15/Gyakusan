@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LifeGridView: View {
+struct LimitGridView: View {
     let lifeStats: TimeCalculator.LifeStats
     
     private let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 6), count: 10)
@@ -51,7 +51,7 @@ struct LifeGridView: View {
         progressPercentage: 40.0
     )
     
-    LifeGridView(lifeStats: mockLifeStats)
+    LimitGridView(lifeStats: mockLifeStats)
         .padding(.vertical)
         .background(Color(uiColor: .systemGroupedBackground))
 }
