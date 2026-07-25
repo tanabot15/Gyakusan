@@ -6,19 +6,41 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainTabView: View {
+    @State private var selectedTab: Tab = .visualizer
+    
+    enum Tab {
+        case visualizer
+        case tasks
+        case settings
+    }
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView(selection: $selectedTab) {
+            TodoListView()
+                .tabItem {
+                    Label("Tasks", systemImage: "checkmark.square")
+                }
+                .tag(Tab.tasks)
+            
+            LimitVisualizerView()
+                .tabItem {
+                    Label("Visualizer", systemImage: "hourglass")
+                }
+                .tag(Tab.visualizer)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .tag(Tab.settings)
         }
-        .padding()
     }
 }
 
 #Preview {
     MainTabView()
+        .modelContainer(for: [LimitTask.self, UserProfile.self], inMemory: true)
 }

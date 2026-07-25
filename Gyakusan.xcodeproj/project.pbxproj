@@ -10,7 +10,6 @@
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
 		D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068693010A63900E88132 /* GyakusanApp.swift */; };
-		D9E068753010B06900E88132 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D9E068743010B06900E88132 /* Localizable.xcstrings */; };
 		D9E068773010E08C00E88132 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068763010E08C00E88132 /* AppDelegate.swift */; };
 		D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068783010E0CB00E88132 /* LimitTask.swift */; };
 		D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687A3010E0D400E88132 /* UserProfile.swift */; };
@@ -26,8 +25,8 @@
 		D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068933010E1CA00E88132 /* AddTaskSheet.swift */; };
 		D9E068963010E1DF00E88132 /* TimeCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068953010E1DF00E88132 /* TimeCalculator.swift */; };
 		D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068973010E1E800E88132 /* AdMobManager.swift */; };
-		D9E0689A3010E1F200E88132 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068993010E1F200E88132 /* AppTheme.swift */; };
 		D9E0689D3011DF0B00E88132 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D9E0689C3011DF0B00E88132 /* GoogleMobileAds */; };
+		D9E0689F3014535500E88132 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = D9E0689E3014535500E88132 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,7 +35,6 @@
 		D9E068683010A63900E88132 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		D9E068693010A63900E88132 /* GyakusanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanApp.swift; sourceTree = "<group>"; };
 		D9E0686E3010A69900E88132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D9E068743010B06900E88132 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		D9E068763010E08C00E88132 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9E068783010E0CB00E88132 /* LimitTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitTask.swift; sourceTree = "<group>"; };
 		D9E0687A3010E0D400E88132 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
@@ -52,7 +50,7 @@
 		D9E068933010E1CA00E88132 /* AddTaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskSheet.swift; sourceTree = "<group>"; };
 		D9E068953010E1DF00E88132 /* TimeCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeCalculator.swift; sourceTree = "<group>"; };
 		D9E068973010E1E800E88132 /* AdMobManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobManager.swift; sourceTree = "<group>"; };
-		D9E068993010E1F200E88132 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		D9E0689E3014535500E88132 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +131,6 @@
 			children = (
 				D9E068953010E1DF00E88132 /* TimeCalculator.swift */,
 				D9E068973010E1E800E88132 /* AdMobManager.swift */,
-				D9E068993010E1F200E88132 /* AppTheme.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -141,8 +138,8 @@
 		D9E068733010AFE800E88132 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				D9E068743010B06900E88132 /* Localizable.xcstrings */,
 				D9E068673010A63900E88132 /* Assets.xcassets */,
+				D9E0689E3014535500E88132 /* Localizable.xcstrings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -235,6 +232,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
 			);
 			mainGroup = D9E068503010A55D00E88132;
 			minimizedProjectReferenceProxies = 1;
@@ -256,7 +254,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9E068753010B06900E88132 /* Localizable.xcstrings in Resources */,
+				D9E0689F3014535500E88132 /* Localizable.xcstrings in Resources */,
 				D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -271,7 +269,6 @@
 				D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */,
 				D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */,
 				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
-				D9E0689A3010E1F200E88132 /* AppTheme.swift in Sources */,
 				D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */,
 				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,

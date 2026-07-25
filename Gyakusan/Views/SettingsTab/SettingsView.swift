@@ -56,17 +56,6 @@ struct SettingsView: View {
                         }
                     }
                     
-                    Section(header: Text("Language")) {
-                        Picker("Preferred Language", selection: $preferredLanguage) {
-                            Text("日本語").tag("ja")
-                            Text("English").tag("en")
-                        }
-                        .pickerStyle(.segmented)
-                        .onChange(of: preferredLanguage) { _, newValue in
-                            saveProfile()
-                        }
-                    }
-                    
                     Section(header: Text("About App")) {
                         HStack {
                             Text("Version")
