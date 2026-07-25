@@ -63,9 +63,11 @@ struct LimitVisualizerView: View {
                             lifeStats: selectedTimeFrame == .life ? lifeStats : nil
                         )
                         
-                        if selectedTimeFrame == .life {
-                            LifeGridView(lifeStats: lifeStats)
-                        }
+                        LimitGridView(
+                            timeFrame: selectedTimeFrame,
+                            lifeStats: selectedTimeFrame == .life ? lifeStats : nil,
+                            currentDate: currentDate
+                        )
                         
                         taskSummarySection
                     }

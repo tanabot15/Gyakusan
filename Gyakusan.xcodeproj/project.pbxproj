@@ -20,7 +20,7 @@
 		D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068873010E17D00E88132 /* TaskRowView.swift */; };
 		D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068893010E19100E88132 /* TodoListView.swift */; };
 		D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */; };
-		D9E0688E3010E1A400E88132 /* LifeGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LifeGridView.swift */; };
+		D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LimitGridView.swift */; };
 		D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */; };
 		D9E068923010E1C000E88132 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068913010E1C000E88132 /* SettingsView.swift */; };
 		D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068933010E1CA00E88132 /* AddTaskSheet.swift */; };
@@ -46,7 +46,7 @@
 		D9E068873010E17D00E88132 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		D9E068893010E19100E88132 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
 		D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitVisualizerView.swift; sourceTree = "<group>"; };
-		D9E0688D3010E1A400E88132 /* LifeGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeGridView.swift; sourceTree = "<group>"; };
+		D9E0688D3010E1A400E88132 /* LimitGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitGridView.swift; sourceTree = "<group>"; };
 		D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownHeaderView.swift; sourceTree = "<group>"; };
 		D9E068913010E1C000E88132 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D9E068933010E1CA00E88132 /* AddTaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskSheet.swift; sourceTree = "<group>"; };
@@ -169,7 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */,
-				D9E0688D3010E1A400E88132 /* LifeGridView.swift */,
+				D9E0688D3010E1A400E88132 /* LimitGridView.swift */,
 				D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */,
 			);
 			path = LimitTab;
@@ -270,7 +270,7 @@
 			files = (
 				D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */,
 				D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */,
-				D9E0688E3010E1A400E88132 /* LifeGridView.swift in Sources */,
+				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
 				D9E0689A3010E1F200E88132 /* AppTheme.swift in Sources */,
 				D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */,
 				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
