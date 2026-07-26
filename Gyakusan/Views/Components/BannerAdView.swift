@@ -8,12 +8,30 @@
 import SwiftUI
 import GoogleMobileAds
 
-struct BannerAdView: UIViewRepresentable {
+struct BannerAdView: View {
+    
+    var isForScreenshot: Bool = false
+    
+    var body: some View {
+        #if targetEnvironment(simulator)
+        EmptyView()
+        #else
+        if isForScreenshot {
+            EmptyView()
+        } else {
+            AdMobBannerRepresentable()
+                .frame(height: 50)
+        }
+        #endif
+    }
+}
+
+private struct AdMobBannerRepresentable: UIViewRepresentable {
     
     #if DEBUG
     private let adUnitID = "ca-app-pub-3940256099942544/2934735716"
     #else
-    private let adUnitID = "YOUR_BANNER_AD_UNIT_ID"
+    private let adUnitID = AdMobConfig.bannerAdUnitID
     #endif
     
     @MainActor

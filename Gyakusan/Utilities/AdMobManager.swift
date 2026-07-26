@@ -21,7 +21,7 @@ final class AdMobManager: NSObject, FullScreenContentDelegate {
     #if DEBUG
     private let adUnitID = "ca-app-pub-3940256099942544/4411468910"
     #else
-    private let adUnitID = "Ad_Unit_ID"
+    private let adUnitID = AdMobConfig.interstitialAdUnitID
     #endif
     
     private override init() {

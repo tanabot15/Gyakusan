@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D96D2FB33014D2FC0083DC1E /* AdMobConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */; };
+		D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */; };
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
 		D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068693010A63900E88132 /* GyakusanApp.swift */; };
@@ -30,6 +32,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = AdMobConfig.plist; sourceTree = "<group>"; };
+		D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConfig.swift; sourceTree = "<group>"; };
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D9E068683010A63900E88132 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -131,6 +135,7 @@
 			children = (
 				D9E068953010E1DF00E88132 /* TimeCalculator.swift */,
 				D9E068973010E1E800E88132 /* AdMobManager.swift */,
+				D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -140,6 +145,7 @@
 			children = (
 				D9E068673010A63900E88132 /* Assets.xcassets */,
 				D9E0689E3014535500E88132 /* Localizable.xcstrings */,
+				D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -255,6 +261,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D9E0689F3014535500E88132 /* Localizable.xcstrings in Resources */,
+				D96D2FB33014D2FC0083DC1E /* AdMobConfig.plist in Resources */,
 				D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -273,6 +280,7 @@
 				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
 				D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */,
+				D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */,
 				D9E068923010E1C000E88132 /* SettingsView.swift in Sources */,
 				D9E068963010E1DF00E88132 /* TimeCalculator.swift in Sources */,
 				D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */,
@@ -423,7 +431,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Gyakusan/App/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_CFBundleDisplayName = Gyakusan;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -462,7 +471,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Gyakusan/App/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_CFBundleDisplayName = Gyakusan;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

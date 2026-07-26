@@ -7,9 +7,14 @@
 
 import SwiftUI
 import SwiftData
+import GoogleMobileAds
 
 @main
 struct GyakusanApp: App {
+    
+    init() {
+        MobileAds.shared.start(completionHandler: nil)
+    }
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-1999992332232297~6299544953</string>
+	<key>BannerAdUnitID</key>
+	<string>ca-app-pub-1999992332232297/3637868389</string>
+	<key>InterstitialAdUnitID</key>
+	<string>ca-app-pub-1999992332232297/2268946393</string>
+</dict>
+</plist>

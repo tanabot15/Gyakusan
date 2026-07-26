@@ -15,7 +15,7 @@ struct LimitVisualizerView: View {
     @Query private var userProfiles: [UserProfile]
     @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
     
-    @State private var selectedTimeFrame: TimeFrame = .day
+    @State private var selectedTimeFrame: TimeFrame = .life
     @State private var currentDate: Date = Date()
     
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()

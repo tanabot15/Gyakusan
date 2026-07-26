@@ -13,7 +13,7 @@ struct TodoListView: View {
     
     @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
     
-    @State private var selectedTimeFrame: TimeFrame = .day
+    @State private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
     
     private var filteredTasks: [LimitTask] {

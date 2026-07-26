@@ -83,7 +83,6 @@ struct SettingsView: View {
         if let profile = currentProfile {
             self.birthday = profile.birthday
             self.targetAge = profile.targetAge
-            self.preferredLanguage = profile.preferredLanguage
         } else {
             let newProfile = UserProfile()
             modelContext.insert(newProfile)
@@ -91,7 +90,6 @@ struct SettingsView: View {
             
             self.birthday = newProfile.birthday
             self.targetAge = newProfile.targetAge
-            self.preferredLanguage = newProfile.preferredLanguage
         }
     }
     
@@ -107,7 +105,6 @@ struct SettingsView: View {
         
         profileToUpdate.birthday = birthday
         profileToUpdate.targetAge = targetAge
-        profileToUpdate.preferredLanguage = preferredLanguage
         
         do {
             try modelContext.save()
