@@ -12,6 +12,12 @@ struct LimitGridView: View {
     let lifeStats: TimeCalculator.LifeStats?
     let currentDate: Date
     
+    @AppStorage("highlightColor") private var highlightColorRaw: String = GridHighlightColor.gray.rawValue
+    
+    private var selectedHighlightColor: GridHighlightColor {
+        GridHighlightColor(rawValue: highlightColorRaw) ?? .gray
+    }
+    
     private var calendar: Calendar { .current }
     
     private var title: String {
@@ -89,9 +95,8 @@ struct LimitGridView: View {
             
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(0..<totalCount, id: \.self) { index in
-                    let isPassed = index < passedCount
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(isPassed ? Color.primary : Color(uiColor: .systemGray5))
+                        .fill(gridColor(for: index))
                         .aspectRatio(1.0, contentMode: .fit)
                 }
             }
@@ -101,6 +106,16 @@ struct LimitGridView: View {
         .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal)
+    }
+    
+    private func gridColor(for index: Int) -> Color {
+        if index < passedCount {
+            return Color.primary
+        } else if index == passedCount {
+            return selectedHighlightColor.color
+        } else {
+            return Color(uiColor: .systemGray5)
+        }
     }
 }
 

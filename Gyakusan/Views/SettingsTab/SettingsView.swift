@@ -13,6 +13,8 @@ struct SettingsView: View {
     
     @Query private var userProfiles: [UserProfile]
     
+    @AppStorage("highlightColor") private var highlightColorRaw: String = GridHighlightColor.gray.rawValue
+    
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
     @State private var preferredLanguage: String = "ja"
@@ -54,6 +56,48 @@ struct SettingsView: View {
                         .onChange(of: targetAge) { _, newValue in
                             saveProfile()
                         }
+                    }
+                    
+                    Section(
+                        header: Text("Appearance Settings"),
+                        footer: Text("Choose the color used to highlight the current period in the grid.")
+                    ) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Current Grid Color")
+                                .font(.body)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 14) {
+                                    ForEach(GridHighlightColor.allCases) { item in
+                                        let isSelected = highlightColorRaw == item.rawValue
+                                        
+                                        Button {
+                                            highlightColorRaw = item.rawValue
+                                        } label: {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(item.color)
+                                                    .frame(width: 24, height: 24)
+                                                
+                                                if isSelected {
+                                                    Circle()
+                                                        .stroke(Color.primary, lineWidth: 1)
+                                                        .frame(width: 30, height: 30)
+                                                    
+                                                    Image(systemName: "checkmark")
+                                                        .font(.caption.bold())
+                                                        .foregroundStyle(.white)
+                                                }
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 2)
+                            }
+                        }
+                        .padding(.vertical, 4)
                     }
                     
                     Section(header: Text("About App")) {
