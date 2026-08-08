@@ -66,6 +66,7 @@ struct TodoListView: View {
                 }
             }
             .navigationTitle("Tasks")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: {

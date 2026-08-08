@@ -60,19 +60,14 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("1.0")
+                            Text("1.1")
                                 .foregroundStyle(.secondary)
-                        }
-                        
-                        HStack {
-                            Text("App Name")
-                            Spacer()
-                            Text("Gyakusan")
                         }
                     }
                 }
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 loadProfile()
             }
