@@ -13,11 +13,18 @@ struct SettingsView: View {
     
     @Query private var userProfiles: [UserProfile]
     
-    @AppStorage("highlightColor") private var highlightColorRaw: String = GridHighlightColor.gray.rawValue
+    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
     
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
-    @State private var preferredLanguage: String = "ja"
+    
+    // ColorPicker と動的に同期する State
+    private var selectedColorBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: highlightColorHex) },
+            set: { newColor in highlightColorHex = newColor.toHex() }
+        )
+    }
     
     private var currentProfile: UserProfile? {
         userProfiles.first
@@ -62,42 +69,7 @@ struct SettingsView: View {
                         header: Text("Appearance Settings"),
                         footer: Text("Choose the color used to highlight the current period in the grid.")
                     ) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Current Grid Color")
-                                .font(.body)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 14) {
-                                    ForEach(GridHighlightColor.allCases) { item in
-                                        let isSelected = highlightColorRaw == item.rawValue
-                                        
-                                        Button {
-                                            highlightColorRaw = item.rawValue
-                                        } label: {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(item.color)
-                                                    .frame(width: 24, height: 24)
-                                                
-                                                if isSelected {
-                                                    Circle()
-                                                        .stroke(Color.primary, lineWidth: 1)
-                                                        .frame(width: 30, height: 30)
-                                                    
-                                                    Image(systemName: "checkmark")
-                                                        .font(.caption.bold())
-                                                        .foregroundStyle(.white)
-                                                }
-                                            }
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 2)
-                            }
-                        }
-                        .padding(.vertical, 4)
+                        ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
                     }
                     
                     Section(header: Text("About App")) {

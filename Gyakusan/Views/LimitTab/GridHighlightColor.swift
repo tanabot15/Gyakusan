@@ -7,38 +7,41 @@
 
 import SwiftUI
 
-enum GridHighlightColor: String, CaseIterable, Identifiable {
-    case gray = "gray"
-    case blue = "blue"
-    case orange = "orange"
-    case green = "green"
-    case purple = "purple"
-    case red = "red"
-    case teal = "teal"
-    
-    var id: String { rawValue }
-    
-    var displayName: String {
-        switch self {
-        case .gray: return "Gray"
-        case .blue: return "Blue"
-        case .orange: return "Orange"
-        case .green: return "Green"
-        case .purple: return "Purple"
-        case .red: return "Red"
-        case .teal: return "Teal"
+extension Color {
+    // Hex文字列（例: "#8E8E93"）から Color を生成
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 142, 142, 147) // Default: systemGray2
         }
+
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
     }
-    
-    var color: Color {
-        switch self {
-        case .gray: return Color(uiColor: .systemGray2)
-        case .blue: return .blue
-        case .orange: return .orange
-        case .green: return .green
-        case .purple: return .purple
-        case .red: return .red
-        case .teal: return .teal
+
+    // Color から Hex文字列を取得
+    func toHex() -> String {
+        guard let components = UIColor(self).cgColor.components, components.count >= 3 else {
+            return "#8E8E93"
         }
+        let r = Float(components[0])
+        let g = Float(components[1])
+        let b = Float(components[2])
+        return String(format: "#%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255))
     }
 }

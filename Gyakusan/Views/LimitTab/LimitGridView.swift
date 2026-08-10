@@ -12,11 +12,7 @@ struct LimitGridView: View {
     let lifeStats: TimeCalculator.LifeStats?
     let currentDate: Date
     
-    @AppStorage("highlightColor") private var highlightColorRaw: String = GridHighlightColor.gray.rawValue
-    
-    private var selectedHighlightColor: GridHighlightColor {
-        GridHighlightColor(rawValue: highlightColorRaw) ?? .gray
-    }
+    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
     
     private var calendar: Calendar { .current }
     
@@ -112,7 +108,7 @@ struct LimitGridView: View {
         if index < passedCount {
             return Color.primary
         } else if index == passedCount {
-            return selectedHighlightColor.color
+            return Color(hex: highlightColorHex)
         } else {
             return Color(uiColor: .systemGray5)
         }
