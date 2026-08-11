@@ -14,6 +14,7 @@ import AdSupport
 @main
 struct GyakusanApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
     
     init() {
         MobileAds.shared.start(completionHandler: nil)

@@ -12,6 +12,8 @@ import AdSupport
 
 struct MainTabView: View {
     @State private var selectedTab: Tab = .visualizer
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @State private var showOnboarding: Bool = false
     
     enum Tab {
         case visualizer
