@@ -13,6 +13,7 @@ import AdSupport
 
 @main
 struct GyakusanApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     
     init() {
         MobileAds.shared.start(completionHandler: nil)
@@ -42,9 +43,15 @@ struct GyakusanApp: App {
             MainTabView()
                 .onAppear {
                     ensureUserProfileExist()
+                    requestAppTrackingAuthorization()
                 }
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            if newPhase == .active {
+                requestAppTrackingAuthorization()
+            }
+        }
     }
     
     @MainActor
@@ -66,6 +73,8 @@ struct GyakusanApp: App {
     
     /// Request App Tracking Transparency (ATT) authorization
     private func requestAppTrackingAuthorization() {
+        print("[ATT Check] Current Status: \(ATTrackingManager.trackingAuthorizationStatus.rawValue)")
+
         // Request only if the status is not determined yet
         if ATTrackingManager.trackingAuthorizationStatus == .notDetermined {
             // Delay for 1.0 second to ensure the app window is ready
