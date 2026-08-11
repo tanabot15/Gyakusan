@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftData
 import GoogleMobileAds
+import AppTrackingTransparency
+import AdSupport
 
 @main
 struct GyakusanApp: App {
@@ -59,6 +61,30 @@ struct GyakusanApp: App {
             }
         } catch {
             print("Failed to fetch or create default UserProfile: \(error)")
+        }
+    }
+    
+    /// Request App Tracking Transparency (ATT) authorization
+    private func requestAppTrackingAuthorization() {
+        // Request only if the status is not determined yet
+        if ATTrackingManager.trackingAuthorizationStatus == .notDetermined {
+            // Delay for 1.0 second to ensure the app window is ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                ATTrackingManager.requestTrackingAuthorization { status in
+                    switch status {
+                    case .authorized:
+                        print("[ATT] Tracking authorized (IDFA: \(ASIdentifierManager.shared().advertisingIdentifier))")
+                    case .denied:
+                        print("[ATT] Tracking denied")
+                    case .notDetermined:
+                        print("[ATT] Tracking not determined")
+                    case .restricted:
+                        print("[ATT] Tracking restricted")
+                    @unknown default:
+                        break
+                    }
+                }
+            }
         }
     }
 }
