@@ -23,11 +23,11 @@ struct OnboardingView: View {
             VStack(spacing: 24) {
                 Spacer()
                 
-                // ヘッダーアイコンとタイトル
+                // Header and title
                 VStack(spacing: 12) {
                     Image(systemName: "hourglass")
                         .font(.system(size: 60))
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(.primary)
                     
                     Text("Welcome to Gyakusan")
                         .font(.largeTitle)
@@ -42,7 +42,7 @@ struct OnboardingView: View {
                 
                 Spacer()
                 
-                // 設定フォームエリア
+                // setting
                 Form {
                     Section(
                         header: Text("Your Profile"),
@@ -70,7 +70,7 @@ struct OnboardingView: View {
                 
                 Spacer()
                 
-                // 完了（はじめる）ボタン
+                // Get Started Button
                 Button(action: saveAndContinue) {
                     Text("Get Started")
                         .font(.headline)
