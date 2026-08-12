@@ -35,7 +35,7 @@ struct LimitVisualizerView: View {
     private var periodStats: TimeCalculator.PeriodStats {
         switch selectedTimeFrame {
         case .life:
-            return TimeCalculator.PeriodStats(remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
+            return TimeCalculator.PeriodStats(remainingMonths: 0, remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
         case .year:
             return TimeCalculator.calculateYearsStats(now: currentDate)
         case .month:

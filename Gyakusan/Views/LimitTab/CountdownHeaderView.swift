@@ -12,48 +12,29 @@ struct CountdownHeaderView: View {
     let periodStats: TimeCalculator.PeriodStats?
     let lifeStats: TimeCalculator.LifeStats?
     
+    private var progressRatio: Double {
+        if timeFrame == .life {
+            return (lifeStats?.progressPercentage ?? 0.0) / 100.0
+        }
+        return periodStats?.ProgressRatio ?? 0.0
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
-            if timeFrame == .life, let stats = lifeStats {
-                VStack(spacing: 4) {
-                    Text("REMAINING DAYS")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.secondary)
-                    
-                    Text("\(stats.remainingDays) Days")
-                        .font(.system(size: 32, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.primary)
-                    
-                    Text("(\(stats.remainingYears) Years left / Target: \(stats.totalYears) yo)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
+            VStack(spacing: 4) {
+                Text("REMAINING TIME")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
                 
-                ProgressView(value: stats.progressPercentage, total: 100.0)
-                    .tint(.primary)
-                    .padding(.horizontal)
-            } else if let stats = periodStats {
-                VStack(spacing: 4) {
-                    Text("REMAINING DAYS")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.secondary)
-                    
-                    HStack(spacing: 8) {
-                        if timeFrame != .day {
-                            timeDigitView(value: stats.remainingDays, unit: "D")
-                        }
-                        timeDigitView(value: stats.remainingHours, unit: "H")
-                        timeDigitView(value: stats.remainingMinutes, unit: "M")
-                        timeDigitView(value: stats.remainingSeconds, unit: "S")
-                    }
+                HStack(spacing: 8) {
+                    timeDigitViews
                 }
-                
-                ProgressView(value: stats.ProgressRatio, total: 1.0)
-                    .tint(.primary)
-                    .padding(.horizontal)
             }
+            
+            ProgressView(value: progressRatio, total: 1.0)
+                .tint(.primary)
+                .padding(.horizontal)
         }
         .padding()
         .background(Color(uiColor: .secondarySystemBackground))
@@ -61,10 +42,47 @@ struct CountdownHeaderView: View {
         .padding(.horizontal)
     }
     
+    @ViewBuilder
+    private var timeDigitViews: some View {
+        switch timeFrame {
+        case .life:
+            // 残り: 年 (Y), 月 (M), 日 (D)
+            if let stats = lifeStats {
+                timeDigitView(value: stats.remainingYears, unit: "Y")
+                timeDigitView(value: stats.remainingMonths, unit: "M")
+                timeDigitView(value: stats.remainingDays, unit: "D")
+            }
+            
+        case .year:
+            // 残り: 月 (M), 日 (D), 時間 (H)
+            if let stats = periodStats {
+                timeDigitView(value: stats.remainingMonths, unit: "M")
+                timeDigitView(value: stats.remainingDays, unit: "D")
+                timeDigitView(value: stats.remainingHours, unit: "H")
+            }
+            
+        case .month:
+            // 残り: 日 (D), 時間 (H), 分 (M)
+            if let stats = periodStats {
+                timeDigitView(value: stats.remainingDays, unit: "D")
+                timeDigitView(value: stats.remainingHours, unit: "H")
+                timeDigitView(value: stats.remainingMinutes, unit: "M")
+            }
+            
+        case .day:
+            // 残り: 時間 (H), 分 (M), 秒 (S)
+            if let stats = periodStats {
+                timeDigitView(value: stats.remainingHours, unit: "H")
+                timeDigitView(value: stats.remainingMinutes, unit: "M")
+                timeDigitView(value: stats.remainingSeconds, unit: "S")
+            }
+        }
+    }
+    
     private func timeDigitView(value: Int, unit: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Text(String(format: "%02d", value))
-                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                .font(.system(size: 26, weight: .bold, design: .monospaced))
             Text(unit)
                 .font(.caption)
                 .fontWeight(.bold)
@@ -73,30 +91,15 @@ struct CountdownHeaderView: View {
     }
 }
 
-#Preview("Day View") {
-    let mockStats = TimeCalculator.PeriodStats(
-        remainingDays: 0,
-        remainingHours: 8,
-        remainingMinutes: 32,
-        remainingSeconds: 015,
-        ProgressRatio: 0.65
-    )
-    
-    CountdownHeaderView(
-        timeFrame: .day,
-        periodStats: mockStats,
-        lifeStats: nil
-    )
-    .padding(.vertical)
-    .background(Color(uiColor: .systemGroupedBackground))
-}
+// MARK: - Previews
 
-#Preview("Life View") {
+#Preview("Life") {
     let mockLifeStats = TimeCalculator.LifeStats(
         totalYears: 80,
         passedYears: 30,
         remainingYears: 50,
-        remainingDays: 18250,
+        remainingMonths: 4,
+        remainingDays: 12,
         progressPercentage: 37.5
     )
     
@@ -104,6 +107,63 @@ struct CountdownHeaderView: View {
         timeFrame: .life,
         periodStats: nil,
         lifeStats: mockLifeStats
+    )
+    .padding(.vertical)
+    .background(Color(uiColor: .systemGroupedBackground))
+}
+
+#Preview("Year") {
+    let mockYearStats = TimeCalculator.PeriodStats(
+        remainingMonths: 5,
+        remainingDays: 18,
+        remainingHours: 12,
+        remainingMinutes: 30,
+        remainingSeconds: 45,
+        ProgressRatio: 0.54
+    )
+    
+    CountdownHeaderView(
+        timeFrame: .year,
+        periodStats: mockYearStats,
+        lifeStats: nil
+    )
+    .padding(.vertical)
+    .background(Color(uiColor: .systemGroupedBackground))
+}
+
+#Preview("Month") {
+    let mockMonthStats = TimeCalculator.PeriodStats(
+        remainingMonths: 0,
+        remainingDays: 12,
+        remainingHours: 8,
+        remainingMinutes: 15,
+        remainingSeconds: 30,
+        ProgressRatio: 0.60
+    )
+    
+    CountdownHeaderView(
+        timeFrame: .month,
+        periodStats: mockMonthStats,
+        lifeStats: nil
+    )
+    .padding(.vertical)
+    .background(Color(uiColor: .systemGroupedBackground))
+}
+
+#Preview("Day") {
+    let mockDayStats = TimeCalculator.PeriodStats(
+        remainingMonths: 0,
+        remainingDays: 0,
+        remainingHours: 8,
+        remainingMinutes: 32,
+        remainingSeconds: 15,
+        ProgressRatio: 0.65
+    )
+    
+    CountdownHeaderView(
+        timeFrame: .day,
+        periodStats: mockDayStats,
+        lifeStats: nil
     )
     .padding(.vertical)
     .background(Color(uiColor: .systemGroupedBackground))

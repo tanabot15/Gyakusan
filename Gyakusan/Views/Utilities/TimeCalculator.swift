@@ -14,6 +14,7 @@ struct TimeCalculator {
         let totalYears: Int
         let passedYears: Int
         let remainingYears: Int
+        let remainingMonths: Int
         let remainingDays: Int
         let progressPercentage: Double
         
@@ -23,6 +24,7 @@ struct TimeCalculator {
     
     // MARK: - TimeFrame calculate structure
     struct PeriodStats {
+        let remainingMonths: Int
         let remainingDays: Int
         let remainingHours: Int
         let remainingMinutes: Int
@@ -37,15 +39,16 @@ struct TimeCalculator {
         let targetAge = max(userProfile.targetAge, 1)
         
         guard let targetDate = calendar.date(byAdding: .year, value: targetAge, to: birthday) else {
-            return LifeStats(totalYears: targetAge, passedYears: 0, remainingYears: targetAge, remainingDays: 0, progressPercentage: 0.0)
+            return LifeStats(totalYears: targetAge, passedYears: 0, remainingYears: targetAge, remainingMonths: 0, remainingDays: 0, progressPercentage: 0.0)
         }
         
         let ageComponents = calendar.dateComponents([.year], from: birthday, to: now)
         let passedYears = max(0, ageComponents.year ?? 0)
-        let remainingYears = max(0, targetAge - passedYears)
         
-        let dayComponents = calendar.dateComponents([.day], from: birthday, to: targetDate)
-        let remainingDays = max(0, dayComponents.day ?? 0)
+        let remainingComponents = calendar.dateComponents([.year, .month, .day], from: now, to: targetDate)
+        let remainingYears = max(0, remainingComponents.year ?? 0)
+        let remainingMonths = max(0, remainingComponents.month ?? 0)
+        let remainingDays = max(0, remainingComponents.day ?? 0)
         
         let totalDuration = targetDate.timeIntervalSince(birthday)
         let passedDuration = now.timeIntervalSince(birthday)
@@ -62,6 +65,7 @@ struct TimeCalculator {
             totalYears: targetAge,
             passedYears: passedYears,
             remainingYears: remainingYears,
+            remainingMonths: remainingMonths,
             remainingDays: remainingDays,
             progressPercentage: percentage
         )
@@ -97,7 +101,8 @@ struct TimeCalculator {
     private static func calculatePeriodStats(from startDate: Date, to endDate: Date, now: Date) -> PeriodStats {
         let calendar = Calendar.current
         
-        let components = calendar.dateComponents([.day, .hour, .minute, .second], from: now, to: endDate)
+        let components = calendar.dateComponents([.month, .day, .hour, .minute, .second], from: now, to: endDate)
+        let remainingMonths = max(0, components.month ?? 0)
         let remainingDays = max(0, components.day ?? 0)
         let remainingHours = max(0, components.hour ?? 0)
         let remainingMinutes = max(0, components.minute ?? 0)
@@ -114,6 +119,7 @@ struct TimeCalculator {
         }
         
         return PeriodStats(
+            remainingMonths: remainingMonths,
             remainingDays: remainingDays,
             remainingHours: remainingHours,
             remainingMinutes: remainingMinutes,
@@ -124,6 +130,7 @@ struct TimeCalculator {
     
     private static func emptyPeriodStats() -> PeriodStats {
         PeriodStats(
+            remainingMonths: 0,
             remainingDays: 0,
             remainingHours: 0,
             remainingMinutes: 0,

@@ -130,6 +130,7 @@ struct LimitGridView: View {
         totalYears: 80,
         passedYears: 32,
         remainingYears: 48,
+        remainingMonths: 2,
         remainingDays: 17520,
         progressPercentage: 40.0
     )
