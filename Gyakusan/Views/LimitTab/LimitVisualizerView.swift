@@ -75,8 +75,6 @@ struct LimitVisualizerView: View {
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
             }
-            .navigationTitle("Limit Visualizer")
-            .navigationBarTitleDisplayMode(.inline)
             .onReceive(timer) { input in
                 currentDate = input
             }

@@ -34,7 +34,7 @@ extension Color {
         )
     }
 
-    // Color から Hex文字列を取得
+    // Take Hex from Color
     func toHex() -> String {
         guard let components = UIColor(self).cgColor.components, components.count >= 3 else {
             return "#8E8E93"

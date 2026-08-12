@@ -28,53 +28,61 @@ struct TodoListView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                BannerAdView()
-                    .frame(height: 50)
-                    .background(Color(uiColor: .systemGroupedBackground))
-                
-                TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
-                    .padding(.vertical, 8)
-                
-                if filteredTasks.isEmpty {
-                    emptyTaskView
-                } else {
-                    List {
-                        if !uncompletedTasks.isEmpty {
-                            Section(header: Text("Tasks")) {
-                                ForEach(uncompletedTasks) { task in
-                                    TaskRowView(task: task, onToggle: {
-                                        saveContext()
-                                    })
+            ZStack(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    BannerAdView()
+                        .frame(height: 50)
+                        .background(Color(uiColor: .systemGroupedBackground))
+                    
+                    TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
+                        .padding(.vertical, 8)
+                    
+                    if filteredTasks.isEmpty {
+                        emptyTaskView
+                    } else {
+                        List {
+                            if !uncompletedTasks.isEmpty {
+                                Section(header: Text("Tasks")) {
+                                    ForEach(uncompletedTasks) { task in
+                                        TaskRowView(task: task, onToggle: {
+                                            saveContext()
+                                        })
+                                    }
+                                    .onDelete(perform: deleteUncompletedTasks)
                                 }
-                                .onDelete(perform: deleteUncompletedTasks)
+                            }
+                            
+                            if !completedTasks.isEmpty {
+                                Section(header: Text("Completed")) {
+                                    ForEach(completedTasks) { task in
+                                        TaskRowView(task: task, onToggle: {
+                                            saveContext()
+                                        })
+                                    }
+                                    .onDelete(perform: deleteCompletedTasks)
+                                }
                             }
                         }
-                        
-                        if !completedTasks.isEmpty {
-                            Section(header: Text("Completed")) {
-                                ForEach(completedTasks) { task in
-                                    TaskRowView(task: task, onToggle: {
-                                        saveContext()
-                                    })
-                                }
-                                .onDelete(perform: deleteCompletedTasks)
-                            }
-                        }
-                    }
-                    .listStyle(.insetGrouped)
-                }
-            }
-            .navigationTitle("Tasks")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        isShowingAddTaskSheet = true
-                    }) {
-                        Image(systemName: "plus")
+                        .listStyle(.insetGrouped)
                     }
                 }
+                
+                Button(action: {
+                    isShowingAddTaskSheet = true
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                        Text("Add Task")
+                            .font(.headline)
+                    }
+                    .foregroundStyle(.white)
+                    .padding()
+                    .background(Color.accentColor)
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                }
+                .padding(.bottom, 16)
             }
             .sheet(isPresented: $isShowingAddTaskSheet) {
                 AddTaskSheet(selectedTimeFrame: selectedTimeFrame)
