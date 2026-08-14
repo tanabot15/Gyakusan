@@ -26,7 +26,7 @@
 		D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LimitGridView.swift */; };
 		D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */; };
 		D9E068923010E1C000E88132 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068913010E1C000E88132 /* SettingsView.swift */; };
-		D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068933010E1CA00E88132 /* AddTaskSheet.swift */; };
+		D9E068943010E1CA00E88132 /* TaskFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068933010E1CA00E88132 /* TaskFormSheet.swift */; };
 		D9E068963010E1DF00E88132 /* TimeCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068953010E1DF00E88132 /* TimeCalculator.swift */; };
 		D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068973010E1E800E88132 /* AdMobManager.swift */; };
 		D9E0689D3011DF0B00E88132 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D9E0689C3011DF0B00E88132 /* GoogleMobileAds */; };
@@ -55,7 +55,7 @@
 		D9E0688D3010E1A400E88132 /* LimitGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitGridView.swift; sourceTree = "<group>"; };
 		D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownHeaderView.swift; sourceTree = "<group>"; };
 		D9E068913010E1C000E88132 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		D9E068933010E1CA00E88132 /* AddTaskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskSheet.swift; sourceTree = "<group>"; };
+		D9E068933010E1CA00E88132 /* TaskFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskFormSheet.swift; sourceTree = "<group>"; };
 		D9E068953010E1DF00E88132 /* TimeCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeCalculator.swift; sourceTree = "<group>"; };
 		D9E068973010E1E800E88132 /* AdMobManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobManager.swift; sourceTree = "<group>"; };
 		D9E0689E3014535500E88132 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -203,7 +203,7 @@
 		D9E068823010E12300E88132 /* TaskForm */ = {
 			isa = PBXGroup;
 			children = (
-				D9E068933010E1CA00E88132 /* AddTaskSheet.swift */,
+				D9E068933010E1CA00E88132 /* TaskFormSheet.swift */,
 			);
 			path = TaskForm;
 			sourceTree = "<group>";
@@ -301,7 +301,7 @@
 				D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */,
 				D9E068773010E08C00E88132 /* AppDelegate.swift in Sources */,
 				D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */,
-				D9E068943010E1CA00E88132 /* AddTaskSheet.swift in Sources */,
+				D9E068943010E1CA00E88132 /* TaskFormSheet.swift in Sources */,
 				D9E068843010E16400E88132 /* BannerAdView.swift in Sources */,
 				D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */,
 				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
@@ -442,7 +442,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -459,7 +459,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -482,7 +482,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -499,7 +499,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

@@ -15,6 +15,7 @@ struct TodoListView: View {
     
     @State private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
+    @State private var selectedTaskToEdit: LimitTask? = nil
     
     private var filteredTasks: [LimitTask] {
         allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
@@ -47,6 +48,10 @@ struct TodoListView: View {
                                         TaskRowView(task: task, onToggle: {
                                             saveContext()
                                         })
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            selectedTaskToEdit = task
+                                        }
                                     }
                                     .onDelete(perform: deleteUncompletedTasks)
                                 }
@@ -58,6 +63,10 @@ struct TodoListView: View {
                                         TaskRowView(task: task, onToggle: {
                                             saveContext()
                                         })
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            selectedTaskToEdit = task
+                                        }
                                     }
                                     .onDelete(perform: deleteCompletedTasks)
                                 }
@@ -85,7 +94,10 @@ struct TodoListView: View {
                 .padding(.bottom, 16)
             }
             .sheet(isPresented: $isShowingAddTaskSheet) {
-                AddTaskSheet(selectedTimeFrame: selectedTimeFrame)
+                TaskFormSheet(selectedTimeFrame: selectedTimeFrame)
+            }
+            .sheet(item: $selectedTaskToEdit) { task in
+                TaskFormSheet(taskToEdit: task)
             }
         }
     }
@@ -136,6 +148,52 @@ struct TodoListView: View {
 }
 
 #Preview {
-    TodoListView()
-        .modelContainer(for: [LimitTask.self, UserProfile.self], inMemory: true)
+    let container: ModelContainer = {
+        do {
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
+            let context = container.mainContext
+            
+            let sampleTasks = [
+                LimitTask(
+                    title: "Develop iOS App Prototype",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
+                    location: "Tokyo Studio",
+                    isFlagged: true
+                ),
+                LimitTask(
+                    title: "Read 10 Books on Investments",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    isFlagged: false
+                ),
+                LimitTask(
+                    title: "Visit Hokkaido Hot Springs",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    location: "Noboribetsu"
+                ),
+                {
+                    let task = LimitTask(
+                        title: "Create App Icon and Assets",
+                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        isFlagged: true
+                    )
+                    task.isCompleted = true
+                    task.completedAt = Date()
+                    return task
+                }()
+            ]
+            
+            for task in sampleTasks {
+                context.insert(task)
+            }
+            
+            return container
+        } catch {
+            fatalError("Failed to create preview container: \(error)")
+        }
+    }()
+    
+    return TodoListView()
+        .modelContainer(container)
 }
