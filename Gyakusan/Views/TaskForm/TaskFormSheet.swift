@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct AddTaskSheet: View {
+struct TaskFormSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
@@ -71,6 +71,6 @@ struct AddTaskSheet: View {
 }
 
 #Preview {
-    AddTaskSheet(selectedTimeFrame: .month)
+    TaskFormSheet(selectedTimeFrame: .month)
         .modelContainer(for: LimitTask.self, inMemory: true)
 }
