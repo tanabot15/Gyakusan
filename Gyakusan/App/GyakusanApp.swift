@@ -15,6 +15,7 @@ import AdSupport
 struct GyakusanApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
     init() {
         MobileAds.shared.start(completionHandler: nil)
@@ -39,9 +40,21 @@ struct GyakusanApp: App {
         }
     }()
     
+    private var colorScheme: ColorScheme? {
+        switch selectedAppearance {
+        case "light":
+            return .light
+        case "dark":
+            return .dark
+        default:
+            return nil
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .preferredColorScheme(colorScheme)
                 .onAppear {
                     ensureUserProfileExist()
                     requestAppTrackingAuthorization()

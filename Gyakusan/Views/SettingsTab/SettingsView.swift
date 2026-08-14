@@ -14,6 +14,7 @@ struct SettingsView: View {
     @Query private var userProfiles: [UserProfile]
     
     @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
@@ -69,6 +70,12 @@ struct SettingsView: View {
                         header: Text("Appearance Settings"),
                         footer: Text("Choose the color used to highlight the current period in the grid.")
                     ) {
+                        Picker("Appearance", selection: $selectedAppearance) {
+                            Text("System").tag("system")
+                            Text("Light").tag("light")
+                            Text("Dark").tag("dark")
+                        }
+                        
                         ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
                     }
                     
@@ -76,7 +83,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("1.4")
+                            Text("1.6")
                                 .foregroundStyle(.secondary)
                         }
                     }
