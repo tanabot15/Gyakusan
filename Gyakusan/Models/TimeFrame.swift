@@ -15,13 +15,13 @@ enum TimeFrame: String, Codable, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
-    // Localized Title
-    var localizedTitle: String {
+    // title
+    var title: String {
         switch self {
-        case .life: return String(localized: "Life")
-        case .year: return String(localized: "Year")
-        case .month: return String(localized: "Month")
-        case .day: return String(localized: "Day")
+        case .life: return "Life"
+        case .year: return "Year"
+        case .month: return "Month"
+        case .day: return "Day"
         }
     }
     

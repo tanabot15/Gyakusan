@@ -13,7 +13,7 @@ struct TimeFramePicker: View {
     var body: some View {
         Picker("TimeFrame", selection: $selectedTimeFrame) {
             ForEach(TimeFrame.allCases) { timeFrame in
-                Text(timeFrame.localizedTitle)
+                Text(timeFrame.title)
                     .tag(timeFrame)
             }
         }

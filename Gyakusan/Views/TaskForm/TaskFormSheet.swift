@@ -53,7 +53,7 @@ struct TaskFormSheet: View {
                 Section(header: Text("Time Frame")) {
                     Picker("Time Frame", selection: $selectedTimeFrame) {
                         ForEach(TimeFrame.allCases) { timeFrame in
-                            Text(timeFrame.localizedTitle)
+                            Text(timeFrame.title)
                                 .tag(timeFrame)
                         }
                     }
