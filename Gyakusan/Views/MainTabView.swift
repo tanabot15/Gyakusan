@@ -42,29 +42,20 @@ struct MainTabView: View {
                 .tag(Tab.settings)
         }
         .onAppear {
+            if !hasCompletedOnboarding {
+                showOnboarding = true
+            }
             requestATTInView()
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView()
         }
     }
     
     private func requestATTInView() {
-        print("[MainTabView ATT Check] Current Status Raw Value: \(ATTrackingManager.trackingAuthorizationStatus.rawValue)")
-            
         if ATTrackingManager.trackingAuthorizationStatus == .notDetermined {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                ATTrackingManager.requestTrackingAuthorization { status in
-                    switch status {
-                    case .authorized:
-                        print("[ATT] Tracking authorized (IDFA: \(ASIdentifierManager.shared().advertisingIdentifier))")
-                    case .denied:
-                        print("[ATT] Tracking denied")
-                    case .notDetermined:
-                        print("[ATT] Tracking not determined")
-                    case .restricted:
-                        print("[ATT] Tracking restricted")
-                    @unknown default:
-                        break
-                    }
-                }
+                ATTrackingManager.requestTrackingAuthorization { _ in }
             }
         }
     }
