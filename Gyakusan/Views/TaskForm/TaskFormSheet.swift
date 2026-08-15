@@ -20,6 +20,7 @@ struct TaskFormSheet: View {
     @State private var dueDate: Date = Date()
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
+    @State private var isDetailsExpanded: Bool = false
     
     @FocusState private var isTitleFocused: Bool
     
@@ -36,6 +37,9 @@ struct TaskFormSheet: View {
         _dueDate = State(initialValue: taskToEdit.dueDate ?? Date())
         _location = State(initialValue: taskToEdit.location)
         _isFlagged = State(initialValue: taskToEdit.isFlagged)
+        
+        let hasDetailInfo = taskToEdit.dueDate != nil || !taskToEdit.location.isEmpty || taskToEdit.isFlagged
+        _isDetailsExpanded = State(initialValue: hasDetailInfo)
     }
     
     private var isEditing: Bool {
@@ -60,18 +64,20 @@ struct TaskFormSheet: View {
                     .pickerStyle(.segmented)
                 }
                 
-                Section(header: Text("Details")) {
-                    Toggle("Flag", isOn: $isFlagged)
-                                    
-                    Toggle("Due Date", isOn: $hasDueDate.animation())
-                    if hasDueDate {
-                        DatePicker("Date", selection: $dueDate, displayedComponents: [.date])
-                    }
-                                    
-                    HStack {
-                        Image(systemName: "location")
-                            .foregroundStyle(.secondary)
-                        TextField("Location (optional)", text: $location)
+                Section(header: detailsHeader) {
+                    if isDetailsExpanded {
+                        Toggle("Flag", isOn: $isFlagged)
+                                                                        
+                        Toggle("Due Date", isOn: $hasDueDate.animation())
+                        if hasDueDate {
+                            DatePicker("Date", selection: $dueDate, displayedComponents: [.date])
+                        }
+                                                                        
+                        HStack {
+                            Image(systemName: "location")
+                                .foregroundStyle(.secondary)
+                            TextField("Location (optional)", text: $location)
+                        }
                     }
                 }
             }
@@ -97,6 +103,23 @@ struct TaskFormSheet: View {
                 }
             }
         }
+    }
+    
+    private var detailsHeader: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                isDetailsExpanded.toggle()
+            }
+        }) {
+            HStack {
+                Text("Details")
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .rotationEffect(.degrees(isDetailsExpanded ? 90 : 0))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isDetailsExpanded)
+            }
+        }
+        .buttonStyle(.plain)
     }
     
     private func saveTask() {
