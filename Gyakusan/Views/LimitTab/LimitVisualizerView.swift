@@ -73,8 +73,8 @@ struct LimitVisualizerView: View {
                     }
                     .padding(.vertical)
                 }
-                .background(Color(uiColor: .systemGroupedBackground))
             }
+            .background(Color(uiColor: .systemGroupedBackground))
             .onReceive(timer) { input in
                 currentDate = input
             }
@@ -94,28 +94,96 @@ struct LimitVisualizerView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 4)
             
-            if filteredTasks.isEmpty {
-                Text("No tasks added for this timeframe.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 4)
-            } else {
-                ForEach(filteredTasks) { task in
-                    TaskRowView(task: task, onToggle: {
-                        try? modelContext.save()
-                    })
+            VStack(spacing: 0) {
+                if filteredTasks.isEmpty {
+                    Text("No tasks added for this timeframe.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    ForEach(Array(filteredTasks.enumerated()), id: \.element.id) { index, task in
+                        VStack(spacing: 0) {
+                            TaskRowView(task: task, onToggle: {
+                                try? modelContext.save()
+                            })
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                                        
+                            if index < filteredTasks.count - 1 {
+                                Divider()
+                                    .padding(.leading, 12)
+                            }
+                        }
+                    }
                 }
             }
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .padding()
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal)
     }
 }
 
 #Preview {
+    let container: ModelContainer = {
+        do {
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
+            let context = container.mainContext
+            
+            // サンプルユーザープロフィールの登録
+            let profile = UserProfile()
+            if let birthDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) {
+                profile.birthday = birthDate
+            }
+            profile.targetAge = 80
+            context.insert(profile)
+            
+            // TimeFrame.life 用のサンプルタスク
+            let sampleTasks = [
+                LimitTask(
+                    title: "Develop iOS App Prototype",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
+                    location: "Tokyo Studio",
+                    isFlagged: true
+                ),
+                LimitTask(
+                    title: "Read 10 Books on Investments",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    isFlagged: false
+                ),
+                LimitTask(
+                    title: "Visit Hokkaido Hot Springs",
+                    timeFrameRawValue: TimeFrame.life.rawValue,
+                    location: "Noboribetsu"
+                ),
+                {
+                    let task = LimitTask(
+                        title: "Create App Icon and Assets",
+                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        isFlagged: true
+                    )
+                    task.isCompleted = true
+                    task.completedAt = Date()
+                    return task
+                }()
+            ]
+            
+            for task in sampleTasks {
+                context.insert(task)
+            }
+            
+            return container
+        } catch {
+            fatalError("Failed to create preview container: \(error)")
+        }
+    }()
+    
     LimitVisualizerView()
-        .modelContainer(for: [LimitTask.self, UserProfile.self], inMemory: true)
+        .environment(\.isPreview, true)
+        .modelContainer(container)
 }

@@ -75,6 +75,7 @@ struct TodoListView: View {
                         .listStyle(.insetGrouped)
                     }
                 }
+                .background(Color(uiColor: .systemGroupedBackground))
                 
                 Button(action: {
                     isShowingAddTaskSheet = true
@@ -195,5 +196,6 @@ struct TodoListView: View {
     }()
     
     return TodoListView()
+        .environment(\.isPreview, true)
         .modelContainer(container)
 }

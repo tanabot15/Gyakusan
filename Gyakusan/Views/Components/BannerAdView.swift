@@ -11,18 +11,57 @@ import GoogleMobileAds
 struct BannerAdView: View {
     
     var isForScreenshot: Bool = false
+    var isPreview: Bool = false
+    
+    @Environment(\.isPreview) private var isEnvironmentPreview
+    
+    private var showPreviewPlaceholder: Bool {
+        isPreview || isEnvironmentPreview
+    }
     
     var body: some View {
-        #if targetEnvironment(simulator)
-        EmptyView()
-        #else
-        if isForScreenshot {
-            EmptyView()
+        if showPreviewPlaceholder {
+            previewAdPlaceholder
         } else {
-            AdMobBannerRepresentable()
-                .frame(height: 50)
+            #if targetEnvironment(simulator)
+            EmptyView()
+            #else
+            if isForScreenshot {
+                EmptyView()
+            } else {
+                AdMobBannerRepresentable()
+                    .frame(height: 50)
+            }
+            #endif
         }
-        #endif
+    }
+    
+    // Canvas 用のダミープレビュー表示
+    private var previewAdPlaceholder: some View {
+        ZStack {
+            Color.gray.opacity(0.15)
+            HStack(spacing: 6) {
+                Image(systemName: "rectangle.inset.filled.and.person.filled")
+                    .font(.caption)
+                Text("AdMob Banner (Canvas Preview)")
+                    .font(.caption2)
+                    .bold()
+            }
+            .foregroundStyle(.secondary)
+        }
+        .frame(height: 50)
+    }
+}
+
+// SwiftUI Environment Key の定義
+private struct IsPreviewKey: EnvironmentKey {
+    static let defaultValue: Bool = false
+}
+
+extension EnvironmentValues {
+    var isPreview: Bool {
+        get { self[IsPreviewKey.self] }
+        set { self[IsPreviewKey.self] = newValue }
     }
 }
 
@@ -55,6 +94,5 @@ private struct AdMobBannerRepresentable: UIViewRepresentable {
 }
 
 #Preview {
-    BannerAdView()
-        .frame(height: 50)
+    BannerAdView(isPreview: true)
 }
