@@ -11,31 +11,25 @@ struct TaskRowView: View {
     let task: LimitTask
     var onToggle: () -> Void
     
+    @State private var isCompletedState: Bool = false
+    @State private var toggleTaskWorkItem: Task<Void, Never>? = nil
+    
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    task.isCompleted.toggle()
-                    if task.isCompleted {
-                        task.completedAt = Date()
-                        AdMobManager.shared.taskCompleted()
-                    } else {
-                        task.completedAt = nil
-                    }
-                    onToggle()
-                }
+                handleToggle()
             }) {
-                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                Image(systemName: isCompletedState ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .foregroundStyle(isCompletedState ? .secondary : .primary)
             }
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(task.title)
                     .font(.body)
-                    .strikethrough(task.isCompleted, color: .secondary)
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                    .strikethrough(isCompletedState, color: .secondary)
+                    .foregroundStyle(isCompletedState ? .secondary : .primary)
                             
                 if task.dueDate != nil || !task.location.isEmpty {
                     HStack(spacing: 20) {
@@ -68,6 +62,59 @@ struct TaskRowView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .onAppear {
+            isCompletedState = task.isCompleted
+        }
+        .onChange(of: task.isCompleted) { _, newValue in
+            isCompletedState = newValue
+        }
+        .onDisappear {
+            commitToggleIfNeeded()
+        }
+    }
+    
+    private func handleToggle() {
+        toggleTaskWorkItem?.cancel()
+        toggleTaskWorkItem = nil
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            isCompletedState.toggle()
+        }
+        
+        if isCompletedState == task.isCompleted {
+            return
+        }
+        
+        if isCompletedState {
+            toggleTaskWorkItem = Task {
+                try? await Task.sleep(for: .seconds(3))
+                
+                if !Task.isCancelled {
+                    commitToggle()
+                }
+            }
+        } else {
+            commitToggle()
+        }
+    }
+    
+    private func commitToggleIfNeeded() {
+        if isCompletedState != task.isCompleted {
+            toggleTaskWorkItem?.cancel()
+            commitToggle()
+        }
+    }
+    
+    private func commitToggle() {
+        task.isCompleted = isCompletedState
+        if task.isCompleted {
+            task.completedAt = Date()
+            AdMobManager.shared.taskCompleted()
+        } else {
+            task.completedAt = nil
+        }
+        onToggle()
+        toggleTaskWorkItem = nil
     }
 }
 

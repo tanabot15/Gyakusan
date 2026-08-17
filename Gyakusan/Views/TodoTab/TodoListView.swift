@@ -16,6 +16,7 @@ struct TodoListView: View {
     @State private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
     @State private var selectedTaskToEdit: LimitTask? = nil
+    @State private var isCompletedExpanded: Bool = false
     
     private var filteredTasks: [LimitTask] {
         allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
@@ -58,17 +59,19 @@ struct TodoListView: View {
                             }
                             
                             if !completedTasks.isEmpty {
-                                Section(header: Text("Completed")) {
-                                    ForEach(completedTasks) { task in
-                                        TaskRowView(task: task, onToggle: {
-                                            saveContext()
-                                        })
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            selectedTaskToEdit = task
+                                Section(header: completedHeaderView) {
+                                    if isCompletedExpanded {
+                                        ForEach(completedTasks) { task in
+                                            TaskRowView(task: task, onToggle: {
+                                                saveContext()
+                                            })
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                selectedTaskToEdit = task
+                                            }
                                         }
+                                        .onDelete(perform: deleteCompletedTasks)
                                     }
-                                    .onDelete(perform: deleteCompletedTasks)
                                 }
                             }
                         }
@@ -101,6 +104,22 @@ struct TodoListView: View {
                 TaskFormSheet(taskToEdit: task)
             }
         }
+    }
+    
+    private var completedHeaderView: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isCompletedExpanded.toggle()
+            }
+        }) {
+            HStack {
+                Text("Completed (\(completedTasks.count))")
+                Spacer()  
+                Image(systemName: isCompletedExpanded ? "chevron.down" : "chevron.right")
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
     
     private var emptyTaskView: some View {
