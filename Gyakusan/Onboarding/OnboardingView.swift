@@ -46,7 +46,7 @@ struct OnboardingView: View {
                 Form {
                     Section(
                         header: Text("Your Profile"),
-                        footer: Text("You can change these settings anytime in the Settings tab.")
+                        footer: Text("You can change these settings anytime in the Settings.")
                     ) {
                         DatePicker(
                             "Birthday",

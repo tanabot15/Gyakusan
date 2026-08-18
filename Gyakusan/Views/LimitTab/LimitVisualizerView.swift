@@ -72,12 +72,50 @@ struct LimitVisualizerView: View {
                         taskSummarySection
                     }
                     .padding(.vertical)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
+            .gesture(swipeGesture)
             .onReceive(timer) { input in
                 currentDate = input
             }
+        }
+    }
+    
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 30, coordinateSpace: .local)
+            .onEnded { value in
+                let horizontalAmount = value.translation.width
+                let verticalAmount = value.translation.height
+                
+                guard abs(horizontalAmount) > abs(verticalAmount) * 1.5 else { return }
+                guard abs(horizontalAmount) > 50 else { return }
+                
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if horizontalAmount < 0 {
+                        switchToNextTimeFrame()
+                    } else {
+                        switchToPreviousTimeFrame()
+                    }
+                }
+            }
+    }
+    
+    private func switchToNextTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex < allCases.count - 1 {
+            selectedTimeFrame = allCases[currentIndex + 1]
+        }
+    }
+        
+    private func switchToPreviousTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex > 0 {
+            selectedTimeFrame = allCases[currentIndex - 1]
         }
     }
     
@@ -134,7 +172,7 @@ struct LimitVisualizerView: View {
             let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
             let context = container.mainContext
             
-            // サンプルユーザープロフィールの登録
+            // sample User Profile
             let profile = UserProfile()
             if let birthDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) {
                 profile.birthday = birthDate
@@ -142,7 +180,7 @@ struct LimitVisualizerView: View {
             profile.targetAge = 80
             context.insert(profile)
             
-            // TimeFrame.life 用のサンプルタスク
+            // TimeFrame.life sample task
             let sampleTasks = [
                 LimitTask(
                     title: "Develop iOS App Prototype",

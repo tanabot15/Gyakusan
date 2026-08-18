@@ -79,6 +79,7 @@ struct TodoListView: View {
                     }
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
+                .gesture(swipeGesture)
                 
                 Button(action: {
                     isShowingAddTaskSheet = true
@@ -105,6 +106,43 @@ struct TodoListView: View {
             }
         }
     }
+    
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 30, coordinateSpace: .local)
+            .onEnded { value in
+                let horizontalAmount = value.translation.width
+                let verticalAmount = value.translation.height
+                
+                guard abs(horizontalAmount) > abs(verticalAmount) * 1.5 else { return }
+                guard abs(horizontalAmount) > 50 else { return }
+                
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if horizontalAmount < 0 {
+                        switchToNextTimeFrame()
+                    } else {
+                        switchToPreviousTimeFrame()
+                    }
+                }
+            }
+    }
+    
+    private func switchToPreviousTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex > 0 {
+            selectedTimeFrame = allCases[currentIndex - 1]
+        }
+    }
+    
+    private func switchToNextTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex < allCases.count - 1 {
+            selectedTimeFrame = allCases[currentIndex + 1]
+        }
+    }
+    
+    
     
     private var completedHeaderView: some View {
         Button(action: {
