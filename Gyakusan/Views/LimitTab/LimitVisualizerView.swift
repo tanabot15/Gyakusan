@@ -122,25 +122,66 @@ struct LimitVisualizerView: View {
     private var taskSummarySection: some View {
         let completedCount = filteredTasks.filter { $0.isCompleted }.count
         let totalCount = filteredTasks.count
+        let progressRatio = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0.0
+        let percentage = Int(progressRatio * 100)
         
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Task Overview")
-                    .font(.headline)
-                Spacer()
-                Text("\(completedCount) / \(totalCount) Completed")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        return VStack(spacing: 12) {
+            VStack(spacing: 10) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundStyle(.primary)
+                        Text("Task Progress")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                    }
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 6) {
+                        Text("\(completedCount)/\(totalCount)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("\(percentage)%")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(.primary.opacity(0.15))
+                            .foregroundStyle(.primary)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color(uiColor: .systemGray5))
+                            .frame(height: 4)
+                        
+                        Capsule()
+                            .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
+                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: progressRatio)
+                    }
+                }
+                .frame(height: 6)
             }
             .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
                 if filteredTasks.isEmpty {
-                    Text("No tasks added for this timeframe.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(spacing: 8) {
+                        Image(systemName: "tray")
+                            .font(.title2)
+                            .foregroundStyle(.tertiary)
+                        Text("No tasks for this timeframe")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: .infinity)
                 } else {
                     ForEach(Array(filteredTasks.enumerated()), id: \.element.id) { index, task in
                         VStack(spacing: 0) {
@@ -148,18 +189,19 @@ struct LimitVisualizerView: View {
                                 try? modelContext.save()
                             })
                             .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 10)
                                         
                             if index < filteredTasks.count - 1 {
                                 Divider()
-                                    .padding(.leading, 12)
+                                    .padding(.leading, 44)
                             }
                         }
                     }
                 }
             }
             .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 2)
         }
         .padding(.horizontal)
     }
