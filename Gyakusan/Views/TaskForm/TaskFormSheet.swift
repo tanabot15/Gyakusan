@@ -46,6 +46,33 @@ struct TaskFormSheet: View {
         taskToEdit != nil
     }
     
+    private var hasChanges: Bool {
+        guard let original = taskToEdit else { return true }
+        
+        let isTitleChanged = title != original.title
+        let isTimeFrameChanged = selectedTimeFrame != original.timeFrame
+        let isFlaggedChanged = isFlagged != original.isFlagged
+        let isLocationChanged = location != original.location
+        let isHasDueDateChanged = hasDueDate != (original.dueDate != nil)
+        
+        var isDueDateChanged = false
+        if hasDueDate, let originalDueDate = original.dueDate {
+            // 年月日レベルでの比較
+            isDueDateChanged = !Calendar.current.isDate(dueDate, inSameDayAs: originalDueDate)
+        }
+        
+        return isTitleChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isHasDueDateChanged || isDueDateChanged
+    }
+    
+    private var isSaveDisabled: Bool {
+        let isTitleEmpty = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if isEditing {
+            return isTitleEmpty || !hasChanges
+        } else {
+            return isTitleEmpty
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -94,7 +121,7 @@ struct TaskFormSheet: View {
                     Button(isEditing ? "Save" : "Add") {
                         saveTask()
                     }
-                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(isSaveDisabled)
                 }
             }
             .onAppear {
