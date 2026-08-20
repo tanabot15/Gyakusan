@@ -57,7 +57,6 @@ struct TaskFormSheet: View {
         
         var isDueDateChanged = false
         if hasDueDate, let originalDueDate = original.dueDate {
-            // 年月日レベルでの比較
             isDueDateChanged = !Calendar.current.isDate(dueDate, inSameDayAs: originalDueDate)
         }
         

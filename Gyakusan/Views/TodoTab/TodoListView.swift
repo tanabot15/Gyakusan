@@ -113,8 +113,8 @@ struct TodoListView: View {
                 let horizontalAmount = value.translation.width
                 let verticalAmount = value.translation.height
                 
-                guard abs(horizontalAmount) > abs(verticalAmount) * 1.5 else { return }
-                guard abs(horizontalAmount) > 50 else { return }
+                guard abs(horizontalAmount) > abs(verticalAmount) * 1.1 else { return }
+                guard abs(horizontalAmount) > 30 else { return }
                 
                 withAnimation(.easeInOut(duration: 0.25)) {
                     if horizontalAmount < 0 {

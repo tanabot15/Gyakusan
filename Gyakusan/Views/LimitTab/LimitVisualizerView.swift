@@ -90,8 +90,8 @@ struct LimitVisualizerView: View {
                 let horizontalAmount = value.translation.width
                 let verticalAmount = value.translation.height
                 
-                guard abs(horizontalAmount) > abs(verticalAmount) * 1.5 else { return }
-                guard abs(horizontalAmount) > 50 else { return }
+                guard abs(horizontalAmount) > abs(verticalAmount) * 1.1 else { return }
+                guard abs(horizontalAmount) > 30 else { return }
                 
                 withAnimation(.easeInOut(duration: 0.25)) {
                     if horizontalAmount < 0 {
@@ -128,13 +128,9 @@ struct LimitVisualizerView: View {
         return VStack(spacing: 12) {
             VStack(spacing: 10) {
                 HStack {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(.primary)
-                        Text("Task Progress")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                    }
+                    Text("Task Progress")
+                        .font(.headline)
+                        .fontWeight(.bold)
                     
                     Spacer()
                     
@@ -208,62 +204,63 @@ struct LimitVisualizerView: View {
 }
 
 #Preview {
-    let container: ModelContainer = {
-        do {
-            let config = ModelConfiguration(isStoredInMemoryOnly: true)
-            let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
-            let context = container.mainContext
-            
-            // sample User Profile
-            let profile = UserProfile()
-            if let birthDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) {
-                profile.birthday = birthDate
-            }
-            profile.targetAge = 80
-            context.insert(profile)
-            
-            // TimeFrame.life sample task
-            let sampleTasks = [
-                LimitTask(
-                    title: "Develop iOS App Prototype",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
-                    location: "Tokyo Studio",
-                    isFlagged: true
-                ),
-                LimitTask(
-                    title: "Read 10 Books on Investments",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    isFlagged: false
-                ),
-                LimitTask(
-                    title: "Visit Hokkaido Hot Springs",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    location: "Noboribetsu"
-                ),
-                {
-                    let task = LimitTask(
-                        title: "Create App Icon and Assets",
+    struct PreviewContainer {
+        @MainActor
+        static let container: ModelContainer = {
+            do {
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
+                let context = container.mainContext
+                
+                let profile = UserProfile()
+                if let birthDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) {
+                    profile.birthday = birthDate
+                }
+                profile.targetAge = 80
+                context.insert(profile)
+                
+                let sampleTasks = [
+                    LimitTask(
+                        title: "Develop iOS App Prototype",
                         timeFrameRawValue: TimeFrame.life.rawValue,
+                        dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
+                        location: "Tokyo Studio",
                         isFlagged: true
-                    )
-                    task.isCompleted = true
-                    task.completedAt = Date()
-                    return task
-                }()
-            ]
-            
-            for task in sampleTasks {
-                context.insert(task)
+                    ),
+                    LimitTask(
+                        title: "Read 10 Books on Investments",
+                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        isFlagged: false
+                    ),
+                    LimitTask(
+                        title: "Visit Hokkaido Hot Springs",
+                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        location: "Noboribetsu"
+                    ),
+                    {
+                        let task = LimitTask(
+                            title: "Create App Icon and Assets",
+                            timeFrameRawValue: TimeFrame.life.rawValue,
+                            isFlagged: true
+                        )
+                        task.isCompleted = true
+                        task.completedAt = Date()
+                        return task
+                    }()
+                ]
+                
+                for task in sampleTasks {
+                    context.insert(task)
+                }
+                
+                return container
+            } catch {
+                fatalError("Failed to create preview container: \(error)")
             }
-            
-            return container
-        } catch {
-            fatalError("Failed to create preview container: \(error)")
-        }
-    }()
+        }()
+    }
     
-    LimitVisualizerView()
+    return LimitVisualizerView()
         .environment(\.isPreview, true)
-        .modelContainer(container)
+        .modelContainer(PreviewContainer.container)
 }
