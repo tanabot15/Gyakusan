@@ -135,7 +135,7 @@ struct LimitVisualizerView: View {
                     Spacer()
                     
                     HStack(spacing: 6) {
-                        Text("\(completedCount)/\(totalCount)")
+                        Text("\(completedCount)/\(totalCount) Completed")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)

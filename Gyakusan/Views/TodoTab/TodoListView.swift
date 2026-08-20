@@ -16,16 +16,28 @@ struct TodoListView: View {
     @State private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
     @State private var selectedTaskToEdit: LimitTask? = nil
-    @State private var isCompletedExpanded: Bool = false
     
+    @State private var isCompletedExpanded: Bool = true
+    @State private var isPastExpanded: Bool = false
+    
+    // All Task
     private var filteredTasks: [LimitTask] {
         allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
     }
-    private var uncompletedTasks: [LimitTask] {
-        filteredTasks.filter { !$0.isCompleted }
+    
+    // 1. Current Tasks
+    private var currentUncompletedTasks: [LimitTask] {
+        filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame) }
     }
-    private var completedTasks: [LimitTask] {
-        filteredTasks.filter { $0.isCompleted }
+    
+    // 2. Completed Tasks
+    private var currentCompletedTasks: [LimitTask] {
+        filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame) }
+    }
+    
+    // 3. Past Tasks
+    private var pastTasks: [LimitTask] {
+        filteredTasks.filter { !$0.isCurrentPeriod(for: selectedTimeFrame) }
     }
     
     var body: some View {
@@ -43,34 +55,42 @@ struct TodoListView: View {
                         emptyTaskView
                     } else {
                         List {
-                            if !uncompletedTasks.isEmpty {
-                                Section(header: Text("Tasks")) {
-                                    ForEach(uncompletedTasks) { task in
-                                        TaskRowView(task: task, onToggle: {
-                                            saveContext()
-                                        })
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            selectedTaskToEdit = task
-                                        }
+                            // 1. Current Tasks
+                            if !currentUncompletedTasks.isEmpty {
+                                Section(header: Text("Current Tasks")) {
+                                    ForEach(currentUncompletedTasks) { task in
+                                        taskRow(for: task)
                                     }
-                                    .onDelete(perform: deleteUncompletedTasks)
+                                    .onDelete { offsets in
+                                        deleteTasks(currentUncompletedTasks, at: offsets)
+                                    }
                                 }
                             }
                             
-                            if !completedTasks.isEmpty {
+                            // 2. Completed Tasks
+                            if !currentCompletedTasks.isEmpty {
                                 Section(header: completedHeaderView) {
                                     if isCompletedExpanded {
-                                        ForEach(completedTasks) { task in
-                                            TaskRowView(task: task, onToggle: {
-                                                saveContext()
-                                            })
-                                            .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                selectedTaskToEdit = task
-                                            }
+                                        ForEach(currentCompletedTasks) { task in
+                                            taskRow(for: task)
                                         }
-                                        .onDelete(perform: deleteCompletedTasks)
+                                        .onDelete { offsets in
+                                            deleteTasks(currentCompletedTasks, at: offsets)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // 3. Past Tasks
+                            if !pastTasks.isEmpty {
+                                Section(header: pastHeaderView) {
+                                    if isPastExpanded {
+                                        ForEach(pastTasks) { task in
+                                            taskRow(for: task)
+                                        }
+                                        .onDelete { offsets in
+                                            deleteTasks(pastTasks, at: offsets)
+                                        }
                                     }
                                 }
                             }
@@ -80,6 +100,10 @@ struct TodoListView: View {
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
                 .gesture(swipeGesture)
+                .onChange(of: selectedTimeFrame) { _, _ in
+                    isCompletedExpanded = true
+                    isPastExpanded = false
+                }
                 
                 Button(action: {
                     isShowingAddTaskSheet = true
@@ -107,6 +131,56 @@ struct TodoListView: View {
         }
     }
     
+    // MARK: - Row View Builder
+    @ViewBuilder
+    private func taskRow(for task: LimitTask) -> some View {
+        TaskRowView(task: task, onToggle: {
+            saveContext()
+        })
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedTaskToEdit = task
+        }
+    }
+    
+    // MARK: - Header Views
+    private var completedHeaderView: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isCompletedExpanded.toggle()
+            }
+        }) {
+            HStack {
+                Text("Completed (\(currentCompletedTasks.count))")
+                Spacer()
+                Image(systemName: isCompletedExpanded ? "chevron.down" : "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var pastHeaderView: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPastExpanded.toggle()
+            }
+        }) {
+            HStack {
+                Text("Past Tasks (\(pastTasks.count))")
+                Spacer()
+                Image(systemName: isPastExpanded ? "chevron.down" : "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    
+    // MARK: - Gestures & Helpers
     private var swipeGesture: some Gesture {
         DragGesture(minimumDistance: 30, coordinateSpace: .local)
             .onEnded { value in
@@ -142,24 +216,6 @@ struct TodoListView: View {
         }
     }
     
-    
-    
-    private var completedHeaderView: some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isCompletedExpanded.toggle()
-            }
-        }) {
-            HStack {
-                Text("Completed (\(completedTasks.count))")
-                Spacer()  
-                Image(systemName: isCompletedExpanded ? "chevron.down" : "chevron.right")
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-    
     private var emptyTaskView: some View {
         VStack(spacing: 12) {
             Spacer()
@@ -188,17 +244,9 @@ struct TodoListView: View {
         }
     }
     
-    private func deleteUncompletedTasks(at offsets: IndexSet) {
+    private func deleteTasks(_ tasks: [LimitTask], at offsets: IndexSet) {
         for index in offsets {
-            let taskToDelete = uncompletedTasks[index]
-            modelContext.delete(taskToDelete)
-        }
-        saveContext()
-    }
-    
-    private func deleteCompletedTasks(at offsets: IndexSet) {
-        for index in offsets {
-            let taskToDelete = completedTasks[index]
+            let taskToDelete = tasks[index]
             modelContext.delete(taskToDelete)
         }
         saveContext()
@@ -206,53 +254,104 @@ struct TodoListView: View {
 }
 
 #Preview {
-    let container: ModelContainer = {
-        do {
-            let config = ModelConfiguration(isStoredInMemoryOnly: true)
-            let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
-            let context = container.mainContext
-            
-            let sampleTasks = [
-                LimitTask(
-                    title: "Develop iOS App Prototype",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
-                    location: "Tokyo Studio",
-                    isFlagged: true
-                ),
-                LimitTask(
-                    title: "Read 10 Books on Investments",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    isFlagged: false
-                ),
-                LimitTask(
-                    title: "Visit Hokkaido Hot Springs",
-                    timeFrameRawValue: TimeFrame.life.rawValue,
-                    location: "Noboribetsu"
-                ),
-                {
-                    let task = LimitTask(
-                        title: "Create App Icon and Assets",
-                        timeFrameRawValue: TimeFrame.life.rawValue,
-                        isFlagged: true
-                    )
-                    task.isCompleted = true
-                    task.completedAt = Date()
-                    return task
-                }()
-            ]
-            
-            for task in sampleTasks {
-                context.insert(task)
+    struct PreviewContainer {
+        @MainActor
+        static let container: ModelContainer = {
+            do {
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                let container = try ModelContainer(for: LimitTask.self, UserProfile.self, configurations: config)
+                let context = container.mainContext
+                
+                let now = Date()
+                let calendar = Calendar.current
+                
+                let yesterday = calendar.date(byAdding: .day, value: -1, to: now) ?? now
+                let twoMonthsAgo = calendar.date(byAdding: .month, value: -2, to: now) ?? now
+                let lastYear = calendar.date(byAdding: .year, value: -1, to: now) ?? now
+                
+                let sampleTasks: [LimitTask] = [
+                    // --- Day Sample Data ---
+                    {
+                        let task = LimitTask(
+                            title: "Daily Focus Task",
+                            timeFrameRawValue: TimeFrame.day.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = now
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "Yesterday Unfinished Task",
+                            timeFrameRawValue: TimeFrame.day.rawValue
+                        )
+                        task.createdAt = yesterday
+                        return task
+                    }(),
+                    
+                    // --- Month Sample Data ---
+                    {
+                        let task = LimitTask(
+                            title: "Current Month Project Goal",
+                            timeFrameRawValue: TimeFrame.month.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = now
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "Carryover Item from 2 Months Ago",
+                            timeFrameRawValue: TimeFrame.month.rawValue
+                        )
+                        task.createdAt = twoMonthsAgo
+                        return task
+                    }(),
+                    
+                    // --- Year Sample Data ---
+                    {
+                        let task = LimitTask(
+                            title: "Annual Key Result Objective",
+                            timeFrameRawValue: TimeFrame.year.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = now
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "Unachieved Goal from Last Year",
+                            timeFrameRawValue: TimeFrame.year.rawValue
+                        )
+                        task.createdAt = lastYear
+                        return task
+                    }(),
+                    
+                    // --- Completed Task Sample ---
+                    {
+                        let task = LimitTask(
+                            title: "Completed Task Example",
+                            timeFrameRawValue: TimeFrame.month.rawValue
+                        )
+                        task.createdAt = now
+                        task.isCompleted = true
+                        task.completedAt = now
+                        return task
+                    }()
+                ]
+                
+                for task in sampleTasks {
+                    context.insert(task)
+                }
+                
+                return container
+            } catch {
+                fatalError("Failed to create preview container: \(error)")
             }
-            
-            return container
-        } catch {
-            fatalError("Failed to create preview container: \(error)")
-        }
-    }()
+        }()
+    }
     
     return TodoListView()
         .environment(\.isPreview, true)
-        .modelContainer(container)
+        .modelContainer(PreviewContainer.container)
 }

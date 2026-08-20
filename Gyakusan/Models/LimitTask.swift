@@ -42,4 +42,25 @@ final class LimitTask {
         self.location = location
         self.isFlagged = isFlagged
     }
+    
+    // Determines whether this task was created during the “current period”
+    // based on the specified TimeFrame and the reference date (default: now).
+    func isCurrentPeriod(for timeFrame: TimeFrame, now: Date = Date()) -> Bool {
+        let calendar = Calendar.current
+        
+        switch timeFrame {
+        case .life:
+            return true
+            
+        case .year:
+            return calendar.isDate(createdAt, equalTo: now, toGranularity: .year)
+            
+        case .month:
+            return calendar.isDate(createdAt, equalTo: now, toGranularity: .year) &&
+                   calendar.isDate(createdAt, equalTo: now, toGranularity: .month)
+            
+        case .day:
+            return calendar.isDate(createdAt, inSameDayAs: now)
+        }
+    }
 }
