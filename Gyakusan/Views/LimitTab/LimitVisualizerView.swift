@@ -28,6 +28,18 @@ struct LimitVisualizerView: View {
         allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
     }
     
+    private var currentUncompletedCount: Int {
+        filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
+    }
+    
+    private var currentCompletedCount: Int {
+        filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
+    }
+    
+    private var pastTasksCount: Int {
+        filteredTasks.filter { !$0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
+    }
+    
     private var lifeStats: TimeCalculator.LifeStats {
         TimeCalculator.calculateLifeStats(userProfile: curretProfile, now: currentDate)
     }
@@ -69,7 +81,7 @@ struct LimitVisualizerView: View {
                             currentDate: currentDate
                         )
                         
-                        taskSummarySection
+                        taskMetricsCardSection
                     }
                     .padding(.vertical)
                     .frame(maxWidth: .infinity)
@@ -119,87 +131,128 @@ struct LimitVisualizerView: View {
         }
     }
     
-    private var taskSummarySection: some View {
-        let completedCount = filteredTasks.filter { $0.isCompleted }.count
-        let totalCount = filteredTasks.count
-        let progressRatio = totalCount > 0 ? Double(completedCount) / Double(totalCount) : 0.0
-        let percentage = Int(progressRatio * 100)
+    // MARK: - Task Metrics Card Section
+    private var taskMetricsCardSection: some View {
+        let totalCurrent = currentUncompletedCount + currentCompletedCount
+        let progressRatio = totalCurrent > 0 ? Double(currentCompletedCount) / Double(totalCurrent) : 0.0
         
         return VStack(spacing: 12) {
-            VStack(spacing: 10) {
+            // Section header
+            NavigationLink(destination: TodoListView()) {
                 HStack {
-                    Text("Task Progress")
+                    Text("Task Overview")
                         .font(.headline)
                         .fontWeight(.bold)
+                        .foregroundStyle(.primary)
                     
                     Spacer()
                     
-                    HStack(spacing: 6) {
-                        Text("\(completedCount)/\(totalCount) Completed")
-                            .font(.subheadline)
+                    HStack(spacing: 4) {
+                        Text("View Details")
+                            .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
                         
-                        Text("\(percentage)%")
-                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
                             .fontWeight(.bold)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(.primary.opacity(0.15))
-                            .foregroundStyle(.primary)
-                            .clipShape(Capsule())
+                            .foregroundStyle(.tertiary)
                     }
                 }
-                
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Color(uiColor: .systemGray5))
-                            .frame(height: 4)
-                        
-                        Capsule()
-                            .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: progressRatio)
-                    }
-                }
-                .frame(height: 6)
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, 4)
             
-            VStack(spacing: 0) {
-                if filteredTasks.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "tray")
-                            .font(.title2)
-                            .foregroundStyle(.tertiary)
-                        Text("No tasks for this timeframe")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+            // Graphic card
+            NavigationLink(destination: TodoListView()) {
+                VStack(spacing: 16) {
+                    HStack(spacing: 0) {
+                        metricItem(
+                            title: "Current",
+                            count: currentUncompletedCount,
+                            icon: "circle.circle.fill",
+                            color: .gray
+                        )
+                        
+                        Divider()
+                            .frame(height: 36)
+                        
+                        metricItem(
+                            title: "Completed",
+                            count: currentCompletedCount,
+                            icon: "checkmark.circle.fill",
+                            color: .gray
+                        )
+                        
+                        Divider()
+                            .frame(height: 36)
+                        
+                        metricItem(
+                            title: "Past",
+                            count: pastTasksCount,
+                            icon: "clock.arrow.circlepath",
+                            color: .gray
+                        )
                     }
-                    .padding(.vertical, 24)
-                    .frame(maxWidth: .infinity)
-                } else {
-                    ForEach(Array(filteredTasks.enumerated()), id: \.element.id) { index, task in
-                        VStack(spacing: 0) {
-                            TaskRowView(task: task, onToggle: {
-                                try? modelContext.save()
-                            })
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                                        
-                            if index < filteredTasks.count - 1 {
-                                Divider()
-                                    .padding(.leading, 44)
+                    
+                    VStack(spacing: 6) {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(Color(uiColor: .systemGray5))
+                                    .frame(height: 6)
+                                
+                                Capsule()
+                                    .fill(Color.black)
+                                    .frame(width: geometry.size.width * CGFloat(progressRatio), height: 6)
                             }
+                        }
+                        .frame(height: 6)
+                        
+                        HStack {
+                            Text("Current Period Progress")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(Int(progressRatio * 100))%")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
+                .padding(16)
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(color: .black.opacity(0.04), radius: 10, x: 0, y: 4)
             }
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 2)
+            .buttonStyle(.plain)
         }
         .padding(.horizontal)
+    }
+    
+    // MARK: - Metric Item Helper
+    @ViewBuilder
+    private func metricItem(title: String, count: Int, icon: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundStyle(color)
+                
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Text("\(count)")
+                .font(.title2)
+                .fontWeight(.bold)
+                .fontDesign(.rounded)
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
