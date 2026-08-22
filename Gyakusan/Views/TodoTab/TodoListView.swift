@@ -20,26 +20,6 @@ struct TodoListView: View {
     @State private var isCompletedExpanded: Bool = true
     @State private var isPastExpanded: Bool = false
     
-    // All Task
-    private var filteredTasks: [LimitTask] {
-        allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
-    }
-    
-    // 1. Current Tasks
-    private var currentUncompletedTasks: [LimitTask] {
-        filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame) }
-    }
-    
-    // 2. Completed Tasks
-    private var currentCompletedTasks: [LimitTask] {
-        filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame) }
-    }
-    
-    // 3. Past Tasks
-    private var pastTasks: [LimitTask] {
-        filteredTasks.filter { !$0.isCurrentPeriod(for: selectedTimeFrame) }
-    }
-    
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -51,55 +31,15 @@ struct TodoListView: View {
                     TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
                         .padding(.vertical, 8)
                     
-                    if filteredTasks.isEmpty {
-                        emptyTaskView
-                    } else {
-                        List {
-                            // 1. Current Tasks
-                            if !currentUncompletedTasks.isEmpty {
-                                Section(header: Text("Current Tasks")) {
-                                    ForEach(currentUncompletedTasks) { task in
-                                        taskRow(for: task)
-                                    }
-                                    .onDelete { offsets in
-                                        deleteTasks(currentUncompletedTasks, at: offsets)
-                                    }
-                                }
-                            }
-                            
-                            // 2. Completed Tasks
-                            if !currentCompletedTasks.isEmpty {
-                                Section(header: completedHeaderView) {
-                                    if isCompletedExpanded {
-                                        ForEach(currentCompletedTasks) { task in
-                                            taskRow(for: task)
-                                        }
-                                        .onDelete { offsets in
-                                            deleteTasks(currentCompletedTasks, at: offsets)
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // 3. Past Tasks
-                            if !pastTasks.isEmpty {
-                                Section(header: pastHeaderView) {
-                                    if isPastExpanded {
-                                        ForEach(pastTasks) { task in
-                                            taskRow(for: task)
-                                        }
-                                        .onDelete { offsets in
-                                            deleteTasks(pastTasks, at: offsets)
-                                        }
-                                    }
-                                }
-                            }
+                    TabView(selection: $selectedTimeFrame) {
+                        ForEach(TimeFrame.allCases, id: \.self) { timeFrame in
+                            taskListView(for: timeFrame)
+                                .tag(timeFrame)
                         }
-                        .listStyle(.insetGrouped)
                     }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
-                .gesture(swipeGesture)
                 .onChange(of: selectedTimeFrame) { _, _ in
                     isCompletedExpanded = true
                     isPastExpanded = false
@@ -131,6 +71,62 @@ struct TodoListView: View {
         }
     }
     
+    // MARK: - Task List View Builder
+    @ViewBuilder
+    private func taskListView(for timeFrame: TimeFrame) -> some View {
+        let filteredTasks = allTasks.filter { $0.timeFrameRawValue == timeFrame.rawValue }
+        let currentUncompletedTasks = filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame) }
+        let currentCompletedTasks = filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame) }
+        let pastTasks = filteredTasks.filter { !$0.isCurrentPeriod(for: timeFrame) }
+        
+        if filteredTasks.isEmpty {
+            emptyTaskView
+        } else {
+            List {
+                // 1. Current Tasks
+                if !currentUncompletedTasks.isEmpty {
+                    Section(header: Text("Current Tasks")) {
+                        ForEach(currentUncompletedTasks) { task in
+                            taskRow(for: task)
+                        }
+                        .onDelete { offsets in
+                            deleteTasks(currentUncompletedTasks, at: offsets)
+                        }
+                    }
+                }
+                
+                // 2. Completed Tasks
+                if !currentCompletedTasks.isEmpty {
+                    Section(header: completedHeaderView(count: currentCompletedTasks.count)) {
+                        if isCompletedExpanded {
+                            ForEach(currentCompletedTasks) { task in
+                                taskRow(for: task)
+                            }
+                            .onDelete { offsets in
+                                deleteTasks(currentCompletedTasks, at: offsets)
+                            }
+                        }
+                    }
+                }
+                
+                // 3. Past Tasks
+                if !pastTasks.isEmpty {
+                    Section(header: pastHeaderView(count: pastTasks.count)) {
+                        if isPastExpanded {
+                            ForEach(pastTasks) { task in
+                                taskRow(for: task)
+                            }
+                            .onDelete { offsets in
+                                deleteTasks(pastTasks, at: offsets)
+                            }
+                        }
+                    }
+                }
+            }
+            .listStyle(.insetGrouped)
+        }
+    }
+    
     // MARK: - Row View Builder
     @ViewBuilder
     private func taskRow(for task: LimitTask) -> some View {
@@ -144,14 +140,14 @@ struct TodoListView: View {
     }
     
     // MARK: - Header Views
-    private var completedHeaderView: some View {
+    private func completedHeaderView(count: Int) -> some View {
         Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isCompletedExpanded.toggle()
             }
         }) {
             HStack {
-                Text("Completed (\(currentCompletedTasks.count))")
+                Text("Completed (\(count))")
                 Spacer()
                 Image(systemName: isCompletedExpanded ? "chevron.down" : "chevron.right")
                     .font(.caption)
@@ -162,14 +158,14 @@ struct TodoListView: View {
         .buttonStyle(.plain)
     }
     
-    private var pastHeaderView: some View {
+    private func pastHeaderView(count: Int) -> some View {
         Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isPastExpanded.toggle()
             }
         }) {
             HStack {
-                Text("Past Tasks (\(pastTasks.count))")
+                Text("Past Tasks (\(count))")
                 Spacer()
                 Image(systemName: isPastExpanded ? "chevron.down" : "chevron.right")
                     .font(.caption)
@@ -180,42 +176,7 @@ struct TodoListView: View {
         .buttonStyle(.plain)
     }
     
-    // MARK: - Gestures & Helpers
-    private var swipeGesture: some Gesture {
-        DragGesture(minimumDistance: 30, coordinateSpace: .local)
-            .onEnded { value in
-                let horizontalAmount = value.translation.width
-                let verticalAmount = value.translation.height
-                
-                guard abs(horizontalAmount) > abs(verticalAmount) * 1.1 else { return }
-                guard abs(horizontalAmount) > 30 else { return }
-                
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    if horizontalAmount < 0 {
-                        switchToNextTimeFrame()
-                    } else {
-                        switchToPreviousTimeFrame()
-                    }
-                }
-            }
-    }
-    
-    private func switchToPreviousTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex > 0 {
-            selectedTimeFrame = allCases[currentIndex - 1]
-        }
-    }
-    
-    private func switchToNextTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex < allCases.count - 1 {
-            selectedTimeFrame = allCases[currentIndex + 1]
-        }
-    }
-    
+    // MARK: - Helpers
     private var emptyTaskView: some View {
         VStack(spacing: 12) {
             Spacer()

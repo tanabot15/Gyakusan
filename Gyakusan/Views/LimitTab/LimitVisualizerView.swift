@@ -12,6 +12,8 @@ import Combine
 struct LimitVisualizerView: View {
     @Environment(\.modelContext) private var modelContext
     
+    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    
     @Query private var userProfiles: [UserProfile]
     @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
     
@@ -24,37 +26,8 @@ struct LimitVisualizerView: View {
         userProfiles.first ?? UserProfile()
     }
     
-    private var filteredTasks: [LimitTask] {
-        allTasks.filter { $0.timeFrameRawValue == selectedTimeFrame.rawValue }
-    }
-    
-    private var currentUncompletedCount: Int {
-        filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
-    }
-    
-    private var currentCompletedCount: Int {
-        filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
-    }
-    
-    private var pastTasksCount: Int {
-        filteredTasks.filter { !$0.isCurrentPeriod(for: selectedTimeFrame, now: currentDate) }.count
-    }
-    
     private var lifeStats: TimeCalculator.LifeStats {
         TimeCalculator.calculateLifeStats(userProfile: curretProfile, now: currentDate)
-    }
-    
-    private var periodStats: TimeCalculator.PeriodStats {
-        switch selectedTimeFrame {
-        case .life:
-            return TimeCalculator.PeriodStats(remainingMonths: 0, remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
-        case .year:
-            return TimeCalculator.calculateYearsStats(now: currentDate)
-        case .month:
-            return TimeCalculator.calculateMonthStats(now: currentDate)
-        case .day:
-            return TimeCalculator.calculateDaysStats(now: currentDate)
-        }
     }
     
     var body: some View {
@@ -67,72 +40,59 @@ struct LimitVisualizerView: View {
                 TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
                     .padding(.vertical, 8)
                 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        CountdownHeaderView(
-                            timeFrame: selectedTimeFrame,
-                            periodStats: selectedTimeFrame == .life ? nil : periodStats,
-                            lifeStats: selectedTimeFrame == .life ? lifeStats : nil
-                        )
-                        
-                        LimitGridView(
-                            timeFrame: selectedTimeFrame,
-                            lifeStats: selectedTimeFrame == .life ? lifeStats : nil,
-                            currentDate: currentDate
-                        )
-                        
-                        taskMetricsCardSection
+                TabView(selection: $selectedTimeFrame) {
+                    ForEach(TimeFrame.allCases, id: \.self) { timeFrame in
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                CountdownHeaderView(
+                                    timeFrame: timeFrame,
+                                    periodStats: timeFrame == .life ? nil : periodStats(for: timeFrame),
+                                    lifeStats: timeFrame == .life ? lifeStats : nil
+                                )
+                                
+                                LimitGridView(
+                                    timeFrame: timeFrame,
+                                    lifeStats: timeFrame == .life ? lifeStats : nil,
+                                    currentDate: currentDate
+                                )
+                                
+                                taskMetricsCardSection(for: timeFrame)
+                            }
+                            .padding(.vertical)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .tag(timeFrame)
                     }
-                    .padding(.vertical)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .gesture(swipeGesture)
             .onReceive(timer) { input in
                 currentDate = input
             }
         }
     }
     
-    private var swipeGesture: some Gesture {
-        DragGesture(minimumDistance: 30, coordinateSpace: .local)
-            .onEnded { value in
-                let horizontalAmount = value.translation.width
-                let verticalAmount = value.translation.height
-                
-                guard abs(horizontalAmount) > abs(verticalAmount) * 1.1 else { return }
-                guard abs(horizontalAmount) > 30 else { return }
-                
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    if horizontalAmount < 0 {
-                        switchToNextTimeFrame()
-                    } else {
-                        switchToPreviousTimeFrame()
-                    }
-                }
-            }
-    }
-    
-    private func switchToNextTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex < allCases.count - 1 {
-            selectedTimeFrame = allCases[currentIndex + 1]
-        }
-    }
-        
-    private func switchToPreviousTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex > 0 {
-            selectedTimeFrame = allCases[currentIndex - 1]
+    private func periodStats(for timeFrame: TimeFrame) -> TimeCalculator.PeriodStats {
+        switch timeFrame {
+        case .life:
+            return TimeCalculator.PeriodStats(remainingMonths: 0, remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
+        case .year:
+            return TimeCalculator.calculateYearsStats(now: currentDate)
+        case .month:
+            return TimeCalculator.calculateMonthStats(now: currentDate)
+        case .day:
+            return TimeCalculator.calculateDaysStats(now: currentDate)
         }
     }
     
     // MARK: - Task Metrics Card Section
-    private var taskMetricsCardSection: some View {
+    private func taskMetricsCardSection(for timeFrame: TimeFrame) -> some View {
+        let filteredTasks = allTasks.filter { $0.timeFrameRawValue == timeFrame.rawValue }
+        let currentUncompletedCount = filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
+        let currentCompletedCount = filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
+        let pastTasksCount = filteredTasks.filter { !$0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
+        
         let totalCurrent = currentUncompletedCount + currentCompletedCount
         let progressRatio = totalCurrent > 0 ? Double(currentCompletedCount) / Double(totalCurrent) : 0.0
         
@@ -171,7 +131,7 @@ struct LimitVisualizerView: View {
                             title: "Current",
                             count: currentUncompletedCount,
                             icon: "circle.circle.fill",
-                            color: .gray
+                            color: .accentColor
                         )
                         
                         Divider()
@@ -181,7 +141,7 @@ struct LimitVisualizerView: View {
                             title: "Completed",
                             count: currentCompletedCount,
                             icon: "checkmark.circle.fill",
-                            color: .gray
+                            color: .green
                         )
                         
                         Divider()
@@ -190,8 +150,8 @@ struct LimitVisualizerView: View {
                         metricItem(
                             title: "Past",
                             count: pastTasksCount,
-                            icon: "clock.arrow.circlepath",
-                            color: .gray
+                            icon: "clock.fill",
+                            color: .orange
                         )
                     }
                     
@@ -200,11 +160,11 @@ struct LimitVisualizerView: View {
                             ZStack(alignment: .leading) {
                                 Capsule()
                                     .fill(Color(uiColor: .systemGray5))
-                                    .frame(height: 6)
+                                    .frame(height: 4)
                                 
                                 Capsule()
-                                    .fill(Color.black)
-                                    .frame(width: geometry.size.width * CGFloat(progressRatio), height: 6)
+                                    .fill(Color(hex: highlightColorHex))
+                                    .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
                             }
                         }
                         .frame(height: 6)

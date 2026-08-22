@@ -12,6 +12,8 @@ struct CountdownHeaderView: View {
     let periodStats: TimeCalculator.PeriodStats?
     let lifeStats: TimeCalculator.LifeStats?
     
+    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    
     private var progressRatio: Double {
         if timeFrame == .life {
             return (lifeStats?.progressPercentage ?? 0.0) / 100.0
@@ -33,7 +35,7 @@ struct CountdownHeaderView: View {
             }
             
             ProgressView(value: progressRatio, total: 1.0)
-                .tint(.primary)
+                .tint(Color(hex: highlightColorHex))
                 .padding(.horizontal)
         }
         .padding()
