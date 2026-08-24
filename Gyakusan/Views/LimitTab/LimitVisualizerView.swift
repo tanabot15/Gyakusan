@@ -10,14 +10,16 @@ import SwiftData
 import Combine
 
 struct LimitVisualizerView: View {
+    @Binding var selectedTab: MainTabView.Tab
+    
     @Environment(\.modelContext) private var modelContext
     
     @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    @AppStorage("selectedTimeFrame") private var selectedTimeFrame: TimeFrame = .life
     
     @Query private var userProfiles: [UserProfile]
     @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
     
-    @State private var selectedTimeFrame: TimeFrame = .life
     @State private var currentDate: Date = Date()
     
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -98,15 +100,17 @@ struct LimitVisualizerView: View {
         
         return VStack(spacing: 12) {
             // Section header
-            NavigationLink(destination: TodoListView()) {
-                HStack {
-                    Text("Task Overview")
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.primary)
-                    
-                    Spacer()
-                    
+            HStack {
+                Text("Task Overview")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.primary)
+                
+                Spacer()
+                
+                Button(action: {
+                    selectedTab = .tasks
+                }) {
                     HStack(spacing: 4) {
                         Text("View Details")
                             .font(.caption)
@@ -118,75 +122,73 @@ struct LimitVisualizerView: View {
                             .fontWeight(.bold)
                             .foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, 4)
             
             // Graphic card
-            NavigationLink(destination: TodoListView()) {
-                VStack(spacing: 16) {
-                    HStack(spacing: 0) {
-                        metricItem(
-                            title: "Current",
-                            count: currentUncompletedCount,
-                            icon: "circle.circle.fill",
-                            color: .accentColor
-                        )
-                        
-                        Divider()
-                            .frame(height: 36)
-                        
-                        metricItem(
-                            title: "Completed",
-                            count: currentCompletedCount,
-                            icon: "checkmark.circle.fill",
-                            color: .green
-                        )
-                        
-                        Divider()
-                            .frame(height: 36)
-                        
-                        metricItem(
-                            title: "Past",
-                            count: pastTasksCount,
-                            icon: "clock.fill",
-                            color: .orange
-                        )
-                    }
+            VStack(spacing: 16) {
+                HStack(spacing: 0) {
+                    metricItem(
+                        title: "Current",
+                        count: currentUncompletedCount,
+                        icon: "circle.circle.fill",
+                        color: .accentColor
+                    )
                     
-                    VStack(spacing: 6) {
-                        GeometryReader { geometry in
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(Color(uiColor: .systemGray5))
-                                    .frame(height: 4)
-                                
-                                Capsule()
-                                    .fill(Color(hex: highlightColorHex))
-                                    .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
-                            }
+                    Divider()
+                        .frame(height: 36)
+                    
+                    metricItem(
+                        title: "Completed",
+                        count: currentCompletedCount,
+                        icon: "checkmark.circle.fill",
+                        color: .green
+                    )
+                    
+                    Divider()
+                        .frame(height: 36)
+                    
+                    metricItem(
+                        title: "Past",
+                        count: pastTasksCount,
+                        icon: "clock.fill",
+                        color: .orange
+                    )
+                }
+                
+                VStack(spacing: 6) {
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(Color(uiColor: .systemGray5))
+                                .frame(height: 4)
+                            
+                            Capsule()
+                                .fill(Color(hex: highlightColorHex))
+                                .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
                         }
-                        .frame(height: 6)
-                        
-                        HStack {
-                            Text("Current Period Progress")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("\(Int(progressRatio * 100))%")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.secondary)
-                        }
+                    }
+                    .frame(height: 6)
+                    
+                    HStack {
+                        Text("Current Period Progress")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(Int(progressRatio * 100))%")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .padding(16)
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .shadow(color: .black.opacity(0.04), radius: 10, x: 0, y: 4)
             }
-            .buttonStyle(.plain)
+            .padding(16)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .shadow(color: .black.opacity(0.04), radius: 10, x: 0, y: 4)
         }
         .padding(.horizontal)
     }
@@ -273,7 +275,7 @@ struct LimitVisualizerView: View {
         }()
     }
     
-    return LimitVisualizerView()
+    return LimitVisualizerView(selectedTab: .constant(.visualizer))
         .environment(\.isPreview, true)
         .modelContainer(PreviewContainer.container)
 }

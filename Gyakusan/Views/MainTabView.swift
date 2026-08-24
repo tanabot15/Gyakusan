@@ -11,29 +11,37 @@ import AppTrackingTransparency
 import AdSupport
 
 struct MainTabView: View {
-    @State private var selectedTab: Tab = .visualizer
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+
+    @State private var selectedTab: Tab = .visualizer
     @State private var showOnboarding: Bool = false
     
     enum Tab {
         case visualizer
         case tasks
+        case reflection
         case settings
     }
     
     var body: some View {
         TabView(selection: $selectedTab) {
+            LimitVisualizerView(selectedTab: $selectedTab)
+                .tabItem {
+                    Label("Visualizer", systemImage: "hourglass")
+                }
+                .tag(Tab.visualizer)
+            
             TodoListView()
                 .tabItem {
                     Label("Tasks", systemImage: "checkmark.square")
                 }
                 .tag(Tab.tasks)
             
-            LimitVisualizerView()
+            ReflectionView()
                 .tabItem {
-                    Label("Visualizer", systemImage: "hourglass")
+                    Label("Reflection", systemImage: "chart.bar.doc.horizontal")
                 }
-                .tag(Tab.visualizer)
+                .tag(Tab.reflection)
             
             SettingsView()
                 .tabItem {
