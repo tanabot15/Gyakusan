@@ -184,15 +184,10 @@ struct ReflectionView: View {
                     let stats = taskStats(for: timeFrame)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: timeFrame.systemImageName)
-                                .font(.caption)
-                                .foregroundStyle(Color.accentColor)
-                            Text(timeFrame.title)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(timeFrame.title)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
                         
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text("\(stats.completed)")

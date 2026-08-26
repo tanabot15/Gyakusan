@@ -21,7 +21,6 @@
 		D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687C3010E0DE00E88132 /* TimeFrame.swift */; };
 		D9E068843010E16400E88132 /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068833010E16400E88132 /* BannerAdView.swift */; };
 		D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068853010E16D00E88132 /* TimeFramePicker.swift */; };
-		D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068873010E17D00E88132 /* TaskRowView.swift */; };
 		D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068893010E19100E88132 /* TodoListView.swift */; };
 		D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */; };
 		D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LimitGridView.swift */; };
@@ -50,7 +49,6 @@
 		D9E0687C3010E0DE00E88132 /* TimeFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFrame.swift; sourceTree = "<group>"; };
 		D9E068833010E16400E88132 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
 		D9E068853010E16D00E88132 /* TimeFramePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFramePicker.swift; sourceTree = "<group>"; };
-		D9E068873010E17D00E88132 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		D9E068893010E19100E88132 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
 		D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitVisualizerView.swift; sourceTree = "<group>"; };
 		D9E0688D3010E1A400E88132 /* LimitGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitGridView.swift; sourceTree = "<group>"; };
@@ -142,8 +140,8 @@
 			children = (
 				D9E068683010A63900E88132 /* MainTabView.swift */,
 				D9E0687E3010E0EE00E88132 /* Components */,
-				D9E0687F3010E10C00E88132 /* TodoTab */,
 				D9E068803010E11500E88132 /* LimitTab */,
+				D9E0687F3010E10C00E88132 /* TodoTab */,
 				D990D1B4303C00EB001B3CDA /* ReflectionTab */,
 				D9E068813010E11C00E88132 /* SettingsTab */,
 				D9E068823010E12300E88132 /* TaskForm */,
@@ -176,7 +174,6 @@
 			children = (
 				D9E068833010E16400E88132 /* BannerAdView.swift */,
 				D9E068853010E16D00E88132 /* TimeFramePicker.swift */,
-				D9E068873010E17D00E88132 /* TaskRowView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -297,7 +294,6 @@
 				D990D1B6303C010D001B3CDA /* ReflectionView.swift in Sources */,
 				D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */,
 				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
-				D9E068883010E17D00E88132 /* TaskRowView.swift in Sources */,
 				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
 				D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */,
@@ -449,7 +445,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -466,7 +462,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -489,7 +485,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -506,7 +502,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

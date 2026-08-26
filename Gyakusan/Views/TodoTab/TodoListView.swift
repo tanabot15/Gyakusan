@@ -11,7 +11,8 @@ import SwiftData
 struct TodoListView: View {
     @Environment(\.modelContext) private var modelContext
     
-    @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
+    // 作成日時が古い（昔に作った）ものが上に来るよう order: .forward に指定
+    @Query(sort: \LimitTask.createdAt, order: .forward) private var allTasks: [LimitTask]
     
     @AppStorage("selectedTimeFrame") private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
@@ -19,6 +20,50 @@ struct TodoListView: View {
     
     @State private var isCompletedExpanded: Bool = true
     @State private var isPastExpanded: Bool = false
+    
+    // List の編集モードを直接 State で保持して確実に連動させる
+    @State private var editMode: EditMode = .inactive
+    
+    // インデント幅（1階層あたり）
+    private let indentStepWidth: CGFloat = 20.0
+    
+    // TimeFrameごとのインデントレベル（階層: Life=1, Year=2, Month=3, Day=4）
+    private func levelIndex(for timeFrame: TimeFrame) -> Int {
+        switch timeFrame {
+        case .life: return 1
+        case .year: return 2
+        case .month: return 3
+        case .day: return 4
+        }
+    }
+    
+    // [.life]（Level 1）の時を基準表示位置とし、
+    // [.day]側へ切り替わるにつれて左（-方向）へスライドする計算式
+    private var horizontalOffset: CGFloat {
+        let currentLevel = CGFloat(levelIndex(for: selectedTimeFrame) - 1)
+        return -currentLevel * indentStepWidth
+    }
+    
+    // 昔に作ったもの（createdAt 昇順）順の未完了タスク
+    private var sortedCurrentUncompletedTasks: [LimitTask] {
+        allTasks
+            .filter { !$0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    // 昔に作ったもの（createdAt 昇順）順の完了済みタスク
+    private var sortedCurrentCompletedTasks: [LimitTask] {
+        allTasks
+            .filter { $0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    // 昔に作ったもの（createdAt 昇順）順の過去タスク
+    private var sortedPastTasks: [LimitTask] {
+        allTasks
+            .filter { !$0.isCurrentPeriod(for: $0.timeFrame) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
     
     var body: some View {
         NavigationStack {
@@ -31,37 +76,45 @@ struct TodoListView: View {
                     TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
                         .padding(.vertical, 8)
                     
-                    TabView(selection: $selectedTimeFrame) {
-                        ForEach(TimeFrame.allCases, id: \.self) { timeFrame in
-                            taskListView(for: timeFrame)
-                                .tag(timeFrame)
+                    if allTasks.isEmpty {
+                        emptyTaskView
+                    } else {
+                        List {
+                            // 1. 未完了タスク
+                            if !sortedCurrentUncompletedTasks.isEmpty {
+                                Section {
+                                    taskListSectionContent(tasks: sortedCurrentUncompletedTasks)
+                                }
+                            }
+                            
+                            // 2. 完了済みタスク
+                            if !sortedCurrentCompletedTasks.isEmpty {
+                                Section(header: completedHeaderView(count: sortedCurrentCompletedTasks.count)) {
+                                    if isCompletedExpanded {
+                                        taskListSectionContent(tasks: sortedCurrentCompletedTasks)
+                                    }
+                                }
+                            }
+                            
+                            // 3. 過去タスク
+                            if !sortedPastTasks.isEmpty {
+                                Section(header: pastHeaderView(count: sortedPastTasks.count)) {
+                                    if isPastExpanded {
+                                        taskListSectionContent(tasks: sortedPastTasks)
+                                    }
+                                }
+                            }
                         }
+                        .listStyle(.insetGrouped)
+                        .offset(x: horizontalOffset)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
-                .onChange(of: selectedTimeFrame) { _, _ in
-                    isCompletedExpanded = true
-                    isPastExpanded = false
-                }
                 
-                Button(action: {
-                    isShowingAddTaskSheet = true
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title3)
-                        Text("Add Task")
-                            .font(.headline)
-                    }
-                    .foregroundStyle(.white)
-                    .padding()
-                    .background(Color.accentColor)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-                }
-                .padding(.bottom, 16)
+                floatingControlBar
             }
+            .environment(\.editMode, $editMode)
             .sheet(isPresented: $isShowingAddTaskSheet) {
                 TaskFormSheet(selectedTimeFrame: selectedTimeFrame)
             }
@@ -71,60 +124,99 @@ struct TodoListView: View {
         }
     }
     
-    // MARK: - Task List View Builder
+    // MARK: - Section Content Builder (Refactored)
     @ViewBuilder
-    private func taskListView(for timeFrame: TimeFrame) -> some View {
-        let filteredTasks = allTasks.filter { $0.timeFrameRawValue == timeFrame.rawValue }
-        let currentUncompletedTasks = filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame) }
-        let currentCompletedTasks = filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame) }
-        let pastTasks = filteredTasks.filter { !$0.isCurrentPeriod(for: timeFrame) }
+    private func taskListSectionContent(tasks: [LimitTask]) -> some View {
+        ForEach(tasks) { task in
+            let level = levelIndex(for: task.timeFrame)
+            let isSelectedLevel = (task.timeFrame == selectedTimeFrame)
+            indentedTaskRow(task: task, level: level, isSelectedLevel: isSelectedLevel)
+        }
+        .onDelete { offsets in
+            deleteTasks(tasks, at: offsets)
+        }
+        .onMove { indices, newOffset in
+            moveTasks(tasks, from: indices, to: newOffset)
+        }
+    }
+    
+    // MARK: - Floating Control Bar (Inline ViewBuilder)
+    @ViewBuilder
+    private var floatingControlBar: some View {
+        let isEditing = editMode.isEditing
         
-        if filteredTasks.isEmpty {
-            emptyTaskView
-        } else {
-            List {
-                // 1. Current Tasks
-                if !currentUncompletedTasks.isEmpty {
-                    Section(header: Text("Current Tasks")) {
-                        ForEach(currentUncompletedTasks) { task in
-                            taskRow(for: task)
-                        }
-                        .onDelete { offsets in
-                            deleteTasks(currentUncompletedTasks, at: offsets)
-                        }
-                    }
+        HStack(spacing: 0) {
+            // Add Task ボタン
+            Button(action: {
+                isShowingAddTaskSheet = true
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.body.weight(.semibold))
+                    Text("Add Task")
+                        .font(.subheadline.weight(.semibold))
                 }
-                
-                // 2. Completed Tasks
-                if !currentCompletedTasks.isEmpty {
-                    Section(header: completedHeaderView(count: currentCompletedTasks.count)) {
-                        if isCompletedExpanded {
-                            ForEach(currentCompletedTasks) { task in
-                                taskRow(for: task)
-                            }
-                            .onDelete { offsets in
-                                deleteTasks(currentCompletedTasks, at: offsets)
-                            }
-                        }
-                    }
+                .foregroundStyle(Color.accentColor)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+                .frame(height: 18)
+
+            // Edit / Done ボタン
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    editMode = isEditing ? .inactive : .active
                 }
-                
-                // 3. Past Tasks
-                if !pastTasks.isEmpty {
-                    Section(header: pastHeaderView(count: pastTasks.count)) {
-                        if isPastExpanded {
-                            ForEach(pastTasks) { task in
-                                taskRow(for: task)
-                            }
-                            .onDelete { offsets in
-                                deleteTasks(pastTasks, at: offsets)
-                            }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: isEditing ? "checkmark.circle.fill" : "pencil.circle.fill")
+                        .font(.body.weight(.semibold))
+                    Text(isEditing ? "Done" : "Edit Task")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .foregroundStyle(.orange)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+            }
+            .buttonStyle(.plain)
+        }
+        .background(.thinMaterial)
+        .clipShape(Capsule())
+        .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
+        .padding(.bottom, 16)
+    }
+    
+    // MARK: - Indented Task Row
+    @ViewBuilder
+    private func indentedTaskRow(task: LimitTask, level: Int, isSelectedLevel: Bool) -> some View {
+        HStack(spacing: 0) {
+            // 階層を示すツリーガイド線（Life=1本、Year=2本、Month=3本、Day=4本）
+            HStack(spacing: 10) {
+                ForEach(0..<level, id: \.self) { lineIndex in
+                    let lineColor: Color = {
+                        if lineIndex == 0 && task.isFlagged {
+                            return .orange
                         }
-                    }
+                        return isSelectedLevel ? Color.accentColor.opacity(0.5) : Color.gray.opacity(0.25)
+                    }()
+                    
+                    Rectangle()
+                        .fill(lineColor)
+                        .frame(width: lineIndex == 0 && task.isFlagged ? 3 : 2)
                 }
             }
-            .listStyle(.insetGrouped)
+            .padding(.vertical, 4)
+            .padding(.trailing, 6)
+            
+            taskRow(for: task)
+                .opacity(isSelectedLevel ? 1.0 : 0.45)
+                .scaleEffect(isSelectedLevel ? 1.0 : 0.98, anchor: .leading)
+                .animation(.easeInOut(duration: 0.2), value: isSelectedLevel)
         }
+        .padding(.leading, CGFloat(level - 1) * indentStepWidth)
     }
     
     // MARK: - Row View Builder
@@ -188,7 +280,7 @@ struct TodoListView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-            Text("Tap the + button to add a task for this timeframe.")
+            Text("Tap the + button to add a task.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -212,6 +304,127 @@ struct TodoListView: View {
         }
         saveContext()
     }
+    
+    private func moveTasks(_ tasks: [LimitTask], from source: IndexSet, to destination: Int) {
+        var revisedTasks = tasks
+        revisedTasks.move(fromOffsets: source, toOffset: destination)
+        
+        // 移動後の順番に基づいて createdAt を再調整し順序を永続化
+        let baseDate = Date()
+        for (index, task) in revisedTasks.enumerated() {
+            task.createdAt = baseDate.addingTimeInterval(TimeInterval(index))
+        }
+        saveContext()
+    }
+}
+
+// MARK: - TaskRowView (Private Subview)
+private struct TaskRowView: View {
+    let task: LimitTask
+    var onToggle: () -> Void
+    
+    @State private var isCompletedState: Bool = false
+    @State private var pendingToggleTask: Task<Void, Never>? = nil
+    
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            Button(action: handleToggle) {
+                Image(systemName: isCompletedState ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isCompletedState ? .secondary : .primary)
+            }
+            .buttonStyle(.plain)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(task.title)
+                    .font(.body)
+                    .strikethrough(isCompletedState, color: .secondary)
+                    .foregroundStyle(isCompletedState ? .secondary : .primary)
+                            
+                if task.dueDate != nil || !task.location.isEmpty {
+                    HStack(spacing: 20) {
+                        if let dueDate = task.dueDate {
+                            HStack(spacing: 2) {
+                                Image(systemName: "calendar")
+                                Text(dueDate.formatted(date: .numeric, time: .omitted))
+                            }
+                        }
+                        
+                        if !task.location.isEmpty {
+                            HStack(spacing: 2) {
+                                Image(systemName: "location")
+                                Text(task.location)
+                            }
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+                        
+            Spacer()
+                        
+            if task.isFlagged {
+                Image(systemName: "flag.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+            }
+        }
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .onAppear {
+            isCompletedState = task.isCompleted
+        }
+        .onChange(of: task.isCompleted) { _, newValue in
+            isCompletedState = newValue
+        }
+        .onDisappear {
+            commitToggleIfNeeded()
+        }
+    }
+    
+    private func handleToggle() {
+        pendingToggleTask?.cancel()
+        pendingToggleTask = nil
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            isCompletedState.toggle()
+        }
+        
+        if isCompletedState == task.isCompleted {
+            return
+        }
+        
+        if isCompletedState {
+            pendingToggleTask = Task {
+                try? await Task.sleep(for: .seconds(3))
+                if !Task.isCancelled {
+                    commitToggle()
+                }
+            }
+        } else {
+            commitToggle()
+        }
+    }
+    
+    private func commitToggleIfNeeded() {
+        if isCompletedState != task.isCompleted {
+            pendingToggleTask?.cancel()
+            commitToggle()
+        }
+    }
+    
+    private func commitToggle() {
+        task.isCompleted = isCompletedState
+        if task.isCompleted {
+            task.completedAt = Date()
+            AdMobManager.shared.taskCompleted()
+        } else {
+            task.completedAt = nil
+        }
+        onToggle()
+        pendingToggleTask = nil
+    }
 }
 
 #Preview {
@@ -227,76 +440,113 @@ struct TodoListView: View {
                 let calendar = Calendar.current
                 
                 let yesterday = calendar.date(byAdding: .day, value: -1, to: now) ?? now
-                let twoMonthsAgo = calendar.date(byAdding: .month, value: -2, to: now) ?? now
+                let lastMonth = calendar.date(byAdding: .month, value: -1, to: now) ?? now
                 let lastYear = calendar.date(byAdding: .year, value: -1, to: now) ?? now
                 
                 let sampleTasks: [LimitTask] = [
-                    // --- Day Sample Data ---
                     {
                         let task = LimitTask(
-                            title: "Daily Focus Task",
-                            timeFrameRawValue: TimeFrame.day.rawValue,
+                            title: "100銘柄投資分析ノートの完結",
+                            timeFrameRawValue: TimeFrame.life.rawValue,
                             isFlagged: true
                         )
-                        task.createdAt = now
+                        task.createdAt = now.addingTimeInterval(1)
                         return task
                     }(),
                     {
                         let task = LimitTask(
-                            title: "Yesterday Unfinished Task",
-                            timeFrameRawValue: TimeFrame.day.rawValue
+                            title: "iOSアプリの開発・リリース",
+                            timeFrameRawValue: TimeFrame.life.rawValue
                         )
-                        task.createdAt = yesterday
-                        return task
-                    }(),
-                    
-                    // --- Month Sample Data ---
-                    {
-                        let task = LimitTask(
-                            title: "Current Month Project Goal",
-                            timeFrameRawValue: TimeFrame.month.rawValue,
-                            isFlagged: true
-                        )
-                        task.createdAt = now
+                        task.createdAt = now.addingTimeInterval(2)
                         return task
                     }(),
                     {
                         let task = LimitTask(
-                            title: "Carryover Item from 2 Months Ago",
-                            timeFrameRawValue: TimeFrame.month.rawValue
-                        )
-                        task.createdAt = twoMonthsAgo
-                        return task
-                    }(),
-                    
-                    // --- Year Sample Data ---
-                    {
-                        let task = LimitTask(
-                            title: "Annual Key Result Objective",
+                            title: "SAKE DIPLOMA 試験合格",
                             timeFrameRawValue: TimeFrame.year.rawValue,
                             isFlagged: true
                         )
-                        task.createdAt = now
+                        task.createdAt = now.addingTimeInterval(3)
                         return task
                     }(),
                     {
                         let task = LimitTask(
-                            title: "Unachieved Goal from Last Year",
+                            title: "年間50冊の読書達成",
                             timeFrameRawValue: TimeFrame.year.rawValue
                         )
-                        task.createdAt = lastYear
+                        task.createdAt = now.addingTimeInterval(4)
                         return task
                     }(),
-                    
-                    // --- Completed Task Sample ---
                     {
                         let task = LimitTask(
-                            title: "Completed Task Example",
+                            title: "月間ポートフォリオのリバランス実施",
+                            timeFrameRawValue: TimeFrame.month.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = now.addingTimeInterval(5)
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "note記事を4本執筆・公開",
                             timeFrameRawValue: TimeFrame.month.rawValue
                         )
-                        task.createdAt = now
+                        task.createdAt = now.addingTimeInterval(6)
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "SwiftUIのビュー実装・動作確認",
+                            timeFrameRawValue: TimeFrame.day.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = now.addingTimeInterval(7)
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "テイスティング問題の復習（3章）",
+                            timeFrameRawValue: TimeFrame.day.rawValue
+                        )
+                        task.createdAt = now.addingTimeInterval(8)
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "SAKE DIPLOMA 公式テキストの購入",
+                            timeFrameRawValue: TimeFrame.month.rawValue
+                        )
+                        task.createdAt = now.addingTimeInterval(9)
                         task.isCompleted = true
                         task.completedAt = now
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "今週の買い物リスト作成",
+                            timeFrameRawValue: TimeFrame.day.rawValue
+                        )
+                        task.createdAt = now.addingTimeInterval(10)
+                        task.isCompleted = true
+                        task.completedAt = now
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "先月の銘柄スクリーニング見直し",
+                            timeFrameRawValue: TimeFrame.month.rawValue,
+                            isFlagged: true
+                        )
+                        task.createdAt = lastMonth
+                        return task
+                    }(),
+                    {
+                        let task = LimitTask(
+                            title: "昨日の日課タスク",
+                            timeFrameRawValue: TimeFrame.day.rawValue
+                        )
+                        task.createdAt = yesterday
                         return task
                     }()
                 ]
