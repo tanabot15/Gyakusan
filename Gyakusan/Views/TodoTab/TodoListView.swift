@@ -11,23 +11,20 @@ import SwiftData
 struct TodoListView: View {
     @Environment(\.modelContext) private var modelContext
     
-    // 作成日時が古い（昔に作った）ものが上に来るよう order: .forward に指定
     @Query(sort: \LimitTask.createdAt, order: .forward) private var allTasks: [LimitTask]
     
     @AppStorage("selectedTimeFrame") private var selectedTimeFrame: TimeFrame = .life
     @State private var isShowingAddTaskSheet: Bool = false
     @State private var selectedTaskToEdit: LimitTask? = nil
     
-    @State private var isCompletedExpanded: Bool = true
+    @State private var isCompletedExpanded: Bool = false
     @State private var isPastExpanded: Bool = false
-    
-    // List の編集モードを直接 State で保持して確実に連動させる
     @State private var editMode: EditMode = .inactive
     
-    // インデント幅（1階層あたり）
+    // Indent Width
     private let indentStepWidth: CGFloat = 20.0
     
-    // TimeFrameごとのインデントレベル（階層: Life=1, Year=2, Month=3, Day=4）
+    // Indent by TimeFrame
     private func levelIndex(for timeFrame: TimeFrame) -> Int {
         switch timeFrame {
         case .life: return 1
@@ -37,28 +34,24 @@ struct TodoListView: View {
         }
     }
     
-    // [.life]（Level 1）の時を基準表示位置とし、
-    // [.day]側へ切り替わるにつれて左（-方向）へスライドする計算式
+    // Slide function
     private var horizontalOffset: CGFloat {
         let currentLevel = CGFloat(levelIndex(for: selectedTimeFrame) - 1)
         return -currentLevel * indentStepWidth
     }
     
-    // 昔に作ったもの（createdAt 昇順）順の未完了タスク
     private var sortedCurrentUncompletedTasks: [LimitTask] {
         allTasks
             .filter { !$0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame) }
             .sorted { $0.createdAt < $1.createdAt }
     }
     
-    // 昔に作ったもの（createdAt 昇順）順の完了済みタスク
     private var sortedCurrentCompletedTasks: [LimitTask] {
         allTasks
             .filter { $0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame) }
             .sorted { $0.createdAt < $1.createdAt }
     }
     
-    // 昔に作ったもの（createdAt 昇順）順の過去タスク
     private var sortedPastTasks: [LimitTask] {
         allTasks
             .filter { !$0.isCurrentPeriod(for: $0.timeFrame) }
@@ -80,14 +73,14 @@ struct TodoListView: View {
                         emptyTaskView
                     } else {
                         List {
-                            // 1. 未完了タスク
+                            // 1. Current Tasks
                             if !sortedCurrentUncompletedTasks.isEmpty {
                                 Section {
                                     taskListSectionContent(tasks: sortedCurrentUncompletedTasks)
                                 }
                             }
                             
-                            // 2. 完了済みタスク
+                            // 2. Completed Tasks
                             if !sortedCurrentCompletedTasks.isEmpty {
                                 Section(header: completedHeaderView(count: sortedCurrentCompletedTasks.count)) {
                                     if isCompletedExpanded {
@@ -96,7 +89,7 @@ struct TodoListView: View {
                                 }
                             }
                             
-                            // 3. 過去タスク
+                            // 3. Past Tasks
                             if !sortedPastTasks.isEmpty {
                                 Section(header: pastHeaderView(count: sortedPastTasks.count)) {
                                     if isPastExpanded {
@@ -146,26 +139,26 @@ struct TodoListView: View {
         let isEditing = editMode.isEditing
         
         HStack(spacing: 0) {
-            // Add Task ボタン
-            Button(action: {
-                isShowingAddTaskSheet = true
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.body.weight(.semibold))
-                    Text("Add Task")
-                        .font(.subheadline.weight(.semibold))
+            if !isEditing {
+                Button(action: {
+                    isShowingAddTaskSheet = true
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.body.weight(.semibold))
+                        Text("Add Task")
+                            .font(.body.weight(.semibold))
+                    }
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
                 }
-                .foregroundStyle(Color.accentColor)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 16)
+                .buttonStyle(.plain)
+                
+                Divider()
+                    .frame(height: 18)
             }
-            .buttonStyle(.plain)
 
-            Divider()
-                .frame(height: 18)
-
-            // Edit / Done ボタン
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     editMode = isEditing ? .inactive : .active
@@ -175,7 +168,7 @@ struct TodoListView: View {
                     Image(systemName: isEditing ? "checkmark.circle.fill" : "pencil.circle.fill")
                         .font(.body.weight(.semibold))
                     Text(isEditing ? "Done" : "Edit Task")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.body.weight(.semibold))
                 }
                 .foregroundStyle(.orange)
                 .padding(.vertical, 10)
@@ -193,7 +186,7 @@ struct TodoListView: View {
     @ViewBuilder
     private func indentedTaskRow(task: LimitTask, level: Int, isSelectedLevel: Bool) -> some View {
         HStack(spacing: 0) {
-            // 階層を示すツリーガイド線（Life=1本、Year=2本、Month=3本、Day=4本）
+            // Tree Guide
             HStack(spacing: 10) {
                 ForEach(0..<level, id: \.self) { lineIndex in
                     let lineColor: Color = {
@@ -318,7 +311,7 @@ struct TodoListView: View {
     }
 }
 
-// MARK: - TaskRowView (Private Subview)
+// MARK: - TaskRowView
 private struct TaskRowView: View {
     let task: LimitTask
     var onToggle: () -> Void
