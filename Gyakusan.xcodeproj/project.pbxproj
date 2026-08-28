@@ -12,6 +12,7 @@
 		D990D1033026CB39001B3CDA /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
 		D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D14D302BE2C9001B3CDA /* OnboardingView.swift */; };
 		D990D1B6303C010D001B3CDA /* ReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1B5303C010D001B3CDA /* ReflectionView.swift */; };
+		D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D57E4130406130004B29BA /* FocusTimerView.swift */; };
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
 		D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068693010A63900E88132 /* GyakusanApp.swift */; };
@@ -38,6 +39,7 @@
 		D990D1023026CB39001B3CDA /* GridHighlightColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridHighlightColor.swift; sourceTree = "<group>"; };
 		D990D14D302BE2C9001B3CDA /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		D990D1B5303C010D001B3CDA /* ReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionView.swift; sourceTree = "<group>"; };
+		D9D57E4130406130004B29BA /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D9E068683010A63900E88132 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -85,6 +87,14 @@
 				D990D1B5303C010D001B3CDA /* ReflectionView.swift */,
 			);
 			path = ReflectionTab;
+			sourceTree = "<group>";
+		};
+		D9D57E403040611D004B29BA /* FocusTimer */ = {
+			isa = PBXGroup;
+			children = (
+				D9D57E4130406130004B29BA /* FocusTimerView.swift */,
+			);
+			path = FocusTimer;
 			sourceTree = "<group>";
 		};
 		D9E068503010A55D00E88132 = {
@@ -142,6 +152,7 @@
 				D9E0687E3010E0EE00E88132 /* Components */,
 				D9E068803010E11500E88132 /* LimitTab */,
 				D9E0687F3010E10C00E88132 /* TodoTab */,
+				D9D57E403040611D004B29BA /* FocusTimer */,
 				D990D1B4303C00EB001B3CDA /* ReflectionTab */,
 				D9E068813010E11C00E88132 /* SettingsTab */,
 				D9E068823010E12300E88132 /* TaskForm */,
@@ -306,6 +317,7 @@
 				D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */,
 				D9E068943010E1CA00E88132 /* TaskFormSheet.swift in Sources */,
 				D9E068843010E16400E88132 /* BannerAdView.swift in Sources */,
+				D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */,
 				D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */,
 				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
 				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
@@ -445,7 +457,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -462,7 +474,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.1;
+				MARKETING_VERSION = 3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -485,7 +497,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -502,7 +514,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.1;
+				MARKETING_VERSION = 3.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

@@ -19,6 +19,7 @@ struct MainTabView: View {
     enum Tab {
         case visualizer
         case tasks
+        case focus
         case reflection
         case settings
     }
@@ -36,6 +37,12 @@ struct MainTabView: View {
                     Label("Tasks", systemImage: "checkmark.square")
                 }
                 .tag(Tab.tasks)
+            
+            FocusTimerView(selectedTab: $selectedTab)
+                .tabItem {
+                    Label("Pomodoro", systemImage: "timer")
+                }
+                .tag(Tab.focus)
             
             ReflectionView()
                 .tabItem {

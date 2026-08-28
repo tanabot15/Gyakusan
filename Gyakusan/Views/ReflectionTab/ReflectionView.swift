@@ -120,8 +120,6 @@ struct ReflectionView: View {
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Reflection")
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
     

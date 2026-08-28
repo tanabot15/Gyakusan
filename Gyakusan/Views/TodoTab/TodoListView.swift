@@ -185,31 +185,11 @@ struct TodoListView: View {
     // MARK: - Indented Task Row
     @ViewBuilder
     private func indentedTaskRow(task: LimitTask, level: Int, isSelectedLevel: Bool) -> some View {
-        HStack(spacing: 0) {
-            // Tree Guide
-            HStack(spacing: 10) {
-                ForEach(0..<level, id: \.self) { lineIndex in
-                    let lineColor: Color = {
-                        if lineIndex == 0 && task.isFlagged {
-                            return .orange
-                        }
-                        return isSelectedLevel ? Color.accentColor.opacity(0.5) : Color.gray.opacity(0.25)
-                    }()
-                    
-                    Rectangle()
-                        .fill(lineColor)
-                        .frame(width: lineIndex == 0 && task.isFlagged ? 3 : 2)
-                }
-            }
-            .padding(.vertical, 4)
-            .padding(.trailing, 6)
-            
-            taskRow(for: task)
-                .opacity(isSelectedLevel ? 1.0 : 0.45)
-                .scaleEffect(isSelectedLevel ? 1.0 : 0.98, anchor: .leading)
-                .animation(.easeInOut(duration: 0.2), value: isSelectedLevel)
-        }
-        .padding(.leading, CGFloat(level - 1) * indentStepWidth)
+        taskRow(for: task)
+            .opacity(isSelectedLevel ? 1.0 : 0.45)
+            .scaleEffect(isSelectedLevel ? 1.0 : 0.98, anchor: .leading)
+            .animation(.easeInOut(duration: 0.2), value: isSelectedLevel)
+            .padding(.leading, CGFloat(level - 1) * indentStepWidth)
     }
     
     // MARK: - Row View Builder
@@ -319,12 +299,22 @@ private struct TaskRowView: View {
     @State private var isCompletedState: Bool = false
     @State private var pendingToggleTask: Task<Void, Never>? = nil
     
+    private var checkmarkColor: Color {
+        if isCompletedState {
+            return .secondary
+        } else if task.isFlagged {
+            return .orange
+        } else {
+            return .primary
+        }
+    }
+    
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Button(action: handleToggle) {
                 Image(systemName: isCompletedState ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isCompletedState ? .secondary : .primary)
+                    .foregroundStyle(checkmarkColor)
             }
             .buttonStyle(.plain)
             
@@ -339,7 +329,11 @@ private struct TaskRowView: View {
                         if let dueDate = task.dueDate {
                             HStack(spacing: 2) {
                                 Image(systemName: "calendar")
-                                Text(dueDate.formatted(date: .numeric, time: .omitted))
+                                Text(
+                                    task.timeFrame == .life
+                                    ? dueDate.formatted(.dateTime.year())
+                                    : dueDate.formatted(date: .numeric, time: .omitted)
+                                )
                             }
                         }
                         
@@ -356,12 +350,6 @@ private struct TaskRowView: View {
             }
                         
             Spacer()
-                        
-            if task.isFlagged {
-                Image(systemName: "flag.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.orange)
-            }
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -436,6 +424,11 @@ private struct TaskRowView: View {
                 let lastMonth = calendar.date(byAdding: .month, value: -1, to: now) ?? now
                 let lastYear = calendar.date(byAdding: .year, value: -1, to: now) ?? now
                 
+                // 未来の期限日サンプル
+                let nextWeek = calendar.date(byAdding: .day, value: 7, to: now)
+                let endOfCurrentMonth = calendar.date(byAdding: .month, value: 1, to: now)
+                let endOfCurrentYear = calendar.date(byAdding: .year, value: 1, to: now)
+                
                 let sampleTasks: [LimitTask] = [
                     {
                         let task = LimitTask(
@@ -443,6 +436,7 @@ private struct TaskRowView: View {
                             timeFrameRawValue: TimeFrame.life.rawValue,
                             isFlagged: true
                         )
+                        task.dueDate = endOfCurrentYear
                         task.createdAt = now.addingTimeInterval(1)
                         return task
                     }(),
@@ -460,6 +454,7 @@ private struct TaskRowView: View {
                             timeFrameRawValue: TimeFrame.year.rawValue,
                             isFlagged: true
                         )
+                        task.dueDate = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1))
                         task.createdAt = now.addingTimeInterval(3)
                         return task
                     }(),
@@ -477,6 +472,7 @@ private struct TaskRowView: View {
                             timeFrameRawValue: TimeFrame.month.rawValue,
                             isFlagged: true
                         )
+                        task.dueDate = endOfCurrentMonth
                         task.createdAt = now.addingTimeInterval(5)
                         return task
                     }(),
@@ -494,6 +490,7 @@ private struct TaskRowView: View {
                             timeFrameRawValue: TimeFrame.day.rawValue,
                             isFlagged: true
                         )
+                        task.dueDate = now
                         task.createdAt = now.addingTimeInterval(7)
                         return task
                     }(),
@@ -502,6 +499,7 @@ private struct TaskRowView: View {
                             title: "テイスティング問題の復習（3章）",
                             timeFrameRawValue: TimeFrame.day.rawValue
                         )
+                        task.dueDate = nextWeek
                         task.createdAt = now.addingTimeInterval(8)
                         return task
                     }(),
@@ -531,6 +529,7 @@ private struct TaskRowView: View {
                             timeFrameRawValue: TimeFrame.month.rawValue,
                             isFlagged: true
                         )
+                        task.dueDate = lastMonth
                         task.createdAt = lastMonth
                         return task
                     }(),
@@ -539,6 +538,7 @@ private struct TaskRowView: View {
                             title: "昨日の日課タスク",
                             timeFrameRawValue: TimeFrame.day.rawValue
                         )
+                        task.dueDate = yesterday
                         task.createdAt = yesterday
                         return task
                     }()
