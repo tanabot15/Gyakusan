@@ -40,6 +40,27 @@ struct TodoListView: View {
         return -currentLevel * indentStepWidth
     }
     
+    // MARK: - TimeFrame Switcher Logic
+    private func switchToNextTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex < allCases.count - 1 {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                selectedTimeFrame = allCases[currentIndex + 1]
+            }
+        }
+    }
+    
+    private func switchToPreviousTimeFrame() {
+        let allCases = TimeFrame.allCases
+        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
+           currentIndex > 0 {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                selectedTimeFrame = allCases[currentIndex - 1]
+            }
+        }
+    }
+    
     private var sortedCurrentUncompletedTasks: [LimitTask] {
         allTasks
             .filter { !$0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame) }
@@ -101,6 +122,21 @@ struct TodoListView: View {
                         .listStyle(.insetGrouped)
                         .offset(x: horizontalOffset)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
+                        .gesture(
+                            DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                                .onEnded { value in
+                                    // 横方向のスワイプ量を判定（縦スワイプ時の誤動作防止）
+                                    if abs(value.translation.width) > abs(value.translation.height) {
+                                        if value.translation.width < -50 {
+                                            // 左スワイプ -> 次の階層へ (例: .life -> .year)
+                                            switchToNextTimeFrame()
+                                        } else if value.translation.width > 50 {
+                                            // 右スワイプ -> 前の階層へ (例: .year -> .life)
+                                            switchToPreviousTimeFrame()
+                                        }
+                                    }
+                                }
+                        )
                     }
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
@@ -282,7 +318,6 @@ struct TodoListView: View {
         var revisedTasks = tasks
         revisedTasks.move(fromOffsets: source, toOffset: destination)
         
-        // 移動後の順番に基づいて createdAt を再調整し順序を永続化
         let baseDate = Date()
         for (index, task) in revisedTasks.enumerated() {
             task.createdAt = baseDate.addingTimeInterval(TimeInterval(index))
@@ -424,7 +459,6 @@ private struct TaskRowView: View {
                 let lastMonth = calendar.date(byAdding: .month, value: -1, to: now) ?? now
                 let lastYear = calendar.date(byAdding: .year, value: -1, to: now) ?? now
                 
-                // 未来の期限日サンプル
                 let nextWeek = calendar.date(byAdding: .day, value: 7, to: now)
                 let endOfCurrentMonth = calendar.date(byAdding: .month, value: 1, to: now)
                 let endOfCurrentYear = calendar.date(byAdding: .year, value: 1, to: now)

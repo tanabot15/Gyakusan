@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 import Combine
 
 struct FocusTimerView: View {
     @Binding var selectedTab: MainTabView.Tab
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \LimitTask.createdAt, order: .forward) private var allTasks: [LimitTask]
     
     @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
     
@@ -17,7 +21,19 @@ struct FocusTimerView: View {
     @State private var remainingSeconds: Int = 25 * 60
     @State private var isRunning: Bool = false
     
+    // for task choice
+    @State private var selectedPickerTaskID: UUID? = nil
+    @State private var confirmedTask: LimitTask? = nil
+    
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    private var uncompletedDayTasks: [LimitTask] {
+        allTasks.filter { task in
+            !task.isCompleted &&
+            task.timeFrame == .day &&
+            task.isCurrentPeriod(for: .day)
+        }
+    }
     
     enum TimerMode {
         case focus
@@ -67,14 +83,16 @@ struct FocusTimerView: View {
                     .background(Color(uiColor: .systemGroupedBackground))
                 
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 20) {
+                        taskSelectionSection
+                        
                         timerGridCard
                         
                         Text(formattedTime(remainingSeconds))
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.primary)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 4)
                         
                         timerControls
                     }
@@ -91,10 +109,159 @@ struct FocusTimerView: View {
                     isRunning = false
                 }
             }
+            .onAppear {
+                if selectedPickerTaskID == nil {
+                    selectedPickerTaskID = uncompletedDayTasks.first?.id
+                }
+            }
+            .onChange(of: uncompletedDayTasks) { _, newTasks in
+                if let selectedID = selectedPickerTaskID, !newTasks.contains(where: { $0.id == selectedID }) {
+                    selectedPickerTaskID = newTasks.first?.id
+                } else if selectedPickerTaskID == nil {
+                    selectedPickerTaskID = newTasks.first?.id
+                }
+            }
         }
     }
     
-    // MARK: - Timer Grid Card (LimitGridView スタイル)
+    // MARK: - Task Selection / Focused Task Card Section
+    private var taskSelectionSection: some View {
+        VStack(spacing: 12) {
+            if let task = confirmedTask {
+                focusedTaskCard(for: task)
+                    .transition(.scale.combined(with: .opacity))
+            } else {
+                taskPickerCard
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: confirmedTask)
+    }
+    
+    private var taskPickerCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Focus Target", systemImage: "target")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            
+            if uncompletedDayTasks.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("No Day Tasks Available")
+                        .font(.subheadline)
+                        .foregroundStyle(.tertiary)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                HStack(spacing: 12) {
+                    Picker("Select Task", selection: $selectedPickerTaskID) {
+                        ForEach(uncompletedDayTasks) { task in
+                            Text(task.title)
+                                .lineLimit(1)
+                                .tag(Optional(task.id))
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(uiColor: .tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    
+                    Button(action: {
+                        if let id = selectedPickerTaskID,
+                           let task = uncompletedDayTasks.first(where: { $0.id == id }) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                confirmedTask = task
+                            }
+                        }
+                    }) {
+                        Text("Set Focus")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(selectedPickerTaskID != nil ? Color.accentColor : Color.gray)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedPickerTaskID == nil)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+    
+    private func focusedTaskCard(for task: LimitTask) -> some View {
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(task.isFlagged ? Color.orange : Color.accentColor)
+                .frame(width: 4)
+                .padding(.vertical, 2)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("CURRENT FOCUS")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(task.isFlagged ? Color.orange : Color.accentColor)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background((task.isFlagged ? Color.orange : Color.accentColor).opacity(0.12))
+                        .clipShape(Capsule())
+                    
+                    if task.isFlagged {
+                        Image(systemName: "flag.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                
+                Text(task.title)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                
+                if let dueDate = task.dueDate {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                        Text(dueDate.formatted(date: .omitted, time: .shortened))
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    confirmedTask = nil
+                }
+            }) {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .padding(8)
+                    .background(Color(uiColor: .tertiarySystemFill))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+    }
+    
+    // MARK: - Timer Grid Card
     private var timerGridCard: some View {
         let total = timerMode.totalBlocks
         let totalSec = timerMode.defaultSeconds
@@ -210,6 +377,45 @@ struct FocusTimerView: View {
 }
 
 #Preview {
-    FocusTimerView(selectedTab: .constant(.focus))
-        .environment(\.isPreview, true)
+    struct PreviewContainer {
+        @MainActor
+        static let container: ModelContainer = {
+            do {
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                let container = try ModelContainer(for: LimitTask.self, configurations: config)
+                let context = container.mainContext
+                
+                let now = Date()
+                
+                let sampleDayTasks: [LimitTask] = [
+                    LimitTask(
+                        title: "day task 1",
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now,
+                        isFlagged: true
+                    ),
+                    LimitTask(
+                        title: "day task 2",
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now.addingTimeInterval(3600)
+                    ),
+                    LimitTask(
+                        title: "day task 3",
+                        timeFrameRawValue: TimeFrame.day.rawValue
+                    )
+                ]
+                
+                for task in sampleDayTasks {
+                    context.insert(task)
+                }
+                
+                return container
+            } catch {
+                fatalError("Failed to create preview container: \(error)")
+            }
+        }()
+    }
+    
+    return FocusTimerView(selectedTab: .constant(.focus))
+        .modelContainer(PreviewContainer.container)
 }

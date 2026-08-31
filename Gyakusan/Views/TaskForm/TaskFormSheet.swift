@@ -19,6 +19,7 @@ struct TaskFormSheet: View {
     @State private var dueDate: Date?
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
+    @State private var isShowingDeleteConfirmation: Bool = false
     
     @FocusState private var isTitleFocused: Bool
     
@@ -140,6 +141,22 @@ struct TaskFormSheet: View {
                         TextField("Location (optional)", text: $location)
                     }
                 }
+                
+                if isEditing {
+                    Section {
+                        Button(role: .destructive) {
+                            isShowingDeleteConfirmation = true
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Label("Delete Task", systemImage: "trash")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .foregroundStyle(.red)
+                        }
+                    }
+                }
             }
             .navigationTitle(isEditing ? "Edit Task" : "New Task")
             .navigationBarTitleDisplayMode(.inline)
@@ -154,6 +171,14 @@ struct TaskFormSheet: View {
                     }
                     .disabled(isSaveDisabled)
                 }
+            }
+            .alert("Delete Task", isPresented: $isShowingDeleteConfirmation) {
+                Button("Delete", role: .destructive) {
+                    deleteTask()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to delete this task? This action cannot be undone.")
             }
             .onAppear {
                 if !isEditing { isTitleFocused = true }
@@ -171,7 +196,6 @@ struct TaskFormSheet: View {
         
         switch selectedTimeFrame {
         case .day:
-            // 日付 + 時間のカードレイアウト
             HStack(spacing: 12) {
                 datePickerChip(binding: binding)
                 
@@ -190,14 +214,12 @@ struct TaskFormSheet: View {
             }
             
         case .month, .year:
-            // .day の時間無しバージョン（日付チップのみ）
             HStack {
                 datePickerChip(binding: binding)
                 Spacer()
             }
             
         case .life:
-            // .life は年数値のみホイールで選択
             Picker("Target Year", selection: selectedYearBinding) {
                 ForEach(availableYears, id: \.self) { year in
                     Text("\(String(year))")
@@ -210,7 +232,6 @@ struct TaskFormSheet: View {
         }
     }
     
-    // 共通の日付選択チップUI
     private func datePickerChip(binding: Binding<Date>) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "calendar")
@@ -249,6 +270,13 @@ struct TaskFormSheet: View {
             modelContext.insert(newTask)
         }
             
+        try? modelContext.save()
+        dismiss()
+    }
+    
+    private func deleteTask() {
+        guard let task = taskToEdit else { return }
+        modelContext.delete(task)
         try? modelContext.save()
         dismiss()
     }
