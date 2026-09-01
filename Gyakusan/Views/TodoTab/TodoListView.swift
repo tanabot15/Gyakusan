@@ -123,14 +123,16 @@ struct TodoListView: View {
                         .offset(x: horizontalOffset)
                         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
                         .gesture(
-                            DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                            DragGesture(minimumDistance: 15, coordinateSpace: .local)
                                 .onEnded { value in
-                                    // 横方向のスワイプ量を判定（縦スワイプ時の誤動作防止）
-                                    if abs(value.translation.width) > abs(value.translation.height) {
-                                        if value.translation.width < -50 {
+                                    let horizontalAmount = value.translation.width
+                                    let verticalAmount = value.translation.height
+
+                                    if abs(horizontalAmount) > abs(verticalAmount) * 1.5 {
+                                        if horizontalAmount < -40 {
                                             // 左スワイプ -> 次の階層へ (例: .life -> .year)
                                             switchToNextTimeFrame()
-                                        } else if value.translation.width > 50 {
+                                        } else if horizontalAmount > 40 {
                                             // 右スワイプ -> 前の階層へ (例: .year -> .life)
                                             switchToPreviousTimeFrame()
                                         }

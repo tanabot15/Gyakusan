@@ -21,9 +21,11 @@ struct FocusTimerView: View {
     @State private var remainingSeconds: Int = 25 * 60
     @State private var isRunning: Bool = false
     
-    // for task choice
     @State private var selectedPickerTaskID: UUID? = nil
     @State private var confirmedTask: LimitTask? = nil
+    
+    @State private var isShowingTaskCompletionAlert: Bool = false
+    @State private var completedTaskTarget: LimitTask? = nil
     
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -107,6 +109,23 @@ struct FocusTimerView: View {
                     remainingSeconds -= 1
                 } else {
                     isRunning = false
+                    handleTimerFinished()
+                }
+            }
+            .alert("Focus Finished!", isPresented: $isShowingTaskCompletionAlert) {
+                Button("Completed") {
+                    if let task = completedTaskTarget {
+                        completeTask(task)
+                    }
+                }
+                Button("Not Yet", role: .cancel) {
+                    completedTaskTarget = nil
+                }
+            } message: {
+                if let task = completedTaskTarget {
+                    Text("Did you complete \"\(task.title)\"?")
+                } else {
+                    Text("Did you complete your target task?")
                 }
             }
             .onAppear {
@@ -121,6 +140,32 @@ struct FocusTimerView: View {
                     selectedPickerTaskID = newTasks.first?.id
                 }
             }
+        }
+    }
+    
+    // MARK: - Timer Completion Handler
+    private func handleTimerFinished() {
+        // Focus Time の終了時かつ、Target Task がセットされている場合のみ確認
+        if timerMode == .focus, let task = confirmedTask {
+            completedTaskTarget = task
+            isShowingTaskCompletionAlert = true
+        }
+    }
+    
+    private func completeTask(_ task: LimitTask) {
+        task.isCompleted = true
+        task.completedAt = Date()
+        
+        do {
+            try modelContext.save()
+            AdMobManager.shared.taskCompleted()
+        } catch {
+            print("Failed to save completed task state: \(error)")
+        }
+        
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            confirmedTask = nil
+            completedTaskTarget = nil
         }
     }
     
@@ -266,7 +311,6 @@ struct FocusTimerView: View {
         let total = timerMode.totalBlocks
         let totalSec = timerMode.defaultSeconds
         let elapsedSec = totalSec - remainingSeconds
-        // 経過時間をブロック数に換算
         let passedBlocks = min(total, Int(Double(elapsedSec) / Double(totalSec) * Double(total)))
         
         let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
@@ -311,7 +355,6 @@ struct FocusTimerView: View {
     // MARK: - Timer Controls
     private var timerControls: some View {
         HStack(spacing: 20) {
-            // Focus ↔ Break
             Button(action: {
                 toggleMode()
             }) {
@@ -324,7 +367,6 @@ struct FocusTimerView: View {
             }
             .buttonStyle(.plain)
             
-            // Play ↔ Pause
             Button(action: {
                 withAnimation {
                     isRunning.toggle()
@@ -340,7 +382,6 @@ struct FocusTimerView: View {
             }
             .buttonStyle(.plain)
             
-            // Reset
             Button(action: {
                 resetTimer(to: timerMode)
             }) {
