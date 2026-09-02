@@ -2,12 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-1999992332232297~6299544953</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>processing</string>
-	</array>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.suzuki.kenichiro.Gyakusan.refresh</string>
+    </array>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-1999992332232297~6299544953</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+    </array>
 </dict>
 </plist>

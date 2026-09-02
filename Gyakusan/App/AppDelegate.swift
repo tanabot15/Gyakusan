@@ -8,8 +8,12 @@
 import UIKit
 import UserNotifications
 import GoogleMobileAds
+import BackgroundTasks
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    
+    static let backgroundTaskIdentifier = "com.suzuki.kenichiro.Gyakusan.refresh"
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -24,7 +28,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             }
         }
         
+        registerBackgroundTask()
+        
         return true
+    }
+    
+    private func registerBackgroundTask() {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: Self.backgroundTaskIdentifier,
+            using: nil
+        ) { task in
+            // バックグラウンドで実行したい処理をここに記述
+            task.setTaskCompleted(success: true)
+        }
     }
     
     func userNotificationCenter(
