@@ -8,14 +8,20 @@
 import SwiftUI
 import SwiftData
 import Combine
+import UserNotifications
 
 struct FocusTimerView: View {
     @Binding var selectedTab: MainTabView.Tab
     
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \LimitTask.createdAt, order: .forward) private var allTasks: [LimitTask]
     
     @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    
+    @AppStorage("focusTimerEndDate") private var timerEndDateInterval: Double = 0
+    @AppStorage("focusTimerIsRunning") private var storedIsRunning: Bool = false
+    @AppStorage("focusTimerModeRaw") private var storedTimerModeRaw: String = "focus"
     
     @State private var timerMode: TimerMode = .focus
     @State private var remainingSeconds: Int = 25 * 60
@@ -28,6 +34,7 @@ struct FocusTimerView: View {
     @State private var completedTaskTarget: LimitTask? = nil
     
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timerNotificationID = "FocusTimerNotification"
     
     private var uncompletedDayTasks: [LimitTask] {
         allTasks.filter { task in
@@ -37,7 +44,7 @@ struct FocusTimerView: View {
         }
     }
     
-    enum TimerMode {
+    enum TimerMode: String {
         case focus
         case breakTime
         
@@ -105,11 +112,11 @@ struct FocusTimerView: View {
             .background(Color(uiColor: .systemGroupedBackground))
             .onReceive(timer) { _ in
                 guard isRunning else { return }
-                if remainingSeconds > 0 {
-                    remainingSeconds -= 1
-                } else {
-                    isRunning = false
-                    handleTimerFinished()
+                updateTimerState()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    syncTimerWithTargetDate()
                 }
             }
             .alert("Focus Finished!", isPresented: $isShowingTaskCompletionAlert) {
@@ -129,6 +136,7 @@ struct FocusTimerView: View {
                 }
             }
             .onAppear {
+                restoreTimerState()
                 if selectedPickerTaskID == nil {
                     selectedPickerTaskID = uncompletedDayTasks.first?.id
                 }
@@ -143,9 +151,86 @@ struct FocusTimerView: View {
         }
     }
     
+    // MARK: - Background & Notification Logic
+    private func updateTimerState() {
+        if timerEndDateInterval > 0 {
+            let now = Date().timeIntervalSince1970
+            let diff = Int(timerEndDateInterval - now)
+            if diff > 0 {
+                remainingSeconds = diff
+            } else {
+                remainingSeconds = 0
+                isRunning = false
+                storedIsRunning = false
+                timerEndDateInterval = 0
+                cancelNotification()
+                handleTimerFinished()
+            }
+        } else if remainingSeconds > 0 {
+            remainingSeconds -= 1
+        } else {
+            isRunning = false
+            storedIsRunning = false
+            cancelNotification()
+            handleTimerFinished()
+        }
+    }
+    
+    private func syncTimerWithTargetDate() {
+        if storedIsRunning && timerEndDateInterval > 0 {
+            let now = Date().timeIntervalSince1970
+            let diff = Int(timerEndDateInterval - now)
+            if diff > 0 {
+                remainingSeconds = diff
+                isRunning = true
+            } else {
+                remainingSeconds = 0
+                isRunning = false
+                storedIsRunning = false
+                timerEndDateInterval = 0
+                handleTimerFinished()
+            }
+        }
+    }
+    
+    private func restoreTimerState() {
+        if let mode = TimerMode(rawValue: storedTimerModeRaw) {
+            timerMode = mode
+        }
+        syncTimerWithTargetDate()
+    }
+    
+    private func scheduleNotification(after seconds: Int) {
+        cancelNotification()
+        
+        // 0秒以下の場合は通知を発行しない（クラッシュ防止）
+        guard seconds > 0 else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = "\(timerMode.title) Finished!"
+        if timerMode == .focus, let task = confirmedTask {
+            content.body = "Great job! Did you complete \"\(task.title)\"?"
+        } else {
+            content.body = "Time is up! Take a moment to reset."
+        }
+        content.sound = .default
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)
+        let request = UNNotificationRequest(identifier: timerNotificationID, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule notification: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func cancelNotification() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerNotificationID])
+    }
+    
     // MARK: - Timer Completion Handler
     private func handleTimerFinished() {
-        // Focus Time の終了時かつ、Target Task がセットされている場合のみ確認
         if timerMode == .focus, let task = confirmedTask {
             completedTaskTarget = task
             isShowingTaskCompletionAlert = true
@@ -368,9 +453,7 @@ struct FocusTimerView: View {
             .buttonStyle(.plain)
             
             Button(action: {
-                withAnimation {
-                    isRunning.toggle()
-                }
+                toggleTimer()
             }) {
                 Image(systemName: isRunning ? "pause.fill" : "play.fill")
                     .font(.title.weight(.bold))
@@ -397,17 +480,41 @@ struct FocusTimerView: View {
         .padding(.top, 8)
     }
     
+    private func toggleTimer() {
+        withAnimation {
+            if remainingSeconds <= 0 {
+                remainingSeconds = timerMode.defaultSeconds
+            }
+            
+            isRunning.toggle()
+            storedIsRunning = isRunning
+            
+            if isRunning {
+                let targetDate = Date().addingTimeInterval(TimeInterval(remainingSeconds))
+                timerEndDateInterval = targetDate.timeIntervalSince1970
+                scheduleNotification(after: remainingSeconds)
+            } else {
+                timerEndDateInterval = 0
+                cancelNotification()
+            }
+        }
+    }
+    
     private func toggleMode() {
         withAnimation {
             let nextMode = timerMode.toggleNext
             timerMode = nextMode
+            storedTimerModeRaw = nextMode.rawValue
             resetTimer(to: nextMode)
         }
     }
     
     private func resetTimer(to mode: TimerMode) {
         isRunning = false
+        storedIsRunning = false
+        timerEndDateInterval = 0
         remainingSeconds = mode.defaultSeconds
+        cancelNotification()
     }
     
     private func formattedTime(_ seconds: Int) -> String {
