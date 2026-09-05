@@ -22,6 +22,8 @@ struct FocusTimerView: View {
     @AppStorage("focusTimerEndDate") private var timerEndDateInterval: Double = 0
     @AppStorage("focusTimerIsRunning") private var storedIsRunning: Bool = false
     @AppStorage("focusTimerModeRaw") private var storedTimerModeRaw: String = "focus"
+    @AppStorage("focusTimerFocusMinutes") private var focusMinutes: Int = 25
+    @AppStorage("focusTimerBreakMinutes") private var breakMinutes: Int = 5
     
     @State private var timerMode: TimerMode = .focus
     @State private var remainingSeconds: Int = 25 * 60
@@ -44,6 +46,21 @@ struct FocusTimerView: View {
         }
     }
     
+    // Helper Methods for Dynamic Preset Times
+    private var currentDefaultSeconds: Int {
+        switch timerMode {
+        case .focus: return focusMinutes * 60
+        case .breakTime: return breakMinutes * 60
+        }
+    }
+    
+    private var currentTotalBlocks: Int {
+        switch timerMode {
+        case .focus: return focusMinutes
+        case .breakTime: return breakMinutes
+        }
+    }
+    
     enum TimerMode: String {
         case focus
         case breakTime
@@ -52,20 +69,6 @@ struct FocusTimerView: View {
             switch self {
             case .focus: return "Focus Time"
             case .breakTime: return "Break Time"
-            }
-        }
-        
-        var defaultSeconds: Int {
-            switch self {
-            case .focus: return 25 * 60
-            case .breakTime: return 5 * 60
-            }
-        }
-        
-        var totalBlocks: Int {
-            switch self {
-            case .focus: return 25
-            case .breakTime: return 5
             }
         }
         
@@ -117,6 +120,16 @@ struct FocusTimerView: View {
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
                     syncTimerWithTargetDate()
+                }
+            }
+            .onChange(of: focusMinutes) { _, _ in
+                if !isRunning && timerMode == .focus {
+                    resetTimer(to: .focus)
+                }
+            }
+            .onChange(of: breakMinutes) { _, _ in
+                if !isRunning && timerMode == .breakTime {
+                    resetTimer(to: .breakTime)
                 }
             }
             .alert("Focus Finished!", isPresented: $isShowingTaskCompletionAlert) {
@@ -197,13 +210,17 @@ struct FocusTimerView: View {
         if let mode = TimerMode(rawValue: storedTimerModeRaw) {
             timerMode = mode
         }
-        syncTimerWithTargetDate()
+        
+        if storedIsRunning && timerEndDateInterval > 0 {
+            syncTimerWithTargetDate()
+        } else {
+            remainingSeconds = currentDefaultSeconds
+        }
     }
     
     private func scheduleNotification(after seconds: Int) {
         cancelNotification()
         
-        // 0秒以下の場合は通知を発行しない（クラッシュ防止）
         guard seconds > 0 else { return }
         
         let content = UNMutableNotificationContent()
@@ -393,10 +410,10 @@ struct FocusTimerView: View {
     
     // MARK: - Timer Grid Card
     private var timerGridCard: some View {
-        let total = timerMode.totalBlocks
-        let totalSec = timerMode.defaultSeconds
+        let total = currentTotalBlocks
+        let totalSec = currentDefaultSeconds
         let elapsedSec = totalSec - remainingSeconds
-        let passedBlocks = min(total, Int(Double(elapsedSec) / Double(totalSec) * Double(total)))
+        let passedBlocks = totalSec > 0 ? min(total, Int(Double(elapsedSec) / Double(totalSec) * Double(total))) : 0
         
         let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
         
@@ -483,7 +500,7 @@ struct FocusTimerView: View {
     private func toggleTimer() {
         withAnimation {
             if remainingSeconds <= 0 {
-                remainingSeconds = timerMode.defaultSeconds
+                remainingSeconds = currentDefaultSeconds
             }
             
             isRunning.toggle()
@@ -513,7 +530,7 @@ struct FocusTimerView: View {
         isRunning = false
         storedIsRunning = false
         timerEndDateInterval = 0
-        remainingSeconds = mode.defaultSeconds
+        remainingSeconds = currentDefaultSeconds
         cancelNotification()
     }
     

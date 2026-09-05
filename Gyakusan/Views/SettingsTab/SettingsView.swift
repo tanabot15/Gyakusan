@@ -16,6 +16,10 @@ struct SettingsView: View {
     @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
     @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
+    // タイマープリセット設定用の AppStorage
+    @AppStorage("focusTimerFocusMinutes") private var focusMinutes: Int = 25
+    @AppStorage("focusTimerBreakMinutes") private var breakMinutes: Int = 5
+    
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
     
@@ -66,9 +70,31 @@ struct SettingsView: View {
                         }
                     }
                     
+                    // MARK: - Timer Settings
                     Section(
-                        header: Text("Appearance Settings"),
-                        footer: Text("Choose the color used to highlight the current period in the grid.")
+                        header: Text("Pomodoro Timer Settings")
+                    ) {
+                        Stepper(value: $focusMinutes, in: 1...120) {
+                            HStack {
+                                Text("Focus Duration")
+                                Spacer()
+                                Text("\(focusMinutes) min")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        
+                        Stepper(value: $breakMinutes, in: 1...60) {
+                            HStack {
+                                Text("Break Duration")
+                                Spacer()
+                                Text("\(breakMinutes) min")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    
+                    Section(
+                        header: Text("Appearance Settings")
                     ) {
                         Picker("Appearance", selection: $selectedAppearance) {
                             Text("System").tag("system")
@@ -83,7 +109,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("3.8")
+                            Text("3.9")
                                 .foregroundStyle(.secondary)
                         }
                     }
