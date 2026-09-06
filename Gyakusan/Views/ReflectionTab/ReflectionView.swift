@@ -20,14 +20,35 @@ struct ReflectionView: View {
         userProfiles.first ?? UserProfile()
     }
     
-    private var lifeProgressRatio: Double {
+    private func calculateProgressRatio(for frame: TimeFrame, at date: Date) -> Double {
         let calendar = Calendar.current
-        let birth = currentProfile.birthday
-        guard let targetDate = calendar.date(byAdding: .year, value: currentProfile.targetAge, to: birth),
-              targetDate > birth else { return 0.0 }
-        let totalSpan = targetDate.timeIntervalSince(birth)
-        let elapsedSpan = currentDate.timeIntervalSince(birth)
-        return max(0.0, min(1.0, elapsedSpan / totalSpan))
+        
+        switch frame {
+        case .day:
+            let startOfDay = calendar.startOfDay(for: date)
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return 0.0 }
+            let total = endOfDay.timeIntervalSince(startOfDay)
+            let elapsed = date.timeIntervalSince(startOfDay)
+            return max(0.0, min(1.0, elapsed / total))
+            
+        case .month:
+            guard let interval = calendar.dateInterval(of: .month, for: date) else { return 0.0 }
+            let elapsed = date.timeIntervalSince(interval.start)
+            return max(0.0, min(1.0, elapsed / interval.duration))
+            
+        case .year:
+            guard let interval = calendar.dateInterval(of: .year, for: date) else { return 0.0 }
+            let elapsed = date.timeIntervalSince(interval.start)
+            return max(0.0, min(1.0, elapsed / interval.duration))
+            
+        case .life:
+            let birth = currentProfile.birthday
+            guard let targetDate = calendar.date(byAdding: .year, value: currentProfile.targetAge, to: birth),
+                  targetDate > birth else { return 0.0 }
+            let totalSpan = targetDate.timeIntervalSince(birth)
+            let elapsedSpan = date.timeIntervalSince(birth)
+            return max(0.0, min(1.0, elapsedSpan / totalSpan))
+        }
     }
     
     private var lifeTaskCompletionRatio: Double {
@@ -130,23 +151,39 @@ struct ReflectionView: View {
                 .font(.headline)
                 .fontWeight(.bold)
             
-            VStack(spacing: 12) {
-                VStack(spacing: 6) {
-                    HStack {
-                        Label("Time Elapsed (Life)", systemImage: "hourglass.bottomhalf.filled")
+            VStack(spacing: 16) {
+                // Time Elapsed (Day / Month / Year / Life)
+                TimelineView(.periodic(from: .now, by: 60.0)) { timelineContext in
+                    let now = timelineContext.date
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Time Elapsed")
                             .font(.caption)
+                            .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(lifeProgressRatio * 100))%")
-                            .font(.caption)
-                            .fontWeight(.bold)
+                        
+                        ForEach(TimeFrame.allCases) { timeFrame in
+                            let ratio = calculateProgressRatio(for: timeFrame, at: now)
+                            VStack(spacing: 4) {
+                                HStack {
+                                    Text(timeFrame.title)
+                                        .font(.caption)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    Text("\(Int(ratio * 100))%")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
+                                ProgressView(value: ratio)
+                                    .tint(.orange)
+                            }
+                        }
                     }
-                    ProgressView(value: lifeProgressRatio)
-                        .tint(.orange)
                 }
                 
                 Divider()
                 
+                // Life Goals Achieved
                 VStack(spacing: 6) {
                     HStack {
                         Label("Life Goals Achieved", systemImage: "flag.checkered")

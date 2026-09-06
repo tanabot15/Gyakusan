@@ -24,14 +24,4 @@ enum TimeFrame: String, Codable, CaseIterable, Identifiable {
         case .day: return "Day"
         }
     }
-    
-    // SF Symbol
-    var systemImageName: String {
-        switch self {
-        case .life: return "calendar.year"
-        case .year: return "calendar"
-        case .month: return "calendar.badge.clock"
-        case .day: return "clock"
-        }
-    }
 }
