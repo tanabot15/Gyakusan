@@ -14,8 +14,13 @@ struct LimitVisualizerView: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
-    @AppStorage("selectedTimeFrame") private var selectedTimeFrame: TimeFrame = .life
+    private static let sharedStore = UserDefaults(suiteName: "group.com.yourname.Gyakusan")
+        
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
+    
+    @AppStorage("selectedTimeFrame", store: sharedStore)
+    private var selectedTimeFrame: TimeFrame = .life
     
     @Query private var userProfiles: [UserProfile]
     @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]

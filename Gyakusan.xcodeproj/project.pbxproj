@@ -12,6 +12,18 @@
 		D990D1033026CB39001B3CDA /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
 		D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D14D302BE2C9001B3CDA /* OnboardingView.swift */; };
 		D990D1B6303C010D001B3CDA /* ReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1B5303C010D001B3CDA /* ReflectionView.swift */; };
+		D9BA15B6304ED6C7008B3FC5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9BA15B5304ED6C7008B3FC5 /* WidgetKit.framework */; };
+		D9BA15B8304ED6C7008B3FC5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9BA15B7304ED6C7008B3FC5 /* SwiftUI.framework */; };
+		D9BA15C3304ED6C8008B3FC5 /* GyakusanWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D9BA15B3304ED6C7008B3FC5 /* GyakusanWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D9BA15D0304ED77D008B3FC5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9BA15CB304ED77D008B3FC5 /* Assets.xcassets */; };
+		D9BA15D2304ED77D008B3FC5 /* GyakusanWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15CC304ED77D008B3FC5 /* GyakusanWidget.swift */; };
+		D9BA15D3304ED77D008B3FC5 /* GyakusanWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15CD304ED77D008B3FC5 /* GyakusanWidgetBundle.swift */; };
+		D9BA15D4304ED917008B3FC5 /* LimitTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068783010E0CB00E88132 /* LimitTask.swift */; };
+		D9BA15D5304ED91C008B3FC5 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687A3010E0D400E88132 /* UserProfile.swift */; };
+		D9BA15D6304ED920008B3FC5 /* TimeFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687C3010E0DE00E88132 /* TimeFrame.swift */; };
+		D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */; };
+		D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */; };
+		D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
 		D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D57E4130406130004B29BA /* FocusTimerView.swift */; };
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
@@ -33,12 +45,46 @@
 		D9E0689D3011DF0B00E88132 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D9E0689C3011DF0B00E88132 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D9BA15C1304ED6C8008B3FC5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D9E068513010A55D00E88132 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D9BA15B2304ED6C7008B3FC5;
+			remoteInfo = GyakusanWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D9BA15C4304ED6C8008B3FC5 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D9BA15C3304ED6C8008B3FC5 /* GyakusanWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = AdMobConfig.plist; sourceTree = "<group>"; };
 		D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConfig.swift; sourceTree = "<group>"; };
 		D990D1023026CB39001B3CDA /* GridHighlightColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridHighlightColor.swift; sourceTree = "<group>"; };
 		D990D14D302BE2C9001B3CDA /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		D990D1B5303C010D001B3CDA /* ReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionView.swift; sourceTree = "<group>"; };
+		D9BA15B3304ED6C7008B3FC5 /* GyakusanWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GyakusanWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9BA15B5304ED6C7008B3FC5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
+		D9BA15B7304ED6C7008B3FC5 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
+		D9BA15C9304ED6F4008B3FC5 /* Gyakusan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Gyakusan.entitlements; sourceTree = "<group>"; };
+		D9BA15CA304ED750008B3FC5 /* GyakusanWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GyakusanWidgetExtension.entitlements; sourceTree = "<group>"; };
+		D9BA15CB304ED77D008B3FC5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D9BA15CC304ED77D008B3FC5 /* GyakusanWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanWidget.swift; sourceTree = "<group>"; };
+		D9BA15CD304ED77D008B3FC5 /* GyakusanWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanWidgetBundle.swift; sourceTree = "<group>"; };
+		D9BA15CE304ED77D008B3FC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
 		D9D57E4130406130004B29BA /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -62,6 +108,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D9BA15B0304ED6C7008B3FC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9BA15B8304ED6C7008B3FC5 /* SwiftUI.framework in Frameworks */,
+				D9BA15B6304ED6C7008B3FC5 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D9E068563010A55D00E88132 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -89,6 +144,26 @@
 			path = ReflectionTab;
 			sourceTree = "<group>";
 		};
+		D9BA15B4304ED6C7008B3FC5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D9BA15B5304ED6C7008B3FC5 /* WidgetKit.framework */,
+				D9BA15B7304ED6C7008B3FC5 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D9BA15CF304ED77D008B3FC5 /* GyakusanWidget */ = {
+			isa = PBXGroup;
+			children = (
+				D9BA15CC304ED77D008B3FC5 /* GyakusanWidget.swift */,
+				D9BA15CD304ED77D008B3FC5 /* GyakusanWidgetBundle.swift */,
+				D9BA15CE304ED77D008B3FC5 /* Info.plist */,
+				D9BA15CB304ED77D008B3FC5 /* Assets.xcassets */,
+			);
+			path = GyakusanWidget;
+			sourceTree = "<group>";
+		};
 		D9D57E403040611D004B29BA /* FocusTimer */ = {
 			isa = PBXGroup;
 			children = (
@@ -100,7 +175,10 @@
 		D9E068503010A55D00E88132 = {
 			isa = PBXGroup;
 			children = (
+				D9BA15CA304ED750008B3FC5 /* GyakusanWidgetExtension.entitlements */,
 				D9E0686A3010A63900E88132 /* Gyakusan */,
+				D9BA15CF304ED77D008B3FC5 /* GyakusanWidget */,
+				D9BA15B4304ED6C7008B3FC5 /* Frameworks */,
 				D9E0685A3010A55D00E88132 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -109,6 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				D9E068593010A55D00E88132 /* Gyakusan.app */,
+				D9BA15B3304ED6C7008B3FC5 /* GyakusanWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -116,6 +195,7 @@
 		D9E0686A3010A63900E88132 /* Gyakusan */ = {
 			isa = PBXGroup;
 			children = (
+				D9BA15C9304ED6F4008B3FC5 /* Gyakusan.entitlements */,
 				D9E0686F3010AFB900E88132 /* App */,
 				D9E068703010AFC200E88132 /* Models */,
 				D9E068713010AFD200E88132 /* Views */,
@@ -130,6 +210,7 @@
 			children = (
 				D9E068693010A63900E88132 /* GyakusanApp.swift */,
 				D9E068763010E08C00E88132 /* AppDelegate.swift */,
+				D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */,
 				D9E0686E3010A69900E88132 /* Info.plist */,
 			);
 			path = App;
@@ -227,6 +308,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D9BA15B2304ED6C7008B3FC5 /* GyakusanWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9BA15C8304ED6C8008B3FC5 /* Build configuration list for PBXNativeTarget "GyakusanWidgetExtension" */;
+			buildPhases = (
+				D9BA15AF304ED6C7008B3FC5 /* Sources */,
+				D9BA15B0304ED6C7008B3FC5 /* Frameworks */,
+				D9BA15B1304ED6C7008B3FC5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GyakusanWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = GyakusanWidgetExtension;
+			productReference = D9BA15B3304ED6C7008B3FC5 /* GyakusanWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D9E068583010A55D00E88132 /* Gyakusan */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D9E068643010A55E00E88132 /* Build configuration list for PBXNativeTarget "Gyakusan" */;
@@ -234,10 +334,12 @@
 				D9E068553010A55D00E88132 /* Sources */,
 				D9E068563010A55D00E88132 /* Frameworks */,
 				D9E068573010A55D00E88132 /* Resources */,
+				D9BA15C4304ED6C8008B3FC5 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D9BA15C2304ED6C8008B3FC5 /* PBXTargetDependency */,
 			);
 			name = Gyakusan;
 			packageProductDependencies = (
@@ -257,6 +359,9 @@
 				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					D9BA15B2304ED6C7008B3FC5 = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					D9E068583010A55D00E88132 = {
 						CreatedOnToolsVersion = 26.5;
 					};
@@ -280,11 +385,20 @@
 			projectRoot = "";
 			targets = (
 				D9E068583010A55D00E88132 /* Gyakusan */,
+				D9BA15B2304ED6C7008B3FC5 /* GyakusanWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D9BA15B1304ED6C7008B3FC5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9BA15D0304ED77D008B3FC5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D9E068573010A55D00E88132 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -297,6 +411,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D9BA15AF304ED6C7008B3FC5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9BA15D6304ED920008B3FC5 /* TimeFrame.swift in Sources */,
+				D9BA15D5304ED91C008B3FC5 /* UserProfile.swift in Sources */,
+				D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */,
+				D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
+				D9BA15D4304ED917008B3FC5 /* LimitTask.swift in Sources */,
+				D9BA15D2304ED77D008B3FC5 /* GyakusanWidget.swift in Sources */,
+				D9BA15D3304ED77D008B3FC5 /* GyakusanWidgetBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D9E068553010A55D00E88132 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -319,6 +447,7 @@
 				D9E068843010E16400E88132 /* BannerAdView.swift in Sources */,
 				D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */,
 				D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */,
+				D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
 				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
 				D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */,
@@ -327,7 +456,105 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D9BA15C2304ED6C8008B3FC5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D9BA15B2304ED6C7008B3FC5 /* GyakusanWidgetExtension */;
+			targetProxy = D9BA15C1304ED6C8008B3FC5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D9BA15C5304ED6C8008B3FC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 27;
+				DEVELOPMENT_TEAM = D86GFNUD35;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GyakusanWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GyakusanWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 3.10;
+				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Debug;
+		};
+		D9BA15C6304ED6C8008B3FC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 27;
+				DEVELOPMENT_TEAM = D86GFNUD35;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GyakusanWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GyakusanWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 3.10;
+				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Release;
+		};
 		D9E068623010A55E00E88132 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -456,6 +683,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = D86GFNUD35;
@@ -498,6 +726,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = D86GFNUD35;
@@ -538,6 +767,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D9BA15C8304ED6C8008B3FC5 /* Build configuration list for PBXNativeTarget "GyakusanWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9BA15C5304ED6C8008B3FC5 /* Debug */,
+				D9BA15C6304ED6C8008B3FC5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D9E068543010A55D00E88132 /* Build configuration list for PBXProject "Gyakusan" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

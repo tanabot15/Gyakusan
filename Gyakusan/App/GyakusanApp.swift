@@ -23,32 +23,7 @@ struct GyakusanApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
-    let sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            LimitTask.self,
-            UserProfile.self
-        ])
-        
-        #if DEBUG
-        // Debug / Simulator mode: Run in-memory to ensure a clean state on every launch
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: true
-        )
-        #else
-        // Production mode: Persist data locally
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false
-        )
-        #endif
-        
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    let sharedModelContainer: ModelContainer = SharedModelContainer.create()
     
     private var colorScheme: ColorScheme? {
         switch selectedAppearance {
