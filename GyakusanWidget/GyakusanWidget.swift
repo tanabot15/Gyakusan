@@ -69,7 +69,7 @@ struct Provider: TimelineProvider {
             birthday = profile.birthday
         }
         
-        let appGroupID = "group.com.yourname.Gyakusan"
+        let appGroupID = "group.com.suzuki.kenichiro.Gyakusan"
         let sharedDefaults = UserDefaults(suiteName: appGroupID)
         let savedRawValue = sharedDefaults?.string(forKey: "selectedTimeFrame") ?? TimeFrame.life.rawValue
         let timeFrame = TimeFrame(rawValue: savedRawValue) ?? .life
@@ -139,7 +139,7 @@ struct GyakusanWidgetEntryView: View {
     var entry: Provider.Entry
     @Environment(\.widgetFamily) var family
 
-    @AppStorage("highlightColorHex", store: UserDefaults(suiteName: "group.com.yourname.Gyakusan"))
+    @AppStorage("highlightColorHex", store: UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan"))
     private var highlightColorHex: String = "#8E8E93"
 
     private var columnsCount: Int {

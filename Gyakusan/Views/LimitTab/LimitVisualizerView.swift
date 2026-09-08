@@ -14,7 +14,7 @@ struct LimitVisualizerView: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    private static let sharedStore = UserDefaults(suiteName: "group.com.yourname.Gyakusan")
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
         
     @AppStorage("highlightColorHex", store: sharedStore)
     private var highlightColorHex: String = "#8E8E93"
