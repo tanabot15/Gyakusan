@@ -7,6 +7,16 @@
 
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
+
+// MARK: - Transferable Implementation for LimitTask (Using Identifier String)
+struct TaskDragItem: Transferable, Codable {
+    let idString: String
+    
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .text)
+    }
+}
 
 struct TodoListView: View {
     @Environment(\.modelContext) private var modelContext
@@ -34,31 +44,10 @@ struct TodoListView: View {
         }
     }
     
-    // Slide function
+    // Slide function (画面を平行にずらすアニメーション)
     private var horizontalOffset: CGFloat {
         let currentLevel = CGFloat(levelIndex(for: selectedTimeFrame) - 1)
         return -currentLevel * indentStepWidth
-    }
-    
-    // MARK: - TimeFrame Switcher Logic
-    private func switchToNextTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex < allCases.count - 1 {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                selectedTimeFrame = allCases[currentIndex + 1]
-            }
-        }
-    }
-    
-    private func switchToPreviousTimeFrame() {
-        let allCases = TimeFrame.allCases
-        if let currentIndex = allCases.firstIndex(of: selectedTimeFrame),
-           currentIndex > 0 {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                selectedTimeFrame = allCases[currentIndex - 1]
-            }
-        }
     }
     
     private var sortedCurrentUncompletedTasks: [LimitTask] {
@@ -87,56 +76,18 @@ struct TodoListView: View {
                         .frame(height: 50)
                         .background(Color(uiColor: .systemGroupedBackground))
                     
-                    TimeFramePicker(selectedTimeFrame: $selectedTimeFrame)
+                    // MARK: Interactive TimeFrame Picker with Drop Support
+                    droppableTimeFramePicker
                         .padding(.vertical, 8)
                     
                     if allTasks.isEmpty {
                         emptyTaskView
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        List {
-                            // 1. Current Tasks
-                            if !sortedCurrentUncompletedTasks.isEmpty {
-                                Section {
-                                    taskListSectionContent(tasks: sortedCurrentUncompletedTasks)
-                                }
-                            }
-                            
-                            // 2. Completed Tasks
-                            if !sortedCurrentCompletedTasks.isEmpty {
-                                Section(header: completedHeaderView(count: sortedCurrentCompletedTasks.count)) {
-                                    if isCompletedExpanded {
-                                        taskListSectionContent(tasks: sortedCurrentCompletedTasks)
-                                    }
-                                }
-                            }
-                            
-                            // 3. Past Tasks
-                            if !sortedPastTasks.isEmpty {
-                                Section(header: pastHeaderView(count: sortedPastTasks.count)) {
-                                    if isPastExpanded {
-                                        taskListSectionContent(tasks: sortedPastTasks)
-                                    }
-                                }
-                            }
-                        }
-                        .listStyle(.insetGrouped)
-                        .offset(x: horizontalOffset)
-                        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
-                        .gesture(
-                            DragGesture(minimumDistance: 15, coordinateSpace: .local)
-                                .onEnded { value in
-                                    let horizontalAmount = value.translation.width
-                                    let verticalAmount = value.translation.height
-
-                                    if abs(horizontalAmount) > abs(verticalAmount) * 1.5 {
-                                        if horizontalAmount < -40 {
-                                            switchToNextTimeFrame()
-                                        } else if horizontalAmount > 40 {
-                                            switchToPreviousTimeFrame()
-                                        }
-                                    }
-                                }
-                        )
+                        // 画面全体に広がるタスクリスト表示
+                        taskListView
+                            .offset(x: horizontalOffset)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
                     }
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
@@ -153,6 +104,86 @@ struct TodoListView: View {
         }
     }
     
+    // MARK: - Task List View
+    @ViewBuilder
+    private var taskListView: some View {
+        List {
+            // 1. Current Tasks
+            if !sortedCurrentUncompletedTasks.isEmpty {
+                Section {
+                    taskListSectionContent(tasks: sortedCurrentUncompletedTasks)
+                }
+            }
+            
+            // 2. Completed Tasks
+            if !sortedCurrentCompletedTasks.isEmpty {
+                Section(header: completedHeaderView(count: sortedCurrentCompletedTasks.count)) {
+                    if isCompletedExpanded {
+                        taskListSectionContent(tasks: sortedCurrentCompletedTasks)
+                    }
+                }
+            }
+            
+            // 3. Past Tasks
+            if !sortedPastTasks.isEmpty {
+                Section(header: pastHeaderView(count: sortedPastTasks.count)) {
+                    if isPastExpanded {
+                        taskListSectionContent(tasks: sortedPastTasks)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+    
+    // MARK: - TimeFrame Picker Drop Wrapper
+    @ViewBuilder
+    private var droppableTimeFramePicker: some View {
+        HStack(spacing: 4) {
+            ForEach(TimeFrame.allCases) { timeFrame in
+                let isSelected = timeFrame == selectedTimeFrame
+                
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedTimeFrame = timeFrame
+                    }
+                }) {
+                    Text(timeFrame.title)
+                        .font(.subheadline.weight(isSelected ? .bold : .regular))
+                        .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(
+                            ZStack {
+                                if isSelected {
+                                    Capsule()
+                                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                                }
+                            }
+                        )
+                }
+                .buttonStyle(.plain)
+                .dropDestination(for: TaskDragItem.self) { items, _ in
+                    guard let dragItem = items.first,
+                          let uuid = UUID(uuidString: dragItem.idString),
+                          let task = allTasks.first(where: { $0.id == uuid }) else {
+                        return false
+                    }
+                    
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        task.timeFrame = timeFrame
+                        saveContext()
+                    }
+                    return true
+                }
+            }
+        }
+        .padding(4)
+        .background(Color(uiColor: .tertiarySystemFill))
+        .clipShape(Capsule())
+    }
+    
     // MARK: - Section Content Builder
     @ViewBuilder
     private func taskListSectionContent(tasks: [LimitTask]) -> some View {
@@ -161,7 +192,8 @@ struct TodoListView: View {
             let isSelectedLevel = (task.timeFrame == selectedTimeFrame)
             
             indentedTaskRow(task: task, level: level, isSelectedLevel: isSelectedLevel)
-                // MARK: left swipe (delete)
+                .draggable(TaskDragItem(idString: task.id.uuidString))
+                // MARK: リスト内での左スワイプ（削除）
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
                         deleteTask(task)
@@ -169,7 +201,7 @@ struct TodoListView: View {
                         Label("Delete", systemImage: "trash")
                     }
                 }
-                // MARK: right swipe (flag, dueDate)
+                // MARK: リスト内での右スワイプ（フラグ・dueDateの変更）
                 .swipeActions(edge: .leading, allowsFullSwipe: false) {
                     Button {
                         toggleFlag(for: task)
@@ -281,9 +313,12 @@ struct TodoListView: View {
     // MARK: - Row View Builder
     @ViewBuilder
     private func taskRow(for task: LimitTask) -> some View {
-        TaskRowView(task: task, onToggle: {
-            saveContext()
-        })
+        TaskRowView(
+            task: task,
+            onToggle: {
+                saveContext()
+            }
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             selectedTaskToEdit = task
