@@ -130,10 +130,8 @@ struct TodoListView: View {
 
                                     if abs(horizontalAmount) > abs(verticalAmount) * 1.5 {
                                         if horizontalAmount < -40 {
-                                            // 左スワイプ -> 次の階層へ (例: .life -> .year)
                                             switchToNextTimeFrame()
                                         } else if horizontalAmount > 40 {
-                                            // 右スワイプ -> 前の階層へ (例: .year -> .life)
                                             switchToPreviousTimeFrame()
                                         }
                                     }
@@ -155,13 +153,41 @@ struct TodoListView: View {
         }
     }
     
-    // MARK: - Section Content Builder (Refactored)
+    // MARK: - Section Content Builder
     @ViewBuilder
     private func taskListSectionContent(tasks: [LimitTask]) -> some View {
         ForEach(tasks) { task in
             let level = levelIndex(for: task.timeFrame)
             let isSelectedLevel = (task.timeFrame == selectedTimeFrame)
+            
             indentedTaskRow(task: task, level: level, isSelectedLevel: isSelectedLevel)
+                // MARK: left swipe (delete)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        deleteTask(task)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                // MARK: right swipe (flag, dueDate)
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    Button {
+                        toggleFlag(for: task)
+                    } label: {
+                        Label(
+                            task.isFlagged ? "Unflag" : "Flag",
+                            systemImage: task.isFlagged ? "flag.slash" : "flag.fill"
+                        )
+                    }
+                    .tint(.orange)
+                    
+                    Button {
+                        setDueDateToToday(for: task)
+                    } label: {
+                        Label("Today", systemImage: "calendar.badge.clock")
+                    }
+                    .tint(.blue)
+                }
         }
         .onDelete { offsets in
             deleteTasks(tasks, at: offsets)
@@ -171,7 +197,29 @@ struct TodoListView: View {
         }
     }
     
-    // MARK: - Floating Control Bar (Inline ViewBuilder)
+    // MARK: - Action Helpers
+    private func toggleFlag(for task: LimitTask) {
+        withAnimation {
+            task.isFlagged.toggle()
+            saveContext()
+        }
+    }
+    
+    private func setDueDateToToday(for task: LimitTask) {
+        withAnimation {
+            task.dueDate = Date()
+            saveContext()
+        }
+    }
+    
+    private func deleteTask(_ task: LimitTask) {
+        withAnimation {
+            modelContext.delete(task)
+            saveContext()
+        }
+    }
+    
+    // MARK: - Floating Control Bar
     @ViewBuilder
     private var floatingControlBar: some View {
         let isEditing = editMode.isEditing
