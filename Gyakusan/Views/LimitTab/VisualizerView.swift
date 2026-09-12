@@ -1,5 +1,5 @@
 //
-//  LimitVisualizerView.swift
+//  VisualizerView.swift
 //  Gyakusan
 //
 //  Created by Kenichiro Suzuki on 2026/09/12.
@@ -8,8 +8,8 @@
 import SwiftUI
 import SwiftData
 import Combine
-import UniformTypeIdentifiers
 
+// MARK: - Visualizer View
 struct VisualizerView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -30,7 +30,7 @@ struct VisualizerView: View {
     
     @State private var isCompletedExpanded: Bool = false
     @State private var isPastExpanded: Bool = false
-    @State private var editMode: EditMode = .inactive
+    @State private var isEditingMode: Bool = false
     
     // Quick Add States
     @State private var isQuickAdding: Bool = false
@@ -39,7 +39,6 @@ struct VisualizerView: View {
     @FocusState private var isQuickAddFocused: Bool
     
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private let indentStepWidth: CGFloat = 20.0
     
     private var currentProfile: UserProfile {
         userProfiles.first ?? UserProfile()
@@ -47,39 +46,6 @@ struct VisualizerView: View {
     
     private var lifeStats: TimeCalculator.LifeStats {
         TimeCalculator.calculateLifeStats(userProfile: currentProfile, now: currentDate)
-    }
-    
-    private func levelIndex(for timeFrame: TimeFrame) -> Int {
-        switch timeFrame {
-        case .life: return 1
-        case .year: return 2
-        case .month: return 3
-        case .day: return 4
-        }
-    }
-    
-    private var horizontalOffset: CGFloat {
-        let currentLevel = CGFloat(levelIndex(for: selectedTimeFrame) - 1)
-        return -currentLevel * indentStepWidth
-    }
-    
-    // MARK: Task Filters
-    private var sortedCurrentUncompletedTasks: [LimitTask] {
-        allTasks
-            .filter { !$0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame, now: currentDate) }
-            .sorted { $0.createdAt < $1.createdAt }
-    }
-    
-    private var sortedCurrentCompletedTasks: [LimitTask] {
-        allTasks
-            .filter { $0.isCompleted && $0.isCurrentPeriod(for: $0.timeFrame, now: currentDate) }
-            .sorted { $0.createdAt < $1.createdAt }
-    }
-    
-    private var sortedPastTasks: [LimitTask] {
-        allTasks
-            .filter { !$0.isCurrentPeriod(for: $0.timeFrame, now: currentDate) }
-            .sorted { $0.createdAt < $1.createdAt }
     }
     
     var body: some View {
@@ -90,53 +56,26 @@ struct VisualizerView: View {
                         .frame(height: 50)
                         .background(Color(uiColor: .systemGroupedBackground))
                     
-                    // Droppable TimeFrame Picker
-                    droppableTimeFramePicker
+                    timeFramePicker
+                        .padding(.horizontal)
                         .padding(.vertical, 8)
                     
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            VStack(spacing: 20) {
-                                // 1. カウントダウンヘッダー
-                                CountdownHeaderView(
-                                    timeFrame: selectedTimeFrame,
-                                    periodStats: selectedTimeFrame == .life ? nil : periodStats(for: selectedTimeFrame),
-                                    lifeStats: selectedTimeFrame == .life ? lifeStats : nil
-                                )
-                                
-                                // 2. TimeFrame Overview (メトリクスカード)
-                                taskMetricsCardSection(for: selectedTimeFrame)
-                                
-                                // 3. メイン機能 Limit Grid
-                                LimitGridView(
-                                    timeFrame: selectedTimeFrame,
-                                    lifeStats: selectedTimeFrame == .life ? lifeStats : nil,
-                                    currentDate: currentDate
-                                )
-                                
-                                // 4. Todo リスト表示（インデント切り替えアニメーション付）
-                                taskListSection
-                                    .offset(x: horizontalOffset)
-                                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selectedTimeFrame)
-                                    .id("bottomAddArea")
-                            }
-                            .padding(.vertical)
-                        }
-                        .onChange(of: isQuickAdding) { _, newValue in
-                            if newValue {
-                                withAnimation {
-                                    proxy.scrollTo("bottomAddArea", anchor: .bottom)
-                                }
-                            }
+                    TabView(selection: $selectedTimeFrame) {
+                        ForEach(TimeFrame.allCases) { timeFrame in
+                            timeFrameContentView(for: timeFrame)
+                                .tag(timeFrame)
                         }
                     }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    dismissQuickAdd()
+                }
                 
-                // フローティングコントロールバー
                 floatingControlBar
             }
-            .environment(\.editMode, $editMode)
             .onReceive(timer) { input in
                 currentDate = input
             }
@@ -147,6 +86,49 @@ struct VisualizerView: View {
                 TaskFormSheet(taskToEdit: task)
             }
         }
+    }
+    
+    // MARK: - TimeFrame Content View
+    @ViewBuilder
+    private func timeFrameContentView(for timeFrame: TimeFrame) -> some View {
+        let taskProgressRatio = calculateTaskProgressRatio(for: timeFrame)
+        
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 20) {
+                    CountdownHeaderView(
+                        timeFrame: timeFrame,
+                        periodStats: timeFrame == .life ? nil : periodStats(for: timeFrame),
+                        lifeStats: timeFrame == .life ? lifeStats : nil,
+                        taskProgressRatio: taskProgressRatio
+                    )
+                    
+                    LimitGridView(
+                        timeFrame: timeFrame,
+                        lifeStats: timeFrame == .life ? lifeStats : nil,
+                        currentDate: currentDate
+                    )
+                    
+                    taskListSection(for: timeFrame)
+                        .id("bottomAddArea_\(timeFrame.rawValue)")
+                }
+                .padding(.vertical)
+            }
+            .onChange(of: isQuickAdding) { _, newValue in
+                if newValue {
+                    withAnimation {
+                        proxy.scrollTo("bottomAddArea_\(timeFrame.rawValue)", anchor: .bottom)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func calculateTaskProgressRatio(for timeFrame: TimeFrame) -> Double {
+        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame).count
+        let completed = sortedCurrentCompletedTasks(for: timeFrame).count
+        let total = uncompleted + completed
+        return total > 0 ? Double(completed) / Double(total) : 0.0
     }
     
     private func periodStats(for timeFrame: TimeFrame) -> TimeCalculator.PeriodStats {
@@ -162,162 +144,65 @@ struct VisualizerView: View {
         }
     }
     
-    // MARK: - TimeFrame Picker with Drag & Drop Support
+    // MARK: - Task Filters
+    private func timeFrameTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        allTasks.filter { $0.timeFrame == timeFrame }
+    }
+    
+    private func sortedCurrentUncompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        timeFrameTasks(for: timeFrame)
+            .filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    private func sortedCurrentCompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        timeFrameTasks(for: timeFrame)
+            .filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    private func sortedPastTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        timeFrameTasks(for: timeFrame)
+            .filter { !$0.isCurrentPeriod(for: timeFrame, now: currentDate) }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    // MARK: - TimeFrame Segmented Control
     @ViewBuilder
-    private var droppableTimeFramePicker: some View {
-        HStack(spacing: 4) {
+    private var timeFramePicker: some View {
+        Picker("TimeFrame", selection: $selectedTimeFrame) {
             ForEach(TimeFrame.allCases) { timeFrame in
-                let isSelected = timeFrame == selectedTimeFrame
-                
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedTimeFrame = timeFrame
-                    }
-                }) {
-                    Text(timeFrame.title)
-                        .font(.subheadline.weight(isSelected ? .bold : .regular))
-                        .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(
-                            ZStack {
-                                if isSelected {
-                                    Capsule()
-                                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-                                }
-                            }
-                        )
-                }
-                .buttonStyle(.plain)
-                .dropDestination(for: TaskDragItem.self) { items, _ in
-                    guard let dragItem = items.first,
-                          let uuid = UUID(uuidString: dragItem.idString),
-                          let task = allTasks.first(where: { $0.id == uuid }) else {
-                        return false
-                    }
-                    
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        task.timeFrame = timeFrame
-                        saveContext()
-                    }
-                    return true
-                }
+                Text(timeFrame.title).tag(timeFrame)
             }
         }
-        .padding(4)
-        .background(Color(uiColor: .tertiarySystemFill))
-        .clipShape(Capsule())
-    }
-    
-    // MARK: - Task Overview Metrics Card Section
-    private func taskMetricsCardSection(for timeFrame: TimeFrame) -> some View {
-        let filteredTasks = allTasks.filter { $0.timeFrameRawValue == timeFrame.rawValue }
-        let currentUncompletedCount = filteredTasks.filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
-        let currentCompletedCount = filteredTasks.filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
-        let pastTasksCount = filteredTasks.filter { !$0.isCurrentPeriod(for: timeFrame, now: currentDate) }.count
-        
-        let totalCurrent = currentUncompletedCount + currentCompletedCount
-        let progressRatio = totalCurrent > 0 ? Double(currentCompletedCount) / Double(totalCurrent) : 0.0
-        
-        return VStack(spacing: 12) {
-            HStack {
-                Text("\(timeFrame.title) Overview")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.primary)
-                Spacer()
-            }
-            .padding(.horizontal, 4)
-            
-            VStack(spacing: 16) {
-                HStack(spacing: 0) {
-                    metricItem(title: "Current", count: currentUncompletedCount, icon: "circle.circle.fill", color: .accentColor)
-                    Divider().frame(height: 36)
-                    metricItem(title: "Completed", count: currentCompletedCount, icon: "checkmark.circle.fill", color: .green)
-                    Divider().frame(height: 36)
-                    metricItem(title: "Past", count: pastTasksCount, icon: "clock.fill", color: .orange)
-                }
-                
-                VStack(spacing: 6) {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(Color(uiColor: .systemGray5))
-                                .frame(height: 4)
-                            
-                            Capsule()
-                                .fill(Color(hex: highlightColorHex))
-                                .frame(width: geometry.size.width * CGFloat(progressRatio), height: 4)
-                        }
-                    }
-                    .frame(height: 6)
-                    
-                    HStack {
-                        Text("Current Period Progress")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(progressRatio * 100))%")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding(16)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        }
-        .padding(.horizontal)
-    }
-    
-    @ViewBuilder
-    private func metricItem(title: String, count: Int, icon: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption2)
-                    .foregroundStyle(color)
-                
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Text("\(count)")
-                .font(.title2)
-                .fontWeight(.bold)
-                .fontDesign(.rounded)
-                .foregroundStyle(.primary)
-        }
-        .frame(maxWidth: .infinity)
+        .pickerStyle(.segmented)
     }
     
     // MARK: - Task List Section
     @ViewBuilder
-    private var taskListSection: some View {
+    private func taskListSection(for timeFrame: TimeFrame) -> some View {
+        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame)
+        let completed = sortedCurrentCompletedTasks(for: timeFrame)
+        let past = sortedPastTasks(for: timeFrame)
+        
         VStack(spacing: 12) {
             HStack {
-                Text("Tasks")
+                Text("\(timeFrame.title) Tasks")
                     .font(.headline)
                     .fontWeight(.bold)
                 Spacer()
             }
             .padding(.horizontal)
             
-            if sortedCurrentUncompletedTasks.isEmpty && sortedCurrentCompletedTasks.isEmpty && sortedPastTasks.isEmpty && !isQuickAdding {
+            if uncompleted.isEmpty && completed.isEmpty && past.isEmpty && !isQuickAdding {
                 emptyTaskView
                     .padding(.vertical, 20)
             } else {
                 VStack(spacing: 8) {
-                    // 1. 未完了タスク
-                    ForEach(sortedCurrentUncompletedTasks) { task in
+                    ForEach(uncompleted) { task in
                         taskRowContainer(for: task)
                     }
                     
-                    // インライン入力行
                     if isQuickAdding {
                         quickAddInlineRow
                             .padding(.horizontal)
@@ -327,21 +212,19 @@ struct VisualizerView: View {
                             .padding(.horizontal)
                     }
                     
-                    // 2. 完了済みタスク（アコーディオン形式）
-                    if !sortedCurrentCompletedTasks.isEmpty {
-                        accordionHeader(title: "Completed", count: sortedCurrentCompletedTasks.count, isExpanded: $isCompletedExpanded)
+                    if !completed.isEmpty {
+                        accordionHeader(title: "Completed", count: completed.count, isExpanded: $isCompletedExpanded)
                         if isCompletedExpanded {
-                            ForEach(sortedCurrentCompletedTasks) { task in
+                            ForEach(completed) { task in
                                 taskRowContainer(for: task)
                             }
                         }
                     }
                     
-                    // 3. 過去タスク（アコーディオン形式）
-                    if !sortedPastTasks.isEmpty {
-                        accordionHeader(title: "Past Tasks", count: sortedPastTasks.count, isExpanded: $isPastExpanded)
+                    if !past.isEmpty {
+                        accordionHeader(title: "Past Tasks", count: past.count, isExpanded: $isPastExpanded)
                         if isPastExpanded {
-                            ForEach(sortedPastTasks) { task in
+                            ForEach(past) { task in
                                 taskRowContainer(for: task)
                             }
                         }
@@ -349,7 +232,6 @@ struct VisualizerView: View {
                 }
             }
             
-            // 下部タップ可能エリア（新規タスクのインライン起動）
             Color.clear
                 .frame(height: 80)
                 .contentShape(Rectangle())
@@ -359,55 +241,48 @@ struct VisualizerView: View {
         }
     }
     
-    // MARK: - Task Row Container & Actions
+    // MARK: - Task Row Container
     @ViewBuilder
     private func taskRowContainer(for task: LimitTask) -> some View {
-        let level = levelIndex(for: task.timeFrame)
-        let isSelectedLevel = (task.timeFrame == selectedTimeFrame)
-        
-        TaskRowView(task: task, onToggle: { saveContext() })
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .opacity(isSelectedLevel ? 1.0 : 0.45)
-            .scaleEffect(isSelectedLevel ? 1.0 : 0.98, anchor: .leading)
-            .padding(.leading, CGFloat(level - 1) * indentStepWidth)
-            .padding(.horizontal)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selectedTaskToEdit = task
-            }
-            .draggable(TaskDragItem(idString: task.id.uuidString))
-            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        HStack(spacing: 8) {
+            if isEditingMode {
                 Button(role: .destructive) {
                     deleteTask(task)
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Image(systemName: "minus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.red)
                 }
+                .buttonStyle(.plain)
+                .transition(.move(edge: .leading).combined(with: .opacity))
             }
-            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                Button {
-                    toggleFlag(for: task)
-                } label: {
-                    Label(task.isFlagged ? "Unflag" : "Flag", systemImage: task.isFlagged ? "flag.slash" : "flag.fill")
-                }
-                .tint(.orange)
-                
-                Button {
-                    setDueDateToToday(for: task)
-                } label: {
-                    Label("Today", systemImage: "calendar.badge.clock")
-                }
-                .tint(.blue)
+            
+            TaskRowView(task: task, onToggle: { saveContext() })
+            
+            if isEditingMode {
+                Image(systemName: "line.3.horizontal")
+                    .font(.body)
+                    .foregroundStyle(.tertiary)
+                    .padding(.leading, 4)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !isEditingMode {
+                selectedTaskToEdit = task
+            }
+        }
     }
     
     // MARK: - Quick Add Inline Row
     @ViewBuilder
     private var quickAddInlineRow: some View {
-        let level = levelIndex(for: selectedTimeFrame)
-        
         HStack(spacing: 10) {
             Image(systemName: "circle")
                 .font(.title3)
@@ -451,7 +326,6 @@ struct VisualizerView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.leading, CGFloat(level - 1) * indentStepWidth)
         .onChange(of: isQuickAddFocused) { _, isFocused in
             if !isFocused && isQuickAdding {
                 commitQuickAdd(continueAdding: false)
@@ -486,10 +360,8 @@ struct VisualizerView: View {
     // MARK: - Floating Control Bar
     @ViewBuilder
     private var floatingControlBar: some View {
-        let isEditing = editMode.isEditing
-        
         HStack(spacing: 0) {
-            if !isEditing {
+            if !isEditingMode {
                 Button(action: {
                     startQuickAdd()
                 }) {
@@ -511,13 +383,13 @@ struct VisualizerView: View {
 
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    editMode = isEditing ? .inactive : .active
+                    isEditingMode.toggle()
                 }
             }) {
                 HStack(spacing: 6) {
-                    Image(systemName: isEditing ? "checkmark.circle.fill" : "pencil.circle.fill")
+                    Image(systemName: isEditingMode ? "checkmark.circle.fill" : "pencil.circle.fill")
                         .font(.body.weight(.semibold))
-                    Text(isEditing ? "Done" : "Edit Task")
+                    Text(isEditingMode ? "Done" : "Edit Task")
                         .font(.body.weight(.semibold))
                 }
                 .foregroundStyle(.orange)
@@ -542,6 +414,13 @@ struct VisualizerView: View {
         }
     }
     
+    private func dismissQuickAdd() {
+        if isQuickAdding || isQuickAddFocused {
+            commitQuickAdd(continueAdding: false)
+            isQuickAddFocused = false
+        }
+    }
+    
     private func commitQuickAdd(continueAdding: Bool) {
         let trimmed = quickAddTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
@@ -562,20 +441,6 @@ struct VisualizerView: View {
             withAnimation {
                 isQuickAdding = false
             }
-        }
-    }
-    
-    private func toggleFlag(for task: LimitTask) {
-        withAnimation {
-            task.isFlagged.toggle()
-            saveContext()
-        }
-    }
-    
-    private func setDueDateToToday(for task: LimitTask) {
-        withAnimation {
-            task.dueDate = Date()
-            saveContext()
         }
     }
     
@@ -727,6 +592,7 @@ private struct TaskRowView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     struct PreviewContainer {
         @MainActor
@@ -784,7 +650,7 @@ private struct TaskRowView: View {
         }()
     }
     
-    return VisualizerView(selectedTab: .constant(.visualizer))
+    return VisualizerView()
         .environment(\.isPreview, true)
         .modelContainer(PreviewContainer.container)
 }

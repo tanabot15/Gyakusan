@@ -44,7 +44,7 @@ struct SettingsView: View {
                 
                 Form {
                     Section(
-                        header: Text("Profile Settings"),
+                        header: Text("Profile"),
                         footer: Text("Set your birthday and target lifespan to calculate your life grid.")
                     ) {
                         DatePicker(
@@ -72,7 +72,7 @@ struct SettingsView: View {
                     
                     // MARK: - Timer Settings
                     Section(
-                        header: Text("Pomodoro Timer Settings")
+                        header: Text("Pomodoro Timer")
                     ) {
                         Stepper(value: $focusMinutes, in: 1...120) {
                             HStack {
@@ -94,7 +94,7 @@ struct SettingsView: View {
                     }
                     
                     Section(
-                        header: Text("Appearance Settings")
+                        header: Text("Appearance")
                     ) {
                         Picker("Appearance", selection: $selectedAppearance) {
                             Text("System").tag("system")
@@ -105,11 +105,11 @@ struct SettingsView: View {
                         ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
                     }
                     
-                    Section(header: Text("About App")) {
+                    Section(header: Text("About")) {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("4.1")
+                            Text("4.4")
                                 .foregroundStyle(.secondary)
                         }
                     }

@@ -26,17 +26,11 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            LimitVisualizerView(selectedTab: $selectedTab)
+            VisualizerView()
                 .tabItem {
                     Label("Visualizer", systemImage: "hourglass")
                 }
                 .tag(Tab.visualizer)
-            
-            TodoListView()
-                .tabItem {
-                    Label("Tasks", systemImage: "checkmark.square")
-                }
-                .tag(Tab.tasks)
             
             FocusTimerView(selectedTab: $selectedTab)
                 .tabItem {

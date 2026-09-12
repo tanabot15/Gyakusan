@@ -34,8 +34,7 @@
 		D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687C3010E0DE00E88132 /* TimeFrame.swift */; };
 		D9E068843010E16400E88132 /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068833010E16400E88132 /* BannerAdView.swift */; };
 		D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068853010E16D00E88132 /* TimeFramePicker.swift */; };
-		D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068893010E19100E88132 /* TodoListView.swift */; };
-		D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */; };
+		D9E0688C3010E19B00E88132 /* VisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* VisualizerView.swift */; };
 		D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LimitGridView.swift */; };
 		D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */; };
 		D9E068923010E1C000E88132 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068913010E1C000E88132 /* SettingsView.swift */; };
@@ -97,8 +96,7 @@
 		D9E0687C3010E0DE00E88132 /* TimeFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFrame.swift; sourceTree = "<group>"; };
 		D9E068833010E16400E88132 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
 		D9E068853010E16D00E88132 /* TimeFramePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFramePicker.swift; sourceTree = "<group>"; };
-		D9E068893010E19100E88132 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
-		D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitVisualizerView.swift; sourceTree = "<group>"; };
+		D9E0688B3010E19B00E88132 /* VisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizerView.swift; sourceTree = "<group>"; };
 		D9E0688D3010E1A400E88132 /* LimitGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitGridView.swift; sourceTree = "<group>"; };
 		D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownHeaderView.swift; sourceTree = "<group>"; };
 		D9E068913010E1C000E88132 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -232,8 +230,6 @@
 				D9E068683010A63900E88132 /* MainTabView.swift */,
 				D9E0687E3010E0EE00E88132 /* Components */,
 				D9E068803010E11500E88132 /* LimitTab */,
-				D9E0687F3010E10C00E88132 /* TodoTab */,
-				D9E068823010E12300E88132 /* TaskForm */,
 				D9D57E403040611D004B29BA /* FocusTimer */,
 				D990D1B4303C00EB001B3CDA /* ReflectionTab */,
 				D9E068813010E11C00E88132 /* SettingsTab */,
@@ -270,21 +266,14 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		D9E0687F3010E10C00E88132 /* TodoTab */ = {
-			isa = PBXGroup;
-			children = (
-				D9E068893010E19100E88132 /* TodoListView.swift */,
-			);
-			path = TodoTab;
-			sourceTree = "<group>";
-		};
 		D9E068803010E11500E88132 /* LimitTab */ = {
 			isa = PBXGroup;
 			children = (
-				D9E0688B3010E19B00E88132 /* LimitVisualizerView.swift */,
+				D9E0688B3010E19B00E88132 /* VisualizerView.swift */,
 				D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */,
 				D9E0688D3010E1A400E88132 /* LimitGridView.swift */,
 				D990D1023026CB39001B3CDA /* GridHighlightColor.swift */,
+				D9E068933010E1CA00E88132 /* TaskFormSheet.swift */,
 			);
 			path = LimitTab;
 			sourceTree = "<group>";
@@ -295,14 +284,6 @@
 				D9E068913010E1C000E88132 /* SettingsView.swift */,
 			);
 			path = SettingsTab;
-			sourceTree = "<group>";
-		};
-		D9E068823010E12300E88132 /* TaskForm */ = {
-			isa = PBXGroup;
-			children = (
-				D9E068933010E1CA00E88132 /* TaskFormSheet.swift */,
-			);
-			path = TaskForm;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -431,9 +412,8 @@
 			files = (
 				D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */,
 				D990D1B6303C010D001B3CDA /* ReflectionView.swift in Sources */,
-				D9E0688C3010E19B00E88132 /* LimitVisualizerView.swift in Sources */,
+				D9E0688C3010E19B00E88132 /* VisualizerView.swift in Sources */,
 				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
-				D9E0688A3010E19100E88132 /* TodoListView.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
 				D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */,
 				D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */,
@@ -472,7 +452,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -492,7 +472,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 4.1;
+				MARKETING_VERSION = 4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -517,7 +497,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -537,7 +517,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 4.1;
+				MARKETING_VERSION = 4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -685,7 +665,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -704,7 +684,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1;
+				MARKETING_VERSION = 4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -728,7 +708,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -747,7 +727,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1;
+				MARKETING_VERSION = 4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
