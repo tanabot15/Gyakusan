@@ -24,6 +24,9 @@
 		D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */; };
 		D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */; };
 		D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
+		D9BA15E03057B396008B3FC5 /* FocusTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15DF3057B396008B3FC5 /* FocusTimerAttributes.swift */; };
+		D9BA15E13057B396008B3FC5 /* FocusTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15DF3057B396008B3FC5 /* FocusTimerAttributes.swift */; };
+		D9BA15E33057B3C3008B3FC5 /* FocusTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15E23057B3C3008B3FC5 /* FocusTimerLiveActivity.swift */; };
 		D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D57E4130406130004B29BA /* FocusTimerView.swift */; };
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
@@ -84,6 +87,8 @@
 		D9BA15CD304ED77D008B3FC5 /* GyakusanWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GyakusanWidgetBundle.swift; sourceTree = "<group>"; };
 		D9BA15CE304ED77D008B3FC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9BA15D7304ED9C7008B3FC5 /* SharedModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModelContainer.swift; sourceTree = "<group>"; };
+		D9BA15DF3057B396008B3FC5 /* FocusTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerAttributes.swift; sourceTree = "<group>"; };
+		D9BA15E23057B3C3008B3FC5 /* FocusTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerLiveActivity.swift; sourceTree = "<group>"; };
 		D9D57E4130406130004B29BA /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -156,6 +161,7 @@
 			children = (
 				D9BA15CC304ED77D008B3FC5 /* GyakusanWidget.swift */,
 				D9BA15CD304ED77D008B3FC5 /* GyakusanWidgetBundle.swift */,
+				D9BA15E23057B3C3008B3FC5 /* FocusTimerLiveActivity.swift */,
 				D9BA15CE304ED77D008B3FC5 /* Info.plist */,
 				D9BA15CB304ED77D008B3FC5 /* Assets.xcassets */,
 			);
@@ -244,6 +250,7 @@
 				D9E068953010E1DF00E88132 /* TimeCalculator.swift */,
 				D9E068973010E1E800E88132 /* AdMobManager.swift */,
 				D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */,
+				D9BA15DF3057B396008B3FC5 /* FocusTimerAttributes.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -396,11 +403,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9BA15E33057B3C3008B3FC5 /* FocusTimerLiveActivity.swift in Sources */,
 				D9BA15D6304ED920008B3FC5 /* TimeFrame.swift in Sources */,
 				D9BA15D5304ED91C008B3FC5 /* UserProfile.swift in Sources */,
 				D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */,
 				D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9BA15D4304ED917008B3FC5 /* LimitTask.swift in Sources */,
+				D9BA15E13057B396008B3FC5 /* FocusTimerAttributes.swift in Sources */,
 				D9BA15D2304ED77D008B3FC5 /* GyakusanWidget.swift in Sources */,
 				D9BA15D3304ED77D008B3FC5 /* GyakusanWidgetBundle.swift in Sources */,
 			);
@@ -425,6 +434,7 @@
 				D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */,
 				D9E068943010E1CA00E88132 /* TaskFormSheet.swift in Sources */,
 				D9E068843010E16400E88132 /* BannerAdView.swift in Sources */,
+				D9BA15E03057B396008B3FC5 /* FocusTimerAttributes.swift in Sources */,
 				D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */,
 				D9E0687B3010E0D400E88132 /* UserProfile.swift in Sources */,
 				D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
@@ -452,7 +462,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -472,7 +482,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 4.5;
+				MARKETING_VERSION = 4.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -497,7 +507,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -517,7 +527,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 4.5;
+				MARKETING_VERSION = 4.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -665,7 +675,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -684,7 +694,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.5;
+				MARKETING_VERSION = 4.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -708,7 +718,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 37;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -727,7 +737,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.5;
+				MARKETING_VERSION = 4.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

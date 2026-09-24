@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import Combine
 import UserNotifications
+import ActivityKit
 
 struct FocusTimerView: View {
     @Binding var selectedTab: MainTabView.Tab
@@ -35,6 +36,9 @@ struct FocusTimerView: View {
     @State private var isShowingTaskCompletionAlert: Bool = false
     @State private var completedTaskTarget: LimitTask? = nil
     
+    // Live Activity Management
+    @State private var currentActivity: Activity<FocusTimerAttributes>? = nil
+    
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let timerNotificationID = "FocusTimerNotification"
     
@@ -46,7 +50,6 @@ struct FocusTimerView: View {
         }
     }
     
-    // Helper Methods for Dynamic Preset Times
     private var currentDefaultSeconds: Int {
         switch timerMode {
         case .focus: return focusMinutes * 60
@@ -164,6 +167,42 @@ struct FocusTimerView: View {
         }
     }
     
+    // MARK: - Live Activity Control Logic
+    private func startActivity(endDate: Date) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        endActivity()
+        
+        let attributes = FocusTimerAttributes(
+            taskTitle: confirmedTask?.title ?? "Free Focus",
+            timerModeTitle: timerMode.title
+        )
+        let initialContentState = FocusTimerAttributes.ContentState(
+            endDate: endDate,
+            isRunning: true,
+            totalMinutes: currentTotalBlocks,
+            highlightColorHex: highlightColorHex
+        )
+        
+        do {
+            let activity = try Activity<FocusTimerAttributes>.request(
+                attributes: attributes,
+                content: .init(state: initialContentState, staleDate: nil)
+            )
+            self.currentActivity = activity
+        } catch {
+            print("Failed to start Live Activity: \(error.localizedDescription)")
+        }
+    }
+    
+    private func endActivity() {
+        Task {
+            for activity in Activity<FocusTimerAttributes>.activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            currentActivity = nil
+        }
+    }
+    
     // MARK: - Background & Notification Logic
     private func updateTimerState() {
         if timerEndDateInterval > 0 {
@@ -177,6 +216,7 @@ struct FocusTimerView: View {
                 storedIsRunning = false
                 timerEndDateInterval = 0
                 cancelNotification()
+                endActivity()
                 handleTimerFinished()
             }
         } else if remainingSeconds > 0 {
@@ -185,6 +225,7 @@ struct FocusTimerView: View {
             isRunning = false
             storedIsRunning = false
             cancelNotification()
+            endActivity()
             handleTimerFinished()
         }
     }
@@ -201,6 +242,7 @@ struct FocusTimerView: View {
                 isRunning = false
                 storedIsRunning = false
                 timerEndDateInterval = 0
+                endActivity()
                 handleTimerFinished()
             }
         }
@@ -510,9 +552,11 @@ struct FocusTimerView: View {
                 let targetDate = Date().addingTimeInterval(TimeInterval(remainingSeconds))
                 timerEndDateInterval = targetDate.timeIntervalSince1970
                 scheduleNotification(after: remainingSeconds)
+                startActivity(endDate: targetDate)
             } else {
                 timerEndDateInterval = 0
                 cancelNotification()
+                endActivity()
             }
         }
     }
@@ -532,6 +576,7 @@ struct FocusTimerView: View {
         timerEndDateInterval = 0
         remainingSeconds = currentDefaultSeconds
         cancelNotification()
+        endActivity()
     }
     
     private func formattedTime(_ seconds: Int) -> String {

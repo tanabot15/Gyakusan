@@ -21,6 +21,7 @@ struct LimitEntry: TimelineEntry {
     let lifeGrid: GridMetrics
     let yearGrid: GridMetrics
     let monthGrid: GridMetrics
+    let dayGrid: GridMetrics
 }
 
 // MARK: - Timeline Provider
@@ -30,7 +31,8 @@ struct Provider: TimelineProvider {
             date: Date(),
             lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
             yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-            monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days")
+            monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
+            dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
         )
     }
 
@@ -44,7 +46,7 @@ struct Provider: TimelineProvider {
         let entry = calculateEntry(for: currentDate)
         
         let calendar = Calendar.current
-        let nextUpdate = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate)
+        let nextUpdate = calendar.date(byAdding: .hour, value: 1, to: currentDate) ?? currentDate
         
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
@@ -94,11 +96,21 @@ struct Provider: TimelineProvider {
             unitText: "Days"
         )
         
+        // 4. Day Grid Metrics (24 Hours)
+        let hour = calendar.component(.hour, from: date)
+        let dayGrid = GridMetrics(
+            totalCount: 24,
+            passedCount: max(0, hour),
+            title: "Day Grid",
+            unitText: "Hrs"
+        )
+        
         return LimitEntry(
             date: date,
             lifeGrid: lifeGrid,
             yearGrid: yearGrid,
-            monthGrid: monthGrid
+            monthGrid: monthGrid,
+            dayGrid: dayGrid
         )
     }
 }
@@ -122,34 +134,40 @@ struct GyakusanWidgetEntryView: View {
     // MARK: - Small Layout (Life Grid Only)
     @ViewBuilder
     private var smallView: some View {
-        gridView(metrics: entry.lifeGrid, columnsCount: 10, titleFont: .caption, countFont: .caption, gridSpacing: 2)
+        gridView(metrics: entry.lifeGrid, columnsCount: 10, titleFont: .caption, countFont: .caption2, gridSpacing: 2)
             .padding(10)
     }
 
-    // MARK: - Medium Layout (Left: Life Grid, Right: Year & Month Grids)
+    // MARK: - Medium Layout (Left: Life Grid, Right: Year, Month, Day Grids)
     @ViewBuilder
     private var mediumView: some View {
-        HStack(spacing: 12) {
-            gridView(metrics: entry.lifeGrid, columnsCount: 10, titleFont: .caption, countFont: .caption, gridSpacing: 2)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        HStack(spacing: 10) {
+            // Life Grid
+            VStack {
+                gridView(metrics: entry.lifeGrid, columnsCount: 10, titleFont: .caption, countFont: .caption2, gridSpacing: 2)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                
+                Spacer()
+            }
 
             Divider()
 
-            VStack(spacing: 6) {
-                gridView(metrics: entry.yearGrid, columnsCount: 12, titleFont: .caption2, countFont: .caption, gridSpacing: 1.5)
-                
-                Spacer()
+            // Year Grid: 12×1 / Month Grid: 10×3 / Day Grid: 12×2
+            VStack(spacing: 4) {
+                gridView(metrics: entry.yearGrid, columnsCount: 12, titleFont: .caption2, countFont: .caption2, gridSpacing: 1.5)
                 
                 Divider()
                 
-                Spacer()
+                gridView(metrics: entry.monthGrid, columnsCount: 10, titleFont: .caption2, countFont: .caption2, gridSpacing: 1.5)
                 
-                gridView(metrics: entry.monthGrid, columnsCount: 10, titleFont: .caption2, countFont: .caption, gridSpacing: 1.5)
+                Divider()
+                
+                gridView(metrics: entry.dayGrid, columnsCount: 12, titleFont: .caption2, countFont: .caption2, gridSpacing: 1.5)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 12)
+        .padding(.vertical, 6)
     }
 
     // MARK: - Reusable Grid View Helper
@@ -189,7 +207,7 @@ struct GyakusanWidgetEntryView: View {
         } else if index == passedCount {
             return Color(hex: highlightColorHex)
         } else {
-            return Color(uiColor: .systemGray5)
+            return Color(uiColor: .systemGray3)
         }
     }
 }
@@ -222,7 +240,8 @@ struct GyakusanWidget: Widget {
         date: .now,
         lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
         yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days")
+        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
+        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
     )
 }
 
@@ -233,6 +252,7 @@ struct GyakusanWidget: Widget {
         date: .now,
         lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
         yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days")
+        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
+        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
     )
 }

@@ -12,5 +12,6 @@ import SwiftUI
 struct GyakusanWidgetBundle: WidgetBundle {
     var body: some Widget {
         GyakusanWidget()
+        FocusTimerLiveActivity()
     }
 }
