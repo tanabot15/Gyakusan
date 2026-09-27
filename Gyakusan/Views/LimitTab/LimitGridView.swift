@@ -12,7 +12,10 @@ struct LimitGridView: View {
     let lifeStats: TimeCalculator.LifeStats?
     let currentDate: Date
     
-    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
     
     private var calendar: Calendar { .current }
     

@@ -7,27 +7,33 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var userProfiles: [UserProfile]
     
-    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
+    
     @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
-    // タイマープリセット設定用の AppStorage
     @AppStorage("focusTimerFocusMinutes") private var focusMinutes: Int = 25
     @AppStorage("focusTimerBreakMinutes") private var breakMinutes: Int = 5
     
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
     
-    // ColorPicker と動的に同期する State
     private var selectedColorBinding: Binding<Color> {
         Binding(
             get: { Color(hex: highlightColorHex) },
-            set: { newColor in highlightColorHex = newColor.toHex() }
+            set: { newColor in
+                highlightColorHex = newColor.toHex()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         )
     }
     
@@ -109,7 +115,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("4.7")
+                            Text("4.8")
                                 .foregroundStyle(.secondary)
                         }
                     }

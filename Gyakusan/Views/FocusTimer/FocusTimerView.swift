@@ -18,7 +18,9 @@ struct FocusTimerView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \LimitTask.createdAt, order: .forward) private var allTasks: [LimitTask]
     
-    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
     
     @AppStorage("focusTimerEndDate") private var timerEndDateInterval: Double = 0
     @AppStorage("focusTimerIsRunning") private var storedIsRunning: Bool = false
