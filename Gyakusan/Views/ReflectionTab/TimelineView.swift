@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct ReflectionView: View {
+struct TimelineView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var userProfiles: [UserProfile]
@@ -402,7 +402,7 @@ struct ReflectionView: View {
         }()
     }
     
-    return ReflectionView()
+    return TimelineView()
         .environment(\.isPreview, true)
         .modelContainer(PreviewContainer.container)
 }
