@@ -1,8 +1,6 @@
 //
-//  ReflectionView.swift
+//  TimelineView.swift
 //  Gyakusan
-//
-//  Created by Kenichiro Suzuki on 2026/08/24.
 //
 
 import SwiftUI
@@ -12,7 +10,7 @@ struct TimelineView: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var userProfiles: [UserProfile]
-    @Query private var allTasks: [LimitTask]
+    @Query(sort: \LimitTask.createdAt, order: .reverse) private var allTasks: [LimitTask]
     
     @State private var currentDate: Date = Date()
     
@@ -20,42 +18,8 @@ struct TimelineView: View {
         userProfiles.first ?? UserProfile()
     }
     
-    private func calculateProgressRatio(for frame: TimeFrame, at date: Date) -> Double {
-        let calendar = Calendar.current
-        
-        switch frame {
-        case .day:
-            let startOfDay = calendar.startOfDay(for: date)
-            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return 0.0 }
-            let total = endOfDay.timeIntervalSince(startOfDay)
-            let elapsed = date.timeIntervalSince(startOfDay)
-            return max(0.0, min(1.0, elapsed / total))
-            
-        case .month:
-            guard let interval = calendar.dateInterval(of: .month, for: date) else { return 0.0 }
-            let elapsed = date.timeIntervalSince(interval.start)
-            return max(0.0, min(1.0, elapsed / interval.duration))
-            
-        case .year:
-            guard let interval = calendar.dateInterval(of: .year, for: date) else { return 0.0 }
-            let elapsed = date.timeIntervalSince(interval.start)
-            return max(0.0, min(1.0, elapsed / interval.duration))
-            
-        case .life:
-            let birth = currentProfile.birthday
-            guard let targetDate = calendar.date(byAdding: .year, value: currentProfile.targetAge, to: birth),
-                  targetDate > birth else { return 0.0 }
-            let totalSpan = targetDate.timeIntervalSince(birth)
-            let elapsedSpan = date.timeIntervalSince(birth)
-            return max(0.0, min(1.0, elapsedSpan / totalSpan))
-        }
-    }
-    
-    private var lifeTaskCompletionRatio: Double {
-        let lifeTasks = allTasks.filter { $0.timeFrameRawValue == TimeFrame.life.rawValue }
-        guard !lifeTasks.isEmpty else { return 0.0 }
-        let completedCount = lifeTasks.filter { $0.isCompleted }.count
-        return Double(completedCount) / Double(lifeTasks.count)
+    private var timelineTasks: [LimitTask] {
+        allTasks.filter { $0.showInTimeline }
     }
 
     private struct AgeGroup: Identifiable {
@@ -66,10 +30,6 @@ struct TimelineView: View {
         let tasks: [LimitTask]
     }
     
-    private var lifeTasks: [LimitTask] {
-        allTasks.filter { $0.timeFrameRawValue == TimeFrame.life.rawValue }
-    }
-    
     private var timelineGroups: [AgeGroup] {
         let calendar = Calendar.current
         let birthYear = calendar.component(.year, from: currentProfile.birthday)
@@ -77,26 +37,14 @@ struct TimelineView: View {
         
         var groups: [AgeGroup] = []
         
-        // 1. 期日未設定タスクを "Someday" グループとして最上部に配置
-        let undatedTasks = lifeTasks.filter { $0.dueDate == nil }
-        if !undatedTasks.isEmpty {
-            groups.append(AgeGroup(
-                id: "someday",
-                ageText: "Someday",
-                yearText: "Vision",
-                isCurrentAge: false,
-                tasks: undatedTasks
-            ))
-        }
-        
-        // 2. 年齢ごとのタスクマッピング
-        let datedTasks = lifeTasks.filter { $0.dueDate != nil }
+        // 1. 年齢ごとのタスクマッピング（日付あり）
+        let datedTasks = timelineTasks.filter { $0.dueDate != nil || $0.completedAt != nil }
         var tasksByAge: [Int: [LimitTask]] = [:]
+        
         for task in datedTasks {
-            if let date = task.dueDate {
-                let ageAtTask = calendar.dateComponents([.year], from: currentProfile.birthday, to: date).year ?? 0
-                tasksByAge[ageAtTask, default: []].append(task)
-            }
+            let targetDate = task.dueDate ?? task.completedAt ?? Date()
+            let ageAtTask = calendar.dateComponents([.year], from: currentProfile.birthday, to: targetDate).year ?? 0
+            tasksByAge[ageAtTask, default: []].append(task)
         }
         
         let maxAge = max(currentAge + 5, currentProfile.targetAge)
@@ -116,6 +64,18 @@ struct TimelineView: View {
             }
         }
         
+        // 2. 期日未設定タスク（Someday）を最下部（未来の先）に配置
+        let undatedTasks = timelineTasks.filter { $0.dueDate == nil }
+        if !undatedTasks.isEmpty {
+            groups.append(AgeGroup(
+                id: "someday",
+                ageText: "Someday",
+                yearText: "Future",
+                isCurrentAge: false,
+                tasks: undatedTasks
+            ))
+        }
+        
         return groups
     }
 
@@ -127,220 +87,125 @@ struct TimelineView: View {
                     .background(Color(uiColor: .systemGroupedBackground))
                 
                 ScrollView {
-                    VStack(spacing: 20) {
-                        // 1. Overall Progress
-                        progressOverviewCard
-                        
-                        // 2. Task Completion Metrics
-                        taskMetricsSection
-                        
-                        // 3. Integrated Life Timeline
-                        lifeTimelineSection
-                    }
-                    .padding(.vertical)
+                    lifeTimelineSection
+                        .padding(.vertical)
                 }
             }
+            .navigationTitle("Timeline")
+            .navigationBarTitleDisplayMode(.inline)
             .background(Color(uiColor: .systemGroupedBackground))
         }
     }
     
-    // MARK: - 1. Progress Overview Card
-    private var progressOverviewCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Overview")
-                .font(.headline)
-                .fontWeight(.bold)
-            
-            VStack(spacing: 16) {
-                // Time Elapsed (Day / Month / Year / Life)
-                TimelineView(.periodic(from: .now, by: 60.0)) { timelineContext in
-                    let now = timelineContext.date
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Time Elapsed")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.secondary)
+    // MARK: - Life Timeline Section
+    private var lifeTimelineSection: some View {
+        VStack(spacing: 0) {
+            ForEach(timelineGroups) { group in
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(group.ageText)
+                            .font(.subheadline)
+                            .fontWeight(group.isCurrentAge ? .bold : .semibold)
+                            .foregroundStyle(group.isCurrentAge ? Color.accentColor : (group.id == "someday" ? .orange : .primary))
                         
-                        ForEach(TimeFrame.allCases) { timeFrame in
-                            let ratio = calculateProgressRatio(for: timeFrame, at: now)
-                            VStack(spacing: 4) {
-                                HStack {
-                                    Text(timeFrame.title)
-                                        .font(.caption)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    Text("\(Int(ratio * 100))%")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
-                                ProgressView(value: ratio)
-                                    .tint(.orange)
-                            }
-                        }
+                        Text(group.yearText)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
-                }
-                
-                Divider()
-                
-                // Life Goals Achieved
-                VStack(spacing: 6) {
-                    HStack {
-                        Label("Life Goals Achieved", systemImage: "flag.checkered")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(lifeTaskCompletionRatio * 100))%")
-                            .font(.caption)
-                            .fontWeight(.bold)
+                    .frame(width: 65, alignment: .trailing)
+                    
+                    VStack(spacing: 0) {
+                        Circle()
+                            .fill(group.isCurrentAge ? Color.accentColor : (group.id == "someday" ? Color.orange : (group.tasks.isEmpty ? Color.gray.opacity(0.3) : Color.green)))
+                            .frame(width: group.isCurrentAge ? 14 : 10, height: group.isCurrentAge ? 14 : 10)
+                            .padding(.top, 4)
+                        
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 2)
+                            .frame(maxHeight: .infinity)
                     }
-                    ProgressView(value: lifeTaskCompletionRatio)
-                        .tint(.green)
-                }
-            }
-            .padding(16)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
-        }
-        .padding(.horizontal)
-    }
-    
-    // MARK: - 2. Task Metrics Graphic Cards
-    private var taskMetricsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Current Period Completion")
-                .font(.headline)
-                .fontWeight(.bold)
-                .padding(.horizontal, 4)
-            
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(TimeFrame.allCases) { timeFrame in
-                    let stats = taskStats(for: timeFrame)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(timeFrame.title)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.secondary)
-                        
-                        HStack(alignment: .firstTextBaseline, spacing: 2) {
-                            Text("\(stats.completed)")
-                                .font(.title)
+                        if group.isCurrentAge {
+                            Text("PRESENT")
+                                .font(.caption2)
                                 .fontWeight(.bold)
-                                .fontDesign(.rounded)
-                            
-                            Text(" / \(stats.total)")
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                                .fontDesign(.rounded)
-                                .foregroundStyle(.secondary)
-                            
-                            Spacer()
-                            
-                            Text("tasks")
-                                .font(.caption2)
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        
+                        if group.tasks.isEmpty {
+                            Text("No milestones")
+                                .font(.caption)
                                 .foregroundStyle(.tertiary)
+                                .padding(.bottom, 20)
+                        } else {
+                            ForEach(group.tasks) { task in
+                                timelineTaskCard(task)
+                            }
+                            .padding(.bottom, 12)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Color(uiColor: .secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .shadow(color: .black.opacity(0.03), radius: 6, x: 0, y: 2)
+                    Spacer()
                 }
             }
         }
-        .padding(.horizontal)
-    }
-    
-    // MARK: - 3. Integrated Life Timeline
-    private var lifeTimelineSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Life Timeline")
-                .font(.headline)
-                .fontWeight(.bold)
-                .padding(.horizontal, 4)
-            
-            VStack(spacing: 0) {
-                ForEach(timelineGroups) { group in
-                    HStack(alignment: .top, spacing: 16) {
-                        // 左軸
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(group.ageText)
-                                .font(.subheadline)
-                                .fontWeight(group.isCurrentAge ? .bold : .semibold)
-                                .foregroundStyle(group.isCurrentAge ? Color.accentColor : (group.id == "someday" ? .orange : .primary))
-                            
-                            Text(group.yearText)
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
-                        .frame(width: 65, alignment: .trailing)
-                        
-                        // 中央インジケータ
-                        VStack(spacing: 0) {
-                            Circle()
-                                .fill(group.isCurrentAge ? Color.accentColor : (group.id == "someday" ? Color.orange : (group.tasks.isEmpty ? Color.gray.opacity(0.3) : Color.green)))
-                                .frame(width: group.isCurrentAge ? 14 : 10, height: group.isCurrentAge ? 14 : 10)
-                                .padding(.top, 4)
-                            
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(width: 2)
-                                .frame(maxHeight: .infinity)
-                        }
-                        
-                        // 右側カード
-                        VStack(alignment: .leading, spacing: 8) {
-                            if group.isCurrentAge {
-                                Text("PRESENT AGE")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(Color.accentColor)
-                            }
-                            
-                            if group.tasks.isEmpty {
-                                Text("No milestones set")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                                    .padding(.bottom, 20)
-                            } else {
-                                ForEach(group.tasks) { task in
-                                    timelineTaskCard(task)
-                                }
-                                .padding(.bottom, 12)
-                            }
-                        }
-                        Spacer()
-                    }
-                }
-            }
-            .padding(16)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
-        }
+        .padding(16)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: 3)
         .padding(.horizontal)
     }
     
     private func timelineTaskCard(_ task: LimitTask) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.caption)
-                .foregroundStyle(task.isCompleted ? .green : .secondary)
+        HStack(spacing: 10) {
+            Button {
+                withAnimation {
+                    task.isCompleted.toggle()
+                    task.completedAt = task.isCompleted ? Date() : nil
+                    try? modelContext.save()
+                }
+            } label: {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(task.isCompleted ? .green : .secondary)
+            }
+            .buttonStyle(.plain)
             
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .strikethrough(task.isCompleted)
-                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(task.title)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    
+                    if task.timeFrame != .life {
+                        Text(task.timeFrame.title)
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.gray.opacity(0.15))
+                            .clipShape(Capsule())
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 
-                if !task.location.isEmpty {
-                    Label(task.location, systemImage: "location")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    if let completedAt = task.completedAt {
+                        Label(completedAt.formatted(date: .numeric, time: .omitted), systemImage: "checkmark.done")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                    } else if let dueDate = task.dueDate {
+                        Label(dueDate.formatted(date: .numeric, time: .omitted), systemImage: "calendar")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    if !task.location.isEmpty {
+                        Label(task.location, systemImage: "location")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Spacer()
@@ -351,18 +216,9 @@ struct TimelineView: View {
                     .foregroundStyle(.orange)
             }
         }
-        .padding(8)
+        .padding(10)
         .background(Color(uiColor: .tertiarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-    }
-    
-    private func taskStats(for timeFrame: TimeFrame) -> (completed: Int, total: Int) {
-        let currentPeriodTasks = allTasks.filter { task in
-            task.timeFrameRawValue == timeFrame.rawValue &&
-            task.isCurrentPeriod(for: timeFrame, now: currentDate)
-        }
-        let completedCount = currentPeriodTasks.filter { $0.isCompleted }.count
-        return (completed: completedCount, total: currentPeriodTasks.count)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

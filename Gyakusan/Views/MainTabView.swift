@@ -38,9 +38,9 @@ struct MainTabView: View {
                 }
                 .tag(Tab.focus)
             
-            ReflectionView()
+            TimelineView()
                 .tabItem {
-                    Label("Reflection", systemImage: "chart.bar.doc.horizontal")
+                    Label("Timeline", systemImage: "calendar.day.timeline.left")
                 }
                 .tag(Tab.reflection)
             

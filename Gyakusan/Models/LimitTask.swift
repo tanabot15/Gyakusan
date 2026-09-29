@@ -18,6 +18,7 @@ final class LimitTask {
     var dueDate: Date?
     var location: String
     var isFlagged: Bool
+    var showInTimeline: Bool
     
     var timeFrameRawValue: String
     
@@ -31,7 +32,8 @@ final class LimitTask {
         timeFrameRawValue: String,
         dueDate: Date? = nil,
         location: String = "",
-        isFlagged: Bool = false
+        isFlagged: Bool = false,
+        showInTimeline: Bool? = nil
     ) {
         self.id = UUID()
         self.title = title
@@ -41,6 +43,9 @@ final class LimitTask {
         self.dueDate = dueDate
         self.location = location
         self.isFlagged = isFlagged
+        
+        let tf = TimeFrame(rawValue: timeFrameRawValue) ?? .day
+        self.showInTimeline = showInTimeline ?? (tf == .life || tf == .year)
     }
     
     // Determines whether this task was created during the “current period”

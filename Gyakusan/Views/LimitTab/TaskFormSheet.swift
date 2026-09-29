@@ -19,17 +19,18 @@ struct TaskFormSheet: View {
     @State private var dueDate: Date?
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
+    @State private var showInTimeline: Bool = false // ★ 追加
     @State private var isShowingDeleteConfirmation: Bool = false
     
     @FocusState private var isTitleFocused: Bool
     
-    // 年選択用（1950年〜2100年の範囲）
     private let availableYears: [Int] = Array(1950...2100)
     
     init(selectedTimeFrame: TimeFrame) {
         self.taskToEdit = nil
         _selectedTimeFrame = State(initialValue: selectedTimeFrame)
         _dueDate = State(initialValue: nil)
+        _showInTimeline = State(initialValue: selectedTimeFrame == .life || selectedTimeFrame == .year)
     }
     
     init(taskToEdit: LimitTask) {
@@ -39,6 +40,7 @@ struct TaskFormSheet: View {
         _dueDate = State(initialValue: taskToEdit.dueDate)
         _location = State(initialValue: taskToEdit.location)
         _isFlagged = State(initialValue: taskToEdit.isFlagged)
+        _showInTimeline = State(initialValue: taskToEdit.showInTimeline)
     }
     
     private var isEditing: Bool {
@@ -53,8 +55,9 @@ struct TaskFormSheet: View {
         let isFlaggedChanged = isFlagged != original.isFlagged
         let isLocationChanged = location != original.location
         let isDueDateChanged = dueDate != original.dueDate
+        let isShowInTimelineChanged = showInTimeline != original.showInTimeline
         
-        return isTitleChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged
+        return isTitleChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged || isShowInTimelineChanged
     }
     
     private var isSaveDisabled: Bool {
@@ -62,7 +65,6 @@ struct TaskFormSheet: View {
         return isEditing ? (isTitleEmpty || !hasChanges) : isTitleEmpty
     }
     
-    // Date型から「年」数値を取得・更新するためのBinding (.life用)
     private var selectedYearBinding: Binding<Int> {
         Binding<Int>(
             get: {
@@ -100,6 +102,11 @@ struct TaskFormSheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .onChange(of: selectedTimeFrame) { _, newTimeFrame in
+                        if !isEditing {
+                            showInTimeline = (newTimeFrame == .life || newTimeFrame == .year)
+                        }
+                    }
                     
                     if let currentDueDate = dueDate {
                         VStack(alignment: .leading, spacing: 10) {
@@ -133,6 +140,7 @@ struct TaskFormSheet: View {
                 }
                 
                 Section(header: Text("Options")) {
+                    Toggle("Show in Timeline", isOn: $showInTimeline)
                     Toggle("Flag Task", isOn: $isFlagged)
                     
                     HStack {
@@ -186,7 +194,6 @@ struct TaskFormSheet: View {
         }
     }
     
-    // MARK: - Dynamic DatePicker Builder
     @ViewBuilder
     private func dynamicDatePicker(for date: Date) -> some View {
         let binding = Binding(
@@ -259,13 +266,15 @@ struct TaskFormSheet: View {
             task.dueDate = dueDate
             task.location = trimmedLocation
             task.isFlagged = isFlagged
+            task.showInTimeline = showInTimeline
         } else {
             let newTask = LimitTask(
                 title: trimmedTitle,
                 timeFrameRawValue: selectedTimeFrame.rawValue,
                 dueDate: dueDate,
                 location: trimmedLocation,
-                isFlagged: isFlagged
+                isFlagged: isFlagged,
+                showInTimeline: showInTimeline
             )
             modelContext.insert(newTask)
         }
