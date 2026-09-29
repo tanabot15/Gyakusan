@@ -172,7 +172,7 @@ struct VisualizerView: View {
                         
                         // 下部の余白 & タップによるクイック追加起動エリア
                         Color.clear
-                            .frame(height: 36)
+                            .frame(height: 24)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 startQuickAdd()
@@ -224,6 +224,13 @@ struct VisualizerView: View {
                                 }
                             }
                         }
+                        
+                        // フローティングボタンと被らないためのリスト最下部スペーサー
+                        Color.clear
+                            .frame(height: 80)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
             }
@@ -399,8 +406,9 @@ struct VisualizerView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -658,37 +666,54 @@ private struct TaskRowView: View {
                 profile.targetAge = 80
                 context.insert(profile)
                 
-                let sampleTasks = [
+                let calendar = Calendar.current
+                let now = Date()
+                
+                // 1. 未完了（現在）のタスク 3つ
+                let uncompletedTasks = [
                     LimitTask(
                         title: "Develop iOS App Prototype",
-                        timeFrameRawValue: TimeFrame.life.rawValue,
-                        dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date()),
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now,
                         location: "Tokyo Studio",
                         isFlagged: true
                     ),
                     LimitTask(
                         title: "Read 10 Books on Investments",
-                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now,
                         isFlagged: false
                     ),
                     LimitTask(
                         title: "Visit Hokkaido Hot Springs",
-                        timeFrameRawValue: TimeFrame.life.rawValue,
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now,
                         location: "Noboribetsu"
-                    ),
-                    {
-                        let task = LimitTask(
-                            title: "Create App Icon and Assets",
-                            timeFrameRawValue: TimeFrame.life.rawValue,
-                            isFlagged: true
-                        )
-                        task.isCompleted = true
-                        task.completedAt = Date()
-                        return task
-                    }()
+                    )
                 ]
                 
-                for task in sampleTasks {
+                // 2. 完了済みのタスク 3つ
+                let completedTasks = (1...3).map { i in
+                    let task = LimitTask(
+                        title: "Completed Task \(i)",
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: now
+                    )
+                    task.isCompleted = true
+                    task.completedAt = calendar.date(byAdding: .hour, value: -i, to: now)
+                    return task
+                }
+                
+                // 3. 過去のタスク 3つ (1日前, 2日前, 3日前)
+                let pastTasks = (1...3).map { i in
+                    LimitTask(
+                        title: "Past Task \(i)",
+                        timeFrameRawValue: TimeFrame.day.rawValue,
+                        dueDate: calendar.date(byAdding: .day, value: -i, to: now)
+                    )
+                }
+                
+                for task in uncompletedTasks + completedTasks + pastTasks {
                     context.insert(task)
                 }
                 

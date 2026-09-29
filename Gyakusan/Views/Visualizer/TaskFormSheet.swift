@@ -19,17 +19,21 @@ struct TaskFormSheet: View {
     @State private var selectedTimeFrame: TimeFrame
     @State private var title: String = ""
     @State private var taskDescription: String = ""
-    @State private var tagInputString: String = ""
+    
+    @State private var tags: [String] = []
+    @State private var newTagText: String = ""
+    @State private var isAddingTag: Bool = false
+    
     @State private var dueDate: Date?
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
     @State private var showInTimeline: Bool = false
     @State private var isShowingDeleteConfirmation: Bool = false
     
-    // ★ 表示時点の予測タグを保持（操作中の位置ズレを防ぐため）
     @State private var frequentTags: [String] = []
     
     @FocusState private var isTitleFocused: Bool
+    @FocusState private var isTagInputFocused: Bool
     
     private let availableYears: [Int] = Array(1950...2100)
     
@@ -45,7 +49,7 @@ struct TaskFormSheet: View {
         _selectedTimeFrame = State(initialValue: taskToEdit.timeFrame)
         _title = State(initialValue: taskToEdit.title)
         _taskDescription = State(initialValue: taskToEdit.taskDescription)
-        _tagInputString = State(initialValue: taskToEdit.tags.joined(separator: ", "))
+        _tags = State(initialValue: taskToEdit.tags)
         _dueDate = State(initialValue: taskToEdit.dueDate)
         _location = State(initialValue: taskToEdit.location)
         _isFlagged = State(initialValue: taskToEdit.isFlagged)
@@ -56,19 +60,12 @@ struct TaskFormSheet: View {
         taskToEdit != nil
     }
     
-    private var parsedTags: [String] {
-        tagInputString
-            .components(separatedBy: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
-    
     private var hasChanges: Bool {
         guard let original = taskToEdit else { return true }
         
         let isTitleChanged = title != original.title
         let isDescriptionChanged = taskDescription != original.taskDescription
-        let isTagsChanged = parsedTags != original.tags
+        let isTagsChanged = tags != original.tags
         let isTimeFrameChanged = selectedTimeFrame != original.timeFrame
         let isFlaggedChanged = isFlagged != original.isFlagged
         let isLocationChanged = location != original.location
@@ -177,53 +174,140 @@ struct TaskFormSheet: View {
                     
                     // 4. Tag & Tag Suggestions
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "tag")
-                                .foregroundStyle(.secondary)
-                            TextField("Tags (comma separated)", text: $tagInputString)
-                        }
-                        
-                        // Frequent Tag
-                        if !frequentTags.isEmpty {
+                        if tags.isEmpty && !isAddingTag {
+                            HStack {
+                                Image(systemName: "tag")
+                                    .foregroundStyle(.secondary)
+                                TextField("Add a tag...", text: $newTagText)
+                                    .focused($isTagInputFocused)
+                                    .onSubmit {
+                                        addCurrentInputTag()
+                                    }
+                                    .onChange(of: newTagText) { _, newValue in
+                                        if newValue.contains(",") {
+                                            addCurrentInputTag()
+                                        }
+                                    }
+                            }
+                        } else {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 6) {
-                                    ForEach(frequentTags, id: \.self) { tag in
-                                        let isSelected = parsedTags.contains(tag)
-                                        Button {
-                                            toggleTag(tag)
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                if isSelected {
-                                                    Image(systemName: "checkmark")
-                                                        .font(.caption2)
-                                                }
-                                                Text("#\(tag)")
-                                                    .font(.caption)
-                                                    .fontWeight(isSelected ? .semibold : .regular)
+                                    ForEach(tags, id: \.self) { tag in
+                                        HStack(spacing: 4) {
+                                            Text("#\(tag)")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                            
+                                            Button {
+                                                removeTag(tag)
+                                            } label: {
+                                                Image(systemName: "xmark")
+                                                    .font(.system(size: 10, weight: .bold))
                                             }
-                                            .padding(.horizontal, 10)
+                                            .buttonStyle(.plain)
+                                        }
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(Color.accentColor.opacity(0.15))
+                                        .foregroundStyle(Color.accentColor)
+                                        .clipShape(Capsule())
+                                        .overlay(
+                                            Capsule()
+                                                .strokeBorder(Color.accentColor.opacity(0.4), lineWidth: 1)
+                                        )
+                                    }
+                                    
+                                    if isAddingTag {
+                                        HStack(spacing: 4) {
+                                            TextField("Tag...", text: $newTagText)
+                                                .font(.caption)
+                                                .frame(width: 80)
+                                                .focused($isTagInputFocused)
+                                                .onSubmit {
+                                                    addCurrentInputTag()
+                                                    isAddingTag = false
+                                                }
+                                                .onChange(of: newTagText) { _, newValue in
+                                                    if newValue.contains(",") {
+                                                        addCurrentInputTag()
+                                                    }
+                                                }
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color(uiColor: .tertiarySystemFill))
+                                        .clipShape(Capsule())
+                                    } else {
+                                        Button {
+                                            isAddingTag = true
+                                            isTagInputFocused = true
+                                        } label: {
+                                            HStack(spacing: 2) {
+                                                Image(systemName: "plus")
+                                                    .font(.caption2)
+                                                Text("Add")
+                                                    .font(.caption)
+                                            }
+                                            .padding(.horizontal, 8)
                                             .padding(.vertical, 5)
-                                            .background(
-                                                isSelected
-                                                ? Color.accentColor.opacity(0.15)
-                                                : Color(uiColor: .tertiarySystemFill)
-                                            )
-                                            .foregroundStyle(
-                                                isSelected ? Color.accentColor : Color.primary
-                                            )
+                                            .foregroundStyle(.secondary)
+                                            .background(Color(uiColor: .tertiarySystemFill))
                                             .clipShape(Capsule())
-                                            .overlay(
-                                                Capsule()
-                                                    .strokeBorder(
-                                                        isSelected ? Color.accentColor.opacity(0.4) : Color.clear,
-                                                        lineWidth: 1
-                                                    )
-                                            )
                                         }
                                         .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(.vertical, 2)
+                            }
+                        }
+                        
+                        // 予測タグ（Frequent Tags）のサジェストリスト
+                        if !frequentTags.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Suggestions")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 6) {
+                                        ForEach(frequentTags, id: \.self) { tag in
+                                            let isSelected = tags.contains(tag)
+                                            Button {
+                                                toggleTag(tag)
+                                            } label: {
+                                                HStack(spacing: 4) {
+                                                    if isSelected {
+                                                        Image(systemName: "checkmark")
+                                                            .font(.caption2)
+                                                    }
+                                                    Text("#\(tag)")
+                                                        .font(.caption)
+                                                        .fontWeight(isSelected ? .semibold : .regular)
+                                                }
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(
+                                                    isSelected
+                                                    ? Color.accentColor.opacity(0.15)
+                                                    : Color(uiColor: .tertiarySystemFill)
+                                                )
+                                                .foregroundStyle(
+                                                    isSelected ? Color.accentColor : Color.primary
+                                                )
+                                                .clipShape(Capsule())
+                                                .overlay(
+                                                    Capsule()
+                                                        .strokeBorder(
+                                                            isSelected ? Color.accentColor.opacity(0.4) : Color.clear,
+                                                            lineWidth: 1
+                                                        )
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                    .padding(.vertical, 2)
+                                }
                             }
                         }
                     }
@@ -277,12 +361,34 @@ struct TaskFormSheet: View {
             }
             .onAppear {
                 if !isEditing { isTitleFocused = true }
-                loadFrequentTags() // ★ シート表示時に予測タグリストを固定作成
+                loadFrequentTags()
             }
         }
     }
     
-    // MARK: - 予測タグの初期ロード処理
+    // MARK: - タグ操作用ヘルパーメソッド
+    private func addCurrentInputTag() {
+        let cleaned = newTagText
+            .replacingOccurrences(of: ",", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cleaned.isEmpty && !tags.contains(cleaned) {
+            tags.append(cleaned)
+        }
+        newTagText = ""
+    }
+    
+    private func removeTag(_ tag: String) {
+        tags.removeAll { $0 == tag }
+    }
+    
+    private func toggleTag(_ tag: String) {
+        if let index = tags.firstIndex(of: tag) {
+            tags.remove(at: index)
+        } else {
+            tags.append(tag)
+        }
+    }
+    
     private func loadFrequentTags() {
         var tagCounts: [String: Int] = [:]
         for task in allTasks {
@@ -294,7 +400,6 @@ struct TaskFormSheet: View {
             }
         }
         
-        // 頻出度（降順） → 同数の場合はアルファベット・五十音順（昇順）で並び順を完全に安定化
         self.frequentTags = Array(
             tagCounts
                 .sorted {
@@ -354,16 +459,6 @@ struct TaskFormSheet: View {
         }
     }
     
-    private func toggleTag(_ tag: String) {
-        var current = parsedTags
-        if let index = current.firstIndex(of: tag) {
-            current.remove(at: index)
-        } else {
-            current.append(tag)
-        }
-        tagInputString = current.joined(separator: ", ")
-    }
-    
     private func datePickerChip(binding: Binding<Date>) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "calendar")
@@ -380,6 +475,8 @@ struct TaskFormSheet: View {
     }
     
     private func saveTask() {
+        addCurrentInputTag()
+        
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else { return }
             
@@ -389,7 +486,7 @@ struct TaskFormSheet: View {
         if let task = taskToEdit {
             task.title = trimmedTitle
             task.taskDescription = trimmedDescription
-            task.tags = parsedTags
+            task.tags = tags
             task.timeFrame = selectedTimeFrame
             task.dueDate = dueDate
             task.location = trimmedLocation
@@ -399,7 +496,7 @@ struct TaskFormSheet: View {
             let newTask = LimitTask(
                 title: trimmedTitle,
                 taskDescription: trimmedDescription,
-                tags: parsedTags,
+                tags: tags,
                 timeFrameRawValue: selectedTimeFrame.rawValue,
                 dueDate: dueDate,
                 location: trimmedLocation,
@@ -421,21 +518,34 @@ struct TaskFormSheet: View {
     }
 }
 
+// MARK: - Previews
 #Preview("New Task") {
-    TaskFormSheet(selectedTimeFrame: .life)
-        .modelContainer(for: LimitTask.self, inMemory: true)
+    let container = try! ModelContainer(for: LimitTask.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    
+    container.mainContext.insert(LimitTask(title: "Task 1", tags: ["Swift", "開発"], timeFrameRawValue: TimeFrame.day.rawValue))
+    container.mainContext.insert(LimitTask(title: "Task 2", tags: ["Swift", "学習"], timeFrameRawValue: TimeFrame.day.rawValue))
+    container.mainContext.insert(LimitTask(title: "Task 3", tags: ["買い物"], timeFrameRawValue: TimeFrame.day.rawValue))
+    
+    return TaskFormSheet(selectedTimeFrame: .life)
+        .modelContainer(container)
 }
 
 #Preview("Edit Task") {
+    let container = try! ModelContainer(for: LimitTask.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    
+    container.mainContext.insert(LimitTask(title: "Task 1", tags: ["Swift", "開発"], timeFrameRawValue: TimeFrame.day.rawValue))
+    
     let task = LimitTask(
         title: "Buy groceries",
-        taskDescription: "Buy milk, eggs, and bread from the organic market.",
-        tags: ["Shopping", "Home"],
+        taskDescription: "Buy milk, eggs, and bread.",
+        tags: ["買い物", "生活"],
         timeFrameRawValue: TimeFrame.day.rawValue,
         dueDate: Date(),
         location: "Supermarket",
         isFlagged: true
     )
-    TaskFormSheet(taskToEdit: task)
-        .modelContainer(for: LimitTask.self, inMemory: true)
+    container.mainContext.insert(task)
+    
+    return TaskFormSheet(taskToEdit: task)
+        .modelContainer(container)
 }
