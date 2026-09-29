@@ -38,7 +38,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             forTaskWithIdentifier: Self.backgroundTaskIdentifier,
             using: nil
         ) { task in
-            // バックグラウンドで実行したい処理をここに記述
             task.setTaskCompleted(success: true)
         }
     }

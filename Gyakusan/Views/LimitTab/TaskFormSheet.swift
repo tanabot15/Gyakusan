@@ -19,7 +19,7 @@ struct TaskFormSheet: View {
     @State private var dueDate: Date?
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
-    @State private var showInTimeline: Bool = false // ★ 追加
+    @State private var showInTimeline: Bool = false
     @State private var isShowingDeleteConfirmation: Bool = false
     
     @FocusState private var isTitleFocused: Bool

@@ -37,7 +37,6 @@ struct TimelineView: View {
         
         var groups: [AgeGroup] = []
         
-        // 1. 年齢ごとのタスクマッピング（日付あり）
         let datedTasks = timelineTasks.filter { $0.dueDate != nil || $0.completedAt != nil }
         var tasksByAge: [Int: [LimitTask]] = [:]
         
@@ -64,7 +63,6 @@ struct TimelineView: View {
             }
         }
         
-        // 2. 期日未設定タスク（Someday）を最下部（未来の先）に配置
         let undatedTasks = timelineTasks.filter { $0.dueDate == nil }
         if !undatedTasks.isEmpty {
             groups.append(AgeGroup(
@@ -91,8 +89,6 @@ struct TimelineView: View {
                         .padding(.vertical)
                 }
             }
-            .navigationTitle("Timeline")
-            .navigationBarTitleDisplayMode(.inline)
             .background(Color(uiColor: .systemGroupedBackground))
         }
     }

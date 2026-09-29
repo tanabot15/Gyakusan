@@ -2,14 +2,19 @@
 //  VisualizerView.swift
 //  Gyakusan
 //
-//  Created by Kenichiro Suzuki on 2026/09/12.
-//
 
 import SwiftUI
 import SwiftData
 import Combine
 
-// MARK: - Visualizer View
+// MARK: - Task List Height Preference Key
+struct TaskListHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value += nextValue()
+    }
+}
+
 struct VisualizerView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -32,6 +37,8 @@ struct VisualizerView: View {
     @State private var isPastExpanded: Bool = false
     @State private var isEditingMode: Bool = false
     
+    @State private var calculatedListHeight: CGFloat = 100
+    
     // Quick Add States
     @State private var isQuickAdding: Bool = false
     @State private var quickAddTitle: String = ""
@@ -50,7 +57,7 @@ struct VisualizerView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottom) {
+            ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 0) {
                     BannerAdView()
                         .frame(height: 50)
@@ -75,6 +82,8 @@ struct VisualizerView: View {
                 }
                 
                 floatingControlBar
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 20)
             }
             .onReceive(timer) { input in
                 currentDate = input
@@ -110,14 +119,16 @@ struct VisualizerView: View {
                     )
                     
                     taskListSection(for: timeFrame)
-                        .id("bottomAddArea_\(timeFrame.rawValue)")
                 }
                 .padding(.vertical)
+                .safeAreaPadding(.bottom, 100)
             }
-            .onChange(of: isQuickAdding) { _, newValue in
-                if newValue {
-                    withAnimation {
-                        proxy.scrollTo("bottomAddArea_\(timeFrame.rawValue)", anchor: .bottom)
+            .onChange(of: isQuickAddFocused) { _, isFocused in
+                if isFocused {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            proxy.scrollTo("quickAddRow", anchor: .bottom)
+                        }
                     }
                 }
             }
@@ -199,12 +210,38 @@ struct VisualizerView: View {
                     .padding(.vertical, 20)
             } else {
                 VStack(spacing: 8) {
-                    ForEach(uncompleted) { task in
-                        taskRowContainer(for: task)
+                    if !uncompleted.isEmpty {
+                        List {
+                            ForEach(uncompleted) { task in
+                                taskRowContainer(for: task)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .listRowBackground(Color.clear)
+                            }
+                            .onMove { indices, newOffset in
+                                moveTasks(from: indices, to: newOffset, in: uncompleted)
+                            }
+                            .onDelete { indices in
+                                for index in indices {
+                                    deleteTask(uncompleted[index])
+                                }
+                            }
+                        }
+                        .listStyle(.plain)
+                        .scrollDisabled(true)
+                        // 計測した高さを元に動的にフレーム高さを設定（リスト内の余白を考慮し8ptずつ加算）
+                        .frame(height: max(calculatedListHeight + CGFloat(uncompleted.count * 8), 60))
+                        .onPreferenceChange(TaskListHeightKey.self) { totalHeight in
+                            if totalHeight > 0 {
+                                self.calculatedListHeight = totalHeight
+                            }
+                        }
+                        .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
                     }
                     
                     if isQuickAdding {
                         quickAddInlineRow
+                            .id("quickAddRow")
                             .padding(.horizontal)
                             .padding(.vertical, 8)
                             .background(Color(uiColor: .secondarySystemGroupedBackground))
@@ -217,6 +254,7 @@ struct VisualizerView: View {
                         if isCompletedExpanded {
                             ForEach(completed) { task in
                                 taskRowContainer(for: task)
+                                    .padding(.horizontal)
                             }
                         }
                     }
@@ -226,6 +264,7 @@ struct VisualizerView: View {
                         if isPastExpanded {
                             ForEach(past) { task in
                                 taskRowContainer(for: task)
+                                    .padding(.horizontal)
                             }
                         }
                     }
@@ -233,7 +272,7 @@ struct VisualizerView: View {
             }
             
             Color.clear
-                .frame(height: 80)
+                .frame(height: 20)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     startQuickAdd()
@@ -241,37 +280,33 @@ struct VisualizerView: View {
         }
     }
     
+    private func moveTasks(from source: IndexSet, to destination: Int, in tasks: [LimitTask]) {
+        var updatedTasks = tasks
+        updatedTasks.move(fromOffsets: source, toOffset: destination)
+        
+        let baseDate = Date()
+        for (index, task) in updatedTasks.enumerated() {
+            task.createdAt = baseDate.addingTimeInterval(Double(index))
+        }
+        
+        saveContext()
+    }
+    
     // MARK: - Task Row Container
     @ViewBuilder
     private func taskRowContainer(for task: LimitTask) -> some View {
         HStack(spacing: 8) {
-            if isEditingMode {
-                Button(role: .destructive) {
-                    deleteTask(task)
-                } label: {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(.red)
-                }
-                .buttonStyle(.plain)
-                .transition(.move(edge: .leading).combined(with: .opacity))
-            }
-            
             TaskRowView(task: task, onToggle: { saveContext() })
-            
-            if isEditingMode {
-                Image(systemName: "line.3.horizontal")
-                    .font(.body)
-                    .foregroundStyle(.tertiary)
-                    .padding(.leading, 4)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .padding(.horizontal)
+        .background(
+            GeometryReader { geo in
+                Color.clear.preference(key: TaskListHeightKey.self, value: geo.size.height)
+            }
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             if !isEditingMode {
@@ -360,48 +395,43 @@ struct VisualizerView: View {
     // MARK: - Floating Control Bar
     @ViewBuilder
     private var floatingControlBar: some View {
-        HStack(spacing: 0) {
-            if !isEditingMode {
+        HStack(spacing: 12) {
+            if !isQuickAdding {
                 Button(action: {
-                    startQuickAdd()
-                }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.body.weight(.semibold))
-                        Text("Add Task")
-                            .font(.body.weight(.semibold))
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        isEditingMode.toggle()
                     }
-                    .foregroundStyle(Color.accentColor)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 16)
+                }) {
+                    Image(systemName: isEditingMode ? "checkmark" : "pencil")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .background(.orange)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
                 }
                 .buttonStyle(.plain)
-                
-                Divider()
-                    .frame(height: 18)
             }
 
-            Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    isEditingMode.toggle()
+            if !isEditingMode {
+                Button(action: {
+                    if isQuickAdding {
+                        dismissQuickAdd()
+                    } else {
+                        isShowingAddTaskSheet = true
+                    }
+                }) {
+                    Image(systemName: isQuickAdding ? "checkmark" : "plus")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
                 }
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: isEditingMode ? "checkmark.circle.fill" : "pencil.circle.fill")
-                        .font(.body.weight(.semibold))
-                    Text(isEditingMode ? "Done" : "Edit Task")
-                        .font(.body.weight(.semibold))
-                }
-                .foregroundStyle(.orange)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 16)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
-        .background(.thinMaterial)
-        .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 4)
-        .padding(.bottom, 16)
     }
     
     // MARK: - Quick Add & Action Logic

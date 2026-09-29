@@ -48,24 +48,25 @@ final class LimitTask {
         self.showInTimeline = showInTimeline ?? (tf == .life || tf == .year)
     }
     
-    // Determines whether this task was created during the “current period”
+    // Determines whether this task belongs to the “current period”
     // based on the specified TimeFrame and the reference date (default: now).
     func isCurrentPeriod(for timeFrame: TimeFrame, now: Date = Date()) -> Bool {
         let calendar = Calendar.current
+        let targetDate = dueDate ?? createdAt
         
         switch timeFrame {
         case .life:
             return true
             
         case .year:
-            return calendar.isDate(createdAt, equalTo: now, toGranularity: .year)
+            return calendar.isDate(targetDate, equalTo: now, toGranularity: .year)
             
         case .month:
-            return calendar.isDate(createdAt, equalTo: now, toGranularity: .year) &&
-                   calendar.isDate(createdAt, equalTo: now, toGranularity: .month)
+            return calendar.isDate(targetDate, equalTo: now, toGranularity: .year) &&
+                   calendar.isDate(targetDate, equalTo: now, toGranularity: .month)
             
         case .day:
-            return calendar.isDate(createdAt, inSameDayAs: now)
+            return calendar.isDate(targetDate, inSameDayAs: now)
         }
     }
 }

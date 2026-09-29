@@ -101,7 +101,8 @@ struct GyakusanApp: App {
         
         let yearTask1 = LimitTask(
             title: "Release major iOS app update",
-            timeFrameRawValue: TimeFrame.year.rawValue
+            timeFrameRawValue: TimeFrame.year.rawValue,
+            dueDate: calendar.date(byAdding: .month, value: 6, to: baseDate)
         )
         yearTask1.createdAt = createDate()
         
@@ -126,13 +127,15 @@ struct GyakusanApp: App {
         // MARK: - Group 2: Learning & Writing (Related Group)
         let lifeTask2 = LimitTask(
             title: "Write and publish a non-fiction book",
-            timeFrameRawValue: TimeFrame.life.rawValue
+            timeFrameRawValue: TimeFrame.life.rawValue,
+            dueDate: calendar.date(byAdding: .year, value: 7, to: baseDate)
         )
         lifeTask2.createdAt = createDate()
         
         let yearTask2 = LimitTask(
             title: "Read 24 books this year",
-            timeFrameRawValue: TimeFrame.year.rawValue
+            timeFrameRawValue: TimeFrame.year.rawValue,
+            dueDate: calendar.date(byAdding: .month, value: 10, to: baseDate)
         )
         yearTask2.createdAt = createDate()
         
@@ -162,13 +165,15 @@ struct GyakusanApp: App {
         
         let lifeTask4 = LimitTask(
             title: "Master a second foreign language",
-            timeFrameRawValue: TimeFrame.life.rawValue
+            timeFrameRawValue: TimeFrame.life.rawValue,
+            dueDate: nil
         )
         lifeTask4.createdAt = createDate()
         
         let yearTask3 = LimitTask(
             title: "Plan and complete family vacation",
-            timeFrameRawValue: TimeFrame.year.rawValue
+            timeFrameRawValue: TimeFrame.year.rawValue,
+            dueDate: calendar.date(byAdding: .month, value: 4, to: baseDate)
         )
         yearTask3.createdAt = createDate()
         
@@ -196,13 +201,15 @@ struct GyakusanApp: App {
         
         let yearTask4 = LimitTask(
             title: "Achieve advanced certification",
-            timeFrameRawValue: TimeFrame.year.rawValue
+            timeFrameRawValue: TimeFrame.year.rawValue,
+            dueDate: calendar.date(byAdding: .month, value: 8, to: baseDate)
         )
         yearTask4.createdAt = createDate()
         
         let yearTask5 = LimitTask(
             title: "Build a personal portfolio website",
-            timeFrameRawValue: TimeFrame.year.rawValue
+            timeFrameRawValue: TimeFrame.year.rawValue,
+            dueDate: calendar.date(byAdding: .month, value: 2, to: baseDate)
         )
         yearTask5.createdAt = createDate()
         
