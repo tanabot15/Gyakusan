@@ -7,14 +7,6 @@ import SwiftUI
 import SwiftData
 import Combine
 
-// MARK: - Task List Height Preference Key
-struct TaskListHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value += nextValue()
-    }
-}
-
 struct VisualizerView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -36,8 +28,6 @@ struct VisualizerView: View {
     @State private var isCompletedExpanded: Bool = false
     @State private var isPastExpanded: Bool = false
     @State private var isEditingMode: Bool = false
-    
-    @State private var calculatedListHeight: CGFloat = 100
     
     // Quick Add States
     @State private var isQuickAdding: Bool = false
@@ -101,27 +91,151 @@ struct VisualizerView: View {
     @ViewBuilder
     private func timeFrameContentView(for timeFrame: TimeFrame) -> some View {
         let taskProgressRatio = calculateTaskProgressRatio(for: timeFrame)
+        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame)
+        let completed = sortedCurrentCompletedTasks(for: timeFrame)
+        let past = sortedPastTasks(for: timeFrame)
         
         ScrollViewReader { proxy in
-            ScrollView {
-                VStack(spacing: 20) {
-                    CountdownHeaderView(
-                        timeFrame: timeFrame,
-                        periodStats: timeFrame == .life ? nil : periodStats(for: timeFrame),
-                        lifeStats: timeFrame == .life ? lifeStats : nil,
-                        taskProgressRatio: taskProgressRatio
-                    )
-                    
-                    LimitGridView(
-                        timeFrame: timeFrame,
-                        lifeStats: timeFrame == .life ? lifeStats : nil,
-                        currentDate: currentDate
-                    )
-                    
-                    taskListSection(for: timeFrame)
+            List {
+                // Section 1: 画面上部のヘッダーグラフィック・グリッド領域
+                Section {
+                    VStack(spacing: 20) {
+                        CountdownHeaderView(
+                            timeFrame: timeFrame,
+                            periodStats: timeFrame == .life ? nil : periodStats(for: timeFrame),
+                            lifeStats: timeFrame == .life ? lifeStats : nil,
+                            taskProgressRatio: taskProgressRatio
+                        )
+                        
+                        LimitGridView(
+                            timeFrame: timeFrame,
+                            lifeStats: timeFrame == .life ? lifeStats : nil,
+                            currentDate: currentDate
+                        )
+                    }
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
-                .safeAreaPadding(.bottom, 100)
+                .id("scrollTop_\(timeFrame.rawValue)") // 最上部へ戻すためのアンカーID
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                
+                // Section 2: タスク一覧セクション
+                Section {
+                    HStack {
+                        Text("\(timeFrame.title) Tasks")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    if uncompleted.isEmpty && completed.isEmpty && past.isEmpty && !isQuickAdding {
+                        emptyTaskView
+                            .padding(.vertical, 20)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    } else {
+                        // 未完了タスク一覧
+                        ForEach(uncompleted) { task in
+                            taskRowContainer(for: task)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                .listRowBackground(Color.clear)
+                        }
+                        .onMove { indices, newOffset in
+                            moveTasks(from: indices, to: newOffset, in: uncompleted)
+                        }
+                        .onDelete { indices in
+                            for index in indices {
+                                deleteTask(uncompleted[index])
+                            }
+                        }
+                        
+                        // クイック追加行
+                        if isQuickAdding {
+                            quickAddInlineRow
+                                .id("quickAddRow")
+                                .padding(.horizontal)
+                                .padding(.vertical, 8)
+                                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                .listRowBackground(Color.clear)
+                        }
+                        
+                        // 下部の余白 & タップによるクイック追加起動エリア
+                        Color.clear
+                            .frame(height: 36)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                startQuickAdd()
+                            }
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                        
+                        // 完了済みタスク（アコーディオン）
+                        if !completed.isEmpty {
+                            accordionHeader(title: "Completed", count: completed.count, isExpanded: $isCompletedExpanded)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
+                            
+                            if isCompletedExpanded {
+                                ForEach(completed) { task in
+                                    taskRowContainer(for: task)
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                        .listRowBackground(Color.clear)
+                                }
+                                .onDelete { indices in
+                                    for index in indices {
+                                        deleteTask(completed[index])
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 過去のタスク（アコーディオン）
+                        if !past.isEmpty {
+                            accordionHeader(title: "Past Tasks", count: past.count, isExpanded: $isPastExpanded)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(Color.clear)
+                            
+                            if isPastExpanded {
+                                ForEach(past) { task in
+                                    taskRowContainer(for: task)
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                        .listRowBackground(Color.clear)
+                                }
+                                .onDelete { indices in
+                                    for index in indices {
+                                        deleteTask(past[index])
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color(uiColor: .systemGroupedBackground))
+            .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
+            .onChange(of: selectedTimeFrame) { _, newTimeFrame in
+                // TimeFrame 切り替え時に最上部へスクロール
+                withAnimation {
+                    proxy.scrollTo("scrollTop_\(newTimeFrame.rawValue)", anchor: .top)
+                }
             }
             .onChange(of: isQuickAddFocused) { _, isFocused in
                 if isFocused {
@@ -189,97 +303,6 @@ struct VisualizerView: View {
         .pickerStyle(.segmented)
     }
     
-    // MARK: - Task List Section
-    @ViewBuilder
-    private func taskListSection(for timeFrame: TimeFrame) -> some View {
-        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame)
-        let completed = sortedCurrentCompletedTasks(for: timeFrame)
-        let past = sortedPastTasks(for: timeFrame)
-        
-        VStack(spacing: 12) {
-            HStack {
-                Text("\(timeFrame.title) Tasks")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                Spacer()
-            }
-            .padding(.horizontal)
-            
-            if uncompleted.isEmpty && completed.isEmpty && past.isEmpty && !isQuickAdding {
-                emptyTaskView
-                    .padding(.vertical, 20)
-            } else {
-                VStack(spacing: 8) {
-                    if !uncompleted.isEmpty {
-                        List {
-                            ForEach(uncompleted) { task in
-                                taskRowContainer(for: task)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                    .listRowBackground(Color.clear)
-                            }
-                            .onMove { indices, newOffset in
-                                moveTasks(from: indices, to: newOffset, in: uncompleted)
-                            }
-                            .onDelete { indices in
-                                for index in indices {
-                                    deleteTask(uncompleted[index])
-                                }
-                            }
-                        }
-                        .listStyle(.plain)
-                        .scrollDisabled(true)
-                        // 計測した高さを元に動的にフレーム高さを設定（リスト内の余白を考慮し8ptずつ加算）
-                        .frame(height: max(calculatedListHeight + CGFloat(uncompleted.count * 8), 60))
-                        .onPreferenceChange(TaskListHeightKey.self) { totalHeight in
-                            if totalHeight > 0 {
-                                self.calculatedListHeight = totalHeight
-                            }
-                        }
-                        .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
-                    }
-                    
-                    if isQuickAdding {
-                        quickAddInlineRow
-                            .id("quickAddRow")
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-                            .background(Color(uiColor: .secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .padding(.horizontal)
-                    }
-                    
-                    if !completed.isEmpty {
-                        accordionHeader(title: "Completed", count: completed.count, isExpanded: $isCompletedExpanded)
-                        if isCompletedExpanded {
-                            ForEach(completed) { task in
-                                taskRowContainer(for: task)
-                                    .padding(.horizontal)
-                            }
-                        }
-                    }
-                    
-                    if !past.isEmpty {
-                        accordionHeader(title: "Past Tasks", count: past.count, isExpanded: $isPastExpanded)
-                        if isPastExpanded {
-                            ForEach(past) { task in
-                                taskRowContainer(for: task)
-                                    .padding(.horizontal)
-                            }
-                        }
-                    }
-                }
-            }
-            
-            Color.clear
-                .frame(height: 20)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    startQuickAdd()
-                }
-        }
-    }
-    
     private func moveTasks(from source: IndexSet, to destination: Int, in tasks: [LimitTask]) {
         var updatedTasks = tasks
         updatedTasks.move(fromOffsets: source, toOffset: destination)
@@ -302,11 +325,6 @@ struct VisualizerView: View {
         .padding(.vertical, 10)
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .background(
-            GeometryReader { geo in
-                Color.clear.preference(key: TaskListHeightKey.self, value: geo.size.height)
-            }
-        )
         .contentShape(Rectangle())
         .onTapGesture {
             if !isEditingMode {
@@ -329,7 +347,7 @@ struct VisualizerView: View {
                     .focused($isQuickAddFocused)
                     .submitLabel(.done)
                     .onSubmit {
-                        commitQuickAdd(continueAdding: true)
+                        commitQuickAdd(continueAdding: false)
                     }
                 
                 HStack(spacing: 4) {
@@ -352,18 +370,13 @@ struct VisualizerView: View {
             
             if !quickAddTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Button(action: {
-                    commitQuickAdd(continueAdding: true)
+                    commitQuickAdd(continueAdding: false)
                 }) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title3)
                         .foregroundStyle(Color.accentColor)
                 }
                 .buttonStyle(.plain)
-            }
-        }
-        .onChange(of: isQuickAddFocused) { _, isFocused in
-            if !isFocused && isQuickAdding {
-                commitQuickAdd(continueAdding: false)
             }
         }
     }
@@ -436,18 +449,23 @@ struct VisualizerView: View {
     
     // MARK: - Quick Add & Action Logic
     private func startQuickAdd() {
+        guard !isQuickAdding else { return }
+        
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             isQuickAdding = true
             quickAddDueDate = Date()
             quickAddTitle = ""
+        }
+        
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
             isQuickAddFocused = true
         }
     }
     
     private func dismissQuickAdd() {
-        if isQuickAdding || isQuickAddFocused {
+        if isQuickAdding {
             commitQuickAdd(continueAdding: false)
-            isQuickAddFocused = false
         }
     }
     
@@ -468,7 +486,8 @@ struct VisualizerView: View {
             quickAddDueDate = Date()
             isQuickAddFocused = true
         } else {
-            withAnimation {
+            isQuickAddFocused = false
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 isQuickAdding = false
             }
         }
