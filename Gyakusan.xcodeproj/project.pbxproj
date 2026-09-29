@@ -139,12 +139,12 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		D990D1B4303C00EB001B3CDA /* ReflectionTab */ = {
+		D990D1B4303C00EB001B3CDA /* TimelineTab */ = {
 			isa = PBXGroup;
 			children = (
 				D990D1B5303C010D001B3CDA /* TimelineView.swift */,
 			);
-			path = ReflectionTab;
+			path = TimelineTab;
 			sourceTree = "<group>";
 		};
 		D9BA15B4304ED6C7008B3FC5 /* Frameworks */ = {
@@ -235,9 +235,9 @@
 			children = (
 				D9E068683010A63900E88132 /* MainTabView.swift */,
 				D9E0687E3010E0EE00E88132 /* Components */,
-				D9E068803010E11500E88132 /* LimitTab */,
+				D9E068803010E11500E88132 /* Visualizer */,
 				D9D57E403040611D004B29BA /* FocusTimer */,
-				D990D1B4303C00EB001B3CDA /* ReflectionTab */,
+				D990D1B4303C00EB001B3CDA /* TimelineTab */,
 				D9E068813010E11C00E88132 /* SettingsTab */,
 				D9E068723010AFDD00E88132 /* Utilities */,
 			);
@@ -273,7 +273,7 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		D9E068803010E11500E88132 /* LimitTab */ = {
+		D9E068803010E11500E88132 /* Visualizer */ = {
 			isa = PBXGroup;
 			children = (
 				D9E0688B3010E19B00E88132 /* VisualizerView.swift */,
@@ -282,7 +282,7 @@
 				D990D1023026CB39001B3CDA /* GridHighlightColor.swift */,
 				D9E068933010E1CA00E88132 /* TaskFormSheet.swift */,
 			);
-			path = LimitTab;
+			path = Visualizer;
 			sourceTree = "<group>";
 		};
 		D9E068813010E11C00E88132 /* SettingsTab */ = {

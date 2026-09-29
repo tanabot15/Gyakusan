@@ -12,6 +12,8 @@ import SwiftData
 final class LimitTask {
     @Attribute(.unique) var id: UUID
     var title: String
+    var taskDescription: String
+    var tags: [String]
     var isCompleted: Bool
     var createdAt: Date
     var completedAt: Date?
@@ -29,6 +31,8 @@ final class LimitTask {
     
     init(
         title: String,
+        taskDescription: String = "",
+        tags: [String] = [],
         timeFrameRawValue: String,
         dueDate: Date? = nil,
         location: String = "",
@@ -37,6 +41,8 @@ final class LimitTask {
     ) {
         self.id = UUID()
         self.title = title
+        self.taskDescription = taskDescription
+        self.tags = tags
         self.isCompleted = false
         self.createdAt = Date()
         self.timeFrameRawValue = timeFrameRawValue

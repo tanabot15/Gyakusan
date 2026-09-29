@@ -1,5 +1,5 @@
 //
-//  AddTaskSheet.swift
+//  TaskFormSheet.swift
 //  Gyakusan
 //
 //  Created by Kenichiro Suzuki on 2026/07/22.
@@ -16,6 +16,8 @@ struct TaskFormSheet: View {
     
     @State private var selectedTimeFrame: TimeFrame
     @State private var title: String = ""
+    @State private var taskDescription: String = ""
+    @State private var tagInputString: String = ""
     @State private var dueDate: Date?
     @State private var location: String = ""
     @State private var isFlagged: Bool = false
@@ -37,6 +39,8 @@ struct TaskFormSheet: View {
         self.taskToEdit = taskToEdit
         _selectedTimeFrame = State(initialValue: taskToEdit.timeFrame)
         _title = State(initialValue: taskToEdit.title)
+        _taskDescription = State(initialValue: taskToEdit.taskDescription)
+        _tagInputString = State(initialValue: taskToEdit.tags.joined(separator: ", "))
         _dueDate = State(initialValue: taskToEdit.dueDate)
         _location = State(initialValue: taskToEdit.location)
         _isFlagged = State(initialValue: taskToEdit.isFlagged)
@@ -47,17 +51,26 @@ struct TaskFormSheet: View {
         taskToEdit != nil
     }
     
+    private var parsedTags: [String] {
+        tagInputString
+            .components(separatedBy: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+    
     private var hasChanges: Bool {
         guard let original = taskToEdit else { return true }
         
         let isTitleChanged = title != original.title
+        let isDescriptionChanged = taskDescription != original.taskDescription
+        let isTagsChanged = parsedTags != original.tags
         let isTimeFrameChanged = selectedTimeFrame != original.timeFrame
         let isFlaggedChanged = isFlagged != original.isFlagged
         let isLocationChanged = location != original.location
         let isDueDateChanged = dueDate != original.dueDate
         let isShowInTimelineChanged = showInTimeline != original.showInTimeline
         
-        return isTitleChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged || isShowInTimelineChanged
+        return isTitleChanged || isDescriptionChanged || isTagsChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged || isShowInTimelineChanged
     }
     
     private var isSaveDisabled: Bool {
@@ -139,14 +152,36 @@ struct TaskFormSheet: View {
                     }
                 }
                 
+                // MARK: - Options Section
                 Section(header: Text("Options")) {
+                    // 1. Timeline
                     Toggle("Show in Timeline", isOn: $showInTimeline)
+                    
+                    // 2. Descriptioon
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Description")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("Add details or notes...", text: $taskDescription, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
+                    .padding(.vertical, 2)
+                    
+                    // 3. Flag
                     Toggle("Flag Task", isOn: $isFlagged)
                     
+                    // 4. Tag
+                    HStack {
+                        Image(systemName: "tag")
+                            .foregroundStyle(.secondary)
+                        TextField("Tags, text: $tagInputString)
+                    }
+                    
+                    // 5. Location
                     HStack {
                         Image(systemName: "location")
                             .foregroundStyle(.secondary)
-                        TextField("Location (optional)", text: $location)
+                        TextField("Location", text: $location)
                     }
                 }
                 
@@ -259,9 +294,12 @@ struct TaskFormSheet: View {
         guard !trimmedTitle.isEmpty else { return }
             
         let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDescription = taskDescription.trimmingCharacters(in: .whitespacesAndNewlines)
             
         if let task = taskToEdit {
             task.title = trimmedTitle
+            task.taskDescription = trimmedDescription
+            task.tags = parsedTags
             task.timeFrame = selectedTimeFrame
             task.dueDate = dueDate
             task.location = trimmedLocation
@@ -270,6 +308,8 @@ struct TaskFormSheet: View {
         } else {
             let newTask = LimitTask(
                 title: trimmedTitle,
+                taskDescription: trimmedDescription,
+                tags: parsedTags,
                 timeFrameRawValue: selectedTimeFrame.rawValue,
                 dueDate: dueDate,
                 location: trimmedLocation,
@@ -299,6 +339,8 @@ struct TaskFormSheet: View {
 #Preview("Edit Task") {
     let task = LimitTask(
         title: "Buy groceries",
+        taskDescription: "Buy milk, eggs, and bread from the organic market.",
+        tags: ["Shopping", "Home"],
         timeFrameRawValue: TimeFrame.day.rawValue,
         dueDate: Date(),
         location: "Supermarket",
