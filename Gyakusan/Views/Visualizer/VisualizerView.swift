@@ -26,7 +26,6 @@ struct VisualizerView: View {
     @State private var selectedTaskToEdit: LimitTask? = nil
     
     @State private var isCompletedExpanded: Bool = false
-    @State private var isPastExpanded: Bool = false
     @State private var isEditingMode: Bool = false
     
     // Quick Add States
@@ -93,7 +92,6 @@ struct VisualizerView: View {
         let taskProgressRatio = calculateTaskProgressRatio(for: timeFrame)
         let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame)
         let completed = sortedCurrentCompletedTasks(for: timeFrame)
-        let past = sortedPastTasks(for: timeFrame)
         
         ScrollViewReader { proxy in
             List {
@@ -134,14 +132,14 @@ struct VisualizerView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     
-                    if uncompleted.isEmpty && completed.isEmpty && past.isEmpty && !isQuickAdding {
+                    if uncompleted.isEmpty && completed.isEmpty && !isQuickAdding {
                         emptyTaskView
                             .padding(.vertical, 20)
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     } else {
-                        // 未完了タスク一覧
+                        // 未完了タスク一覧（期限切れタスクを含む）
                         ForEach(uncompleted) { task in
                             taskRowContainer(for: task)
                                 .listRowSeparator(.hidden)
@@ -198,28 +196,6 @@ struct VisualizerView: View {
                                 .onDelete { indices in
                                     for index in indices {
                                         deleteTask(completed[index])
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // 過去のタスク（アコーディオン）
-                        if !past.isEmpty {
-                            accordionHeader(title: "Past Tasks", count: past.count, isExpanded: $isPastExpanded)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets())
-                                .listRowBackground(Color.clear)
-                            
-                            if isPastExpanded {
-                                ForEach(past) { task in
-                                    taskRowContainer(for: task)
-                                        .listRowSeparator(.hidden)
-                                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                        .listRowBackground(Color.clear)
-                                }
-                                .onDelete { indices in
-                                    for index in indices {
-                                        deleteTask(past[index])
                                     }
                                 }
                             }
@@ -283,19 +259,18 @@ struct VisualizerView: View {
     
     private func sortedCurrentUncompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
         timeFrameTasks(for: timeFrame)
-            .filter { !$0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }
+            .filter { task in
+                guard !task.isCompleted else { return false }
+                // 現在の期間内、または期限（dueDate）を過ぎている未完了タスクを取得
+                let isOverdue = task.dueDate.map { $0 < currentDate } ?? false
+                return task.isCurrentPeriod(for: timeFrame, now: currentDate) || isOverdue
+            }
             .sorted { $0.createdAt < $1.createdAt }
     }
     
     private func sortedCurrentCompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
         timeFrameTasks(for: timeFrame)
             .filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }
-            .sorted { $0.createdAt < $1.createdAt }
-    }
-    
-    private func sortedPastTasks(for timeFrame: TimeFrame) -> [LimitTask] {
-        timeFrameTasks(for: timeFrame)
-            .filter { !$0.isCurrentPeriod(for: timeFrame, now: currentDate) }
             .sorted { $0.createdAt < $1.createdAt }
     }
     
@@ -326,7 +301,7 @@ struct VisualizerView: View {
     @ViewBuilder
     private func taskRowContainer(for task: LimitTask) -> some View {
         HStack(spacing: 8) {
-            TaskRowView(task: task, onToggle: { saveContext() })
+            TaskRowView(task: task, currentDate: currentDate, onToggle: { saveContext() })
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -538,19 +513,15 @@ struct VisualizerView: View {
 // MARK: - TaskRowView
 private struct TaskRowView: View {
     let task: LimitTask
+    var currentDate: Date = Date()
     var onToggle: () -> Void
     
     @State private var isCompletedState: Bool = false
     @State private var pendingToggleTask: Task<Void, Never>? = nil
     
-    private var checkmarkColor: Color {
-        if isCompletedState {
-            return .secondary
-        } else if task.isFlagged {
-            return .orange
-        } else {
-            return .primary
-        }
+    private var isOverdue: Bool {
+        guard let dueDate = task.dueDate else { return false }
+        return !isCompletedState && dueDate < currentDate
     }
     
     var body: some View {
@@ -558,7 +529,7 @@ private struct TaskRowView: View {
             Button(action: handleToggle) {
                 Image(systemName: isCompletedState ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(checkmarkColor)
+                    .foregroundStyle(isCompletedState ? .secondary : .primary)
             }
             .buttonStyle(.plain)
             
@@ -568,17 +539,21 @@ private struct TaskRowView: View {
                     .strikethrough(isCompletedState, color: .secondary)
                     .foregroundStyle(isCompletedState ? .secondary : .primary)
                 
-                if task.dueDate != nil || !task.location.isEmpty {
+                if task.dueDate != nil || !task.location.isEmpty || task.isFlagged {
                     HStack(spacing: 16) {
-                        if let dueDate = task.dueDate {
+                        if task.isFlagged {
                             HStack(spacing: 2) {
-                                Image(systemName: "calendar")
-                                Text(
-                                    task.timeFrame == .life
-                                    ? dueDate.formatted(.dateTime.year())
-                                    : dueDate.formatted(date: .numeric, time: .omitted)
-                                )
+                                Image(systemName: "flag.fill")
                             }
+                            .foregroundStyle(.orange)
+                        }
+                        
+                        if let dueDate = task.dueDate {
+                            HStack(spacing: 4) {
+                                Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
+                                Text(formattedDueDate(dueDate, timeFrame: task.timeFrame))
+                            }
+                            .foregroundStyle(isOverdue ? Color.red : Color.secondary)
                         }
                         
                         if !task.location.isEmpty {
@@ -586,10 +561,10 @@ private struct TaskRowView: View {
                                 Image(systemName: "location")
                                 Text(task.location)
                             }
+                            .foregroundStyle(.secondary)
                         }
                     }
                     .font(.caption)
-                    .foregroundStyle(.secondary)
                 }
             }
             Spacer()
@@ -602,6 +577,17 @@ private struct TaskRowView: View {
         }
         .onDisappear {
             commitToggleIfNeeded()
+        }
+    }
+    
+    private func formattedDueDate(_ date: Date, timeFrame: TimeFrame) -> String {
+        switch timeFrame {
+        case .life:
+            return date.formatted(.dateTime.year())
+        case .year, .month:
+            return date.formatted(date: .numeric, time: .omitted)
+        case .day:
+            return date.formatted(date: .omitted, time: .shortened)
         }
     }
     
@@ -704,10 +690,10 @@ private struct TaskRowView: View {
                     return task
                 }
                 
-                // 3. 過去のタスク 3つ (1日前, 2日前, 3日前)
+                // 3. 過去（期限切れ）のタスク 3つ (1日前, 2日前, 3日前)
                 let pastTasks = (1...3).map { i in
                     LimitTask(
-                        title: "Past Task \(i)",
+                        title: "Past Overdue Task \(i)",
                         timeFrameRawValue: TimeFrame.day.rawValue,
                         dueDate: calendar.date(byAdding: .day, value: -i, to: now)
                     )
