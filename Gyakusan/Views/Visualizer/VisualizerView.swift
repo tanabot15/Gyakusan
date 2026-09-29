@@ -52,7 +52,7 @@ struct VisualizerView: View {
                         .frame(height: 50)
                         .background(Color(uiColor: .systemGroupedBackground))
                     
-                    timeFramePicker
+                    timeFrameSegmentedPicker
                         .padding(.horizontal)
                         .padding(.vertical, 8)
                     
@@ -86,6 +86,17 @@ struct VisualizerView: View {
         }
     }
     
+    // MARK: - Segmented Picker
+    @ViewBuilder
+    private var timeFrameSegmentedPicker: some View {
+        Picker("TimeFrame", selection: $selectedTimeFrame) {
+            ForEach(TimeFrame.allCases) { timeFrame in
+                Text(timeFrame.title).tag(timeFrame)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+    
     // MARK: - TimeFrame Content View
     @ViewBuilder
     private func timeFrameContentView(for timeFrame: TimeFrame) -> some View {
@@ -95,7 +106,7 @@ struct VisualizerView: View {
         
         ScrollViewReader { proxy in
             List {
-                // Section 1: 画面上部のヘッダーグラフィック・グリッド領域
+                // Section 1: Top Header Graphic & Grid Area
                 Section {
                     VStack(spacing: 20) {
                         CountdownHeaderView(
@@ -113,12 +124,12 @@ struct VisualizerView: View {
                     }
                     .padding(.vertical)
                 }
-                .id("scrollTop_\(timeFrame.rawValue)") // 最上部へ戻すためのアンカーID
+                .id("scrollTop_\(timeFrame.rawValue)")
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 
-                // Section 2: タスク一覧セクション
+                // Section 2: Task List Section
                 Section {
                     HStack {
                         Text("\(timeFrame.title) Tasks")
@@ -133,13 +144,13 @@ struct VisualizerView: View {
                     .listRowSeparator(.hidden)
                     
                     if uncompleted.isEmpty && completed.isEmpty && !isQuickAdding {
-                        emptyTaskView
+                        emptyTaskPlaceholderView
                             .padding(.vertical, 20)
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     } else {
-                        // 未完了タスク一覧（期限切れタスクを含む）
+                        // Uncompleted Tasks (including overdue)
                         ForEach(uncompleted) { task in
                             taskRowContainer(for: task)
                                 .listRowSeparator(.hidden)
@@ -155,20 +166,22 @@ struct VisualizerView: View {
                             }
                         }
                         
-                        // クイック追加行
+                        // Inline Quick Add Row
                         if isQuickAdding {
-                            quickAddInlineRow
-                                .id("quickAddRow")
-                                .padding(.horizontal)
-                                .padding(.vertical, 8)
-                                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                .listRowBackground(Color.clear)
+                            QuickAddInlineRow(
+                                timeFrame: selectedTimeFrame,
+                                title: $quickAddTitle,
+                                dueDate: $quickAddDueDate,
+                                focusState: $isQuickAddFocused,
+                                onSubmit: { commitQuickAdd(continueAdding: false) }
+                            )
+                            .id("quickAddRow")
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .listRowBackground(Color.clear)
                         }
                         
-                        // 下部の余白 & タップによるクイック追加起動エリア
+                        // Bottom spacer & tap trigger for Quick Add
                         Color.clear
                             .frame(height: 24)
                             .contentShape(Rectangle())
@@ -179,29 +192,46 @@ struct VisualizerView: View {
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                         
-                        // 完了済みタスク（アコーディオン）
+                        // Completed Tasks (Accordion)
                         if !completed.isEmpty {
-                            accordionHeader(title: "Completed", count: completed.count, isExpanded: $isCompletedExpanded)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets())
-                                .listRowBackground(Color.clear)
+                            TaskSectionHeader(
+                                title: "Completed",
+                                count: completed.count,
+                                isExpanded: $isCompletedExpanded
+                            )
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
                             
                             if isCompletedExpanded {
-                                ForEach(completed) { task in
-                                    taskRowContainer(for: task)
+                                ForEach(groupedCompletedTasks(for: timeFrame), id: \.title) { group in
+                                    Text(group.title)
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 20)
+                                        .padding(.top, 8)
+                                        .padding(.bottom, 2)
                                         .listRowSeparator(.hidden)
-                                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                        .listRowInsets(EdgeInsets())
                                         .listRowBackground(Color.clear)
-                                }
-                                .onDelete { indices in
-                                    for index in indices {
-                                        deleteTask(completed[index])
+                                    
+                                    ForEach(group.tasks) { task in
+                                        taskRowContainer(for: task)
+                                            .listRowSeparator(.hidden)
+                                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                            .listRowBackground(Color.clear)
+                                    }
+                                    .onDelete { indices in
+                                        for index in indices {
+                                            deleteTask(group.tasks[index])
+                                        }
                                     }
                                 }
                             }
                         }
                         
-                        // フローティングボタンと被らないためのリスト最下部スペーサー
+                        // Bottom margin spacer to prevent overlapping with floating buttons
                         Color.clear
                             .frame(height: 80)
                             .listRowInsets(EdgeInsets())
@@ -215,7 +245,6 @@ struct VisualizerView: View {
             .background(Color(uiColor: .systemGroupedBackground))
             .environment(\.editMode, .constant(isEditingMode ? .active : .inactive))
             .onChange(of: selectedTimeFrame) { _, newTimeFrame in
-                // TimeFrame 切り替え時に最上部へスクロール
                 withAnimation {
                     proxy.scrollTo("scrollTop_\(newTimeFrame.rawValue)", anchor: .top)
                 }
@@ -232,72 +261,7 @@ struct VisualizerView: View {
         }
     }
     
-    private func calculateTaskProgressRatio(for timeFrame: TimeFrame) -> Double {
-        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame).count
-        let completed = sortedCurrentCompletedTasks(for: timeFrame).count
-        let total = uncompleted + completed
-        return total > 0 ? Double(completed) / Double(total) : 0.0
-    }
-    
-    private func periodStats(for timeFrame: TimeFrame) -> TimeCalculator.PeriodStats {
-        switch timeFrame {
-        case .life:
-            return TimeCalculator.PeriodStats(remainingMonths: 0, remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
-        case .year:
-            return TimeCalculator.calculateYearsStats(now: currentDate)
-        case .month:
-            return TimeCalculator.calculateMonthStats(now: currentDate)
-        case .day:
-            return TimeCalculator.calculateDaysStats(now: currentDate)
-        }
-    }
-    
-    // MARK: - Task Filters
-    private func timeFrameTasks(for timeFrame: TimeFrame) -> [LimitTask] {
-        allTasks.filter { $0.timeFrame == timeFrame }
-    }
-    
-    private func sortedCurrentUncompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
-        timeFrameTasks(for: timeFrame)
-            .filter { task in
-                guard !task.isCompleted else { return false }
-                // 現在の期間内、または期限（dueDate）を過ぎている未完了タスクを取得
-                let isOverdue = task.dueDate.map { $0 < currentDate } ?? false
-                return task.isCurrentPeriod(for: timeFrame, now: currentDate) || isOverdue
-            }
-            .sorted { $0.createdAt < $1.createdAt }
-    }
-    
-    private func sortedCurrentCompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
-        timeFrameTasks(for: timeFrame)
-            .filter { $0.isCompleted && $0.isCurrentPeriod(for: timeFrame, now: currentDate) }
-            .sorted { $0.createdAt < $1.createdAt }
-    }
-    
-    // MARK: - TimeFrame Segmented Control
-    @ViewBuilder
-    private var timeFramePicker: some View {
-        Picker("TimeFrame", selection: $selectedTimeFrame) {
-            ForEach(TimeFrame.allCases) { timeFrame in
-                Text(timeFrame.title).tag(timeFrame)
-            }
-        }
-        .pickerStyle(.segmented)
-    }
-    
-    private func moveTasks(from source: IndexSet, to destination: Int, in tasks: [LimitTask]) {
-        var updatedTasks = tasks
-        updatedTasks.move(fromOffsets: source, toOffset: destination)
-        
-        let baseDate = Date()
-        for (index, task) in updatedTasks.enumerated() {
-            task.createdAt = baseDate.addingTimeInterval(Double(index))
-        }
-        
-        saveContext()
-    }
-    
-    // MARK: - Task Row Container
+    // MARK: - Task Row Container Wrap
     @ViewBuilder
     private func taskRowContainer(for task: LimitTask) -> some View {
         HStack(spacing: 8) {
@@ -313,79 +277,6 @@ struct VisualizerView: View {
                 selectedTaskToEdit = task
             }
         }
-    }
-    
-    // MARK: - Quick Add Inline Row
-    @ViewBuilder
-    private var quickAddInlineRow: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "circle")
-                .font(.title3)
-                .foregroundStyle(.tertiary)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                TextField("New Task...", text: $quickAddTitle)
-                    .font(.body)
-                    .focused($isQuickAddFocused)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        commitQuickAdd(continueAdding: false)
-                    }
-                
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                        .font(.caption)
-                        .foregroundStyle(Color.accentColor)
-                    
-                    DatePicker(
-                        "",
-                        selection: $quickAddDueDate,
-                        displayedComponents: selectedTimeFrame == .day ? [.date, .hourAndMinute] : [.date]
-                    )
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-                    .scaleEffect(0.85, anchor: .leading)
-                }
-            }
-            
-            Spacer()
-            
-            if !quickAddTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Button(action: {
-                    commitQuickAdd(continueAdding: false)
-                }) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(Color.accentColor)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-    
-    // MARK: - Section Accordion Header
-    @ViewBuilder
-    private func accordionHeader(title: String, count: Int, isExpanded: Binding<Bool>) -> some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isExpanded.wrappedValue.toggle()
-            }
-        }) {
-            HStack {
-                Text("\(title) (\(count))")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Image(systemName: isExpanded.wrappedValue ? "chevron.down" : "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
     
     // MARK: - Floating Control Bar
@@ -430,7 +321,111 @@ struct VisualizerView: View {
         }
     }
     
-    // MARK: - Quick Add & Action Logic
+    // MARK: - Empty View Placeholder
+    private var emptyTaskPlaceholderView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.dashed")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            
+            Text("No Tasks")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Text("Tap anywhere to add a task.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            startQuickAdd()
+        }
+    }
+    
+    // MARK: - Calculations & Data Helpers
+    private func calculateTaskProgressRatio(for timeFrame: TimeFrame) -> Double {
+        let uncompleted = sortedCurrentUncompletedTasks(for: timeFrame).count
+        let completed = sortedCurrentCompletedTasks(for: timeFrame).count
+        let total = uncompleted + completed
+        return total > 0 ? Double(completed) / Double(total) : 0.0
+    }
+    
+    private func periodStats(for timeFrame: TimeFrame) -> TimeCalculator.PeriodStats {
+        switch timeFrame {
+        case .life:
+            return TimeCalculator.PeriodStats(remainingMonths: 0, remainingDays: 0, remainingHours: 0, remainingMinutes: 0, remainingSeconds: 0, ProgressRatio: 0.0)
+        case .year:
+            return TimeCalculator.calculateYearsStats(now: currentDate)
+        case .month:
+            return TimeCalculator.calculateMonthStats(now: currentDate)
+        case .day:
+            return TimeCalculator.calculateDaysStats(now: currentDate)
+        }
+    }
+    
+    private func timeFrameTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        allTasks.filter { $0.timeFrame == timeFrame }
+    }
+    
+    private func sortedCurrentUncompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        timeFrameTasks(for: timeFrame)
+            .filter { task in
+                guard !task.isCompleted else { return false }
+                let isOverdue = task.dueDate.map { $0 < currentDate } ?? false
+                return task.isCurrentPeriod(for: timeFrame, now: currentDate) || isOverdue
+            }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+    
+    private func sortedCurrentCompletedTasks(for timeFrame: TimeFrame) -> [LimitTask] {
+        timeFrameTasks(for: timeFrame)
+            .filter { $0.isCompleted }
+            .sorted { ($0.completedAt ?? $0.createdAt) < ($1.completedAt ?? $1.createdAt) }
+    }
+    
+    private func completionGroupTitle(for date: Date, timeFrame: TimeFrame) -> String {
+        switch timeFrame {
+        case .life, .year:
+            return date.formatted(.dateTime.year())
+        case .month:
+            return date.formatted(.dateTime.year().month(.twoDigits))
+        case .day:
+            return date.formatted(.dateTime.month(.twoDigits).day(.twoDigits))
+        }
+    }
+    
+    private func groupedCompletedTasks(for timeFrame: TimeFrame) -> [(title: String, tasks: [LimitTask])] {
+        let tasks = sortedCurrentCompletedTasks(for: timeFrame)
+        let dictionary = Dictionary(grouping: tasks) { task -> String in
+            let date = task.completedAt ?? task.createdAt
+            return completionGroupTitle(for: date, timeFrame: timeFrame)
+        }
+        
+        return dictionary.map { (title: $0.key, tasks: $0.value) }
+            .sorted { first, second in
+                guard let date1 = first.tasks.first?.completedAt ?? first.tasks.first?.createdAt,
+                      let date2 = second.tasks.first?.completedAt ?? second.tasks.first?.createdAt else {
+                    return false
+                }
+                return date1 < date2
+            }
+    }
+    
+    private func moveTasks(from source: IndexSet, to destination: Int, in tasks: [LimitTask]) {
+        var updatedTasks = tasks
+        updatedTasks.move(fromOffsets: source, toOffset: destination)
+        
+        let baseDate = Date()
+        for (index, task) in updatedTasks.enumerated() {
+            task.createdAt = baseDate.addingTimeInterval(Double(index))
+        }
+        
+        saveContext()
+    }
+    
+    // MARK: - Quick Add Logic
     private func startQuickAdd() {
         guard !isQuickAdding else { return }
         
@@ -486,157 +481,11 @@ struct VisualizerView: View {
     private func saveContext() {
         try? modelContext.save()
     }
-    
-    private var emptyTaskView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.dashed")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
-            
-            Text("No Tasks")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
-            Text("Tap anywhere to add a task.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .contentShape(Rectangle())
-        .onTapGesture {
-            startQuickAdd()
-        }
-    }
 }
 
-// MARK: - TaskRowView
-private struct TaskRowView: View {
-    let task: LimitTask
-    var currentDate: Date = Date()
-    var onToggle: () -> Void
-    
-    @State private var isCompletedState: Bool = false
-    @State private var pendingToggleTask: Task<Void, Never>? = nil
-    
-    private var isOverdue: Bool {
-        guard let dueDate = task.dueDate else { return false }
-        return !isCompletedState && dueDate < currentDate
-    }
-    
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Button(action: handleToggle) {
-                Image(systemName: isCompletedState ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(isCompletedState ? .secondary : .primary)
-            }
-            .buttonStyle(.plain)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
-                    .font(.body)
-                    .strikethrough(isCompletedState, color: .secondary)
-                    .foregroundStyle(isCompletedState ? .secondary : .primary)
-                
-                if task.dueDate != nil || !task.location.isEmpty || task.isFlagged {
-                    HStack(spacing: 16) {
-                        if task.isFlagged {
-                            HStack(spacing: 2) {
-                                Image(systemName: "flag.fill")
-                            }
-                            .foregroundStyle(.orange)
-                        }
-                        
-                        if let dueDate = task.dueDate {
-                            HStack(spacing: 4) {
-                                Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
-                                Text(formattedDueDate(dueDate, timeFrame: task.timeFrame))
-                            }
-                            .foregroundStyle(isOverdue ? Color.red : Color.secondary)
-                        }
-                        
-                        if !task.location.isEmpty {
-                            HStack(spacing: 2) {
-                                Image(systemName: "location")
-                                Text(task.location)
-                            }
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-                    .font(.caption)
-                }
-            }
-            Spacer()
-        }
-        .onAppear {
-            isCompletedState = task.isCompleted
-        }
-        .onChange(of: task.isCompleted) { _, newValue in
-            isCompletedState = newValue
-        }
-        .onDisappear {
-            commitToggleIfNeeded()
-        }
-    }
-    
-    private func formattedDueDate(_ date: Date, timeFrame: TimeFrame) -> String {
-        switch timeFrame {
-        case .life:
-            return date.formatted(.dateTime.year())
-        case .year, .month:
-            return date.formatted(date: .numeric, time: .omitted)
-        case .day:
-            return date.formatted(date: .omitted, time: .shortened)
-        }
-    }
-    
-    private func handleToggle() {
-        pendingToggleTask?.cancel()
-        pendingToggleTask = nil
-        
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            isCompletedState.toggle()
-        }
-        
-        if isCompletedState == task.isCompleted {
-            return
-        }
-        
-        if isCompletedState {
-            pendingToggleTask = Task {
-                try? await Task.sleep(for: .seconds(3))
-                if !Task.isCancelled {
-                    commitToggle()
-                }
-            }
-        } else {
-            commitToggle()
-        }
-    }
-    
-    private func commitToggleIfNeeded() {
-        if isCompletedState != task.isCompleted {
-            pendingToggleTask?.cancel()
-            commitToggle()
-        }
-    }
-    
-    private func commitToggle() {
-        task.isCompleted = isCompletedState
-        if task.isCompleted {
-            task.completedAt = Date()
-            AdMobManager.shared.taskCompleted()
-        } else {
-            task.completedAt = nil
-        }
-        onToggle()
-        pendingToggleTask = nil
-    }
-}
+// MARK: - Previews
 
-// MARK: - Preview
-#Preview {
+#Preview("VisualizerView") {
     struct PreviewContainer {
         @MainActor
         static let container: ModelContainer = {
@@ -655,7 +504,6 @@ private struct TaskRowView: View {
                 let calendar = Calendar.current
                 let now = Date()
                 
-                // 1. 未完了（現在）のタスク 3つ
                 let uncompletedTasks = [
                     LimitTask(
                         title: "Develop iOS App Prototype",
@@ -678,7 +526,6 @@ private struct TaskRowView: View {
                     )
                 ]
                 
-                // 2. 完了済みのタスク 3つ
                 let completedTasks = (1...3).map { i in
                     let task = LimitTask(
                         title: "Completed Task \(i)",
@@ -690,7 +537,6 @@ private struct TaskRowView: View {
                     return task
                 }
                 
-                // 3. 過去（期限切れ）のタスク 3つ (1日前, 2日前, 3日前)
                 let pastTasks = (1...3).map { i in
                     LimitTask(
                         title: "Past Overdue Task \(i)",

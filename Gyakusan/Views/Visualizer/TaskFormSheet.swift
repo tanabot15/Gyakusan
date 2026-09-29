@@ -20,6 +20,9 @@ struct TaskFormSheet: View {
     @State private var title: String = ""
     @State private var taskDescription: String = ""
     
+    @State private var isCompleted: Bool = false
+    @State private var completedAt: Date = Date()
+    
     @State private var tags: [String] = []
     @State private var newTagText: String = ""
     @State private var isAddingTag: Bool = false
@@ -49,6 +52,8 @@ struct TaskFormSheet: View {
         _selectedTimeFrame = State(initialValue: taskToEdit.timeFrame)
         _title = State(initialValue: taskToEdit.title)
         _taskDescription = State(initialValue: taskToEdit.taskDescription)
+        _isCompleted = State(initialValue: taskToEdit.isCompleted)
+        _completedAt = State(initialValue: taskToEdit.completedAt ?? Date())
         _tags = State(initialValue: taskToEdit.tags)
         _dueDate = State(initialValue: taskToEdit.dueDate)
         _location = State(initialValue: taskToEdit.location)
@@ -65,6 +70,8 @@ struct TaskFormSheet: View {
         
         let isTitleChanged = title != original.title
         let isDescriptionChanged = taskDescription != original.taskDescription
+        let isCompletedChanged = isCompleted != original.isCompleted
+        let isCompletedAtChanged = isCompleted && (completedAt != original.completedAt)
         let isTagsChanged = tags != original.tags
         let isTimeFrameChanged = selectedTimeFrame != original.timeFrame
         let isFlaggedChanged = isFlagged != original.isFlagged
@@ -72,84 +79,114 @@ struct TaskFormSheet: View {
         let isDueDateChanged = dueDate != original.dueDate
         let isShowInTimelineChanged = showInTimeline != original.showInTimeline
         
-        return isTitleChanged || isDescriptionChanged || isTagsChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged || isShowInTimelineChanged
+        return isTitleChanged || isDescriptionChanged || isCompletedChanged || isCompletedAtChanged || isTagsChanged || isTimeFrameChanged || isFlaggedChanged || isLocationChanged || isDueDateChanged || isShowInTimelineChanged
     }
     
     private var isSaveDisabled: Bool {
         let isTitleEmpty = title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return isEditing ? (isTitleEmpty || !hasChanges) : isTitleEmpty
     }
-    
-    private var selectedYearBinding: Binding<Int> {
-        Binding<Int>(
-            get: {
-                let calendar = Calendar.current
-                let currentYear = calendar.component(.year, from: Date())
-                if let date = dueDate {
-                    return calendar.component(.year, from: date)
-                }
-                return currentYear
-            },
-            set: { newYear in
-                let calendar = Calendar.current
-                var components = calendar.dateComponents([.year, .month, .day], from: dueDate ?? Date())
-                components.year = newYear
-                if components.month == nil { components.month = 1 }
-                if components.day == nil { components.day = 1 }
-                dueDate = calendar.date(from: components)
-            }
-        )
-    }
 
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: - Task Title
                 Section(header: Text("Task Title")) {
                     TextField("Enter task title...", text: $title)
                         .focused($isTitleFocused)
                 }
                 
+                // MARK: - Status Section
+                if isEditing {
+                    Section(header: Text("Status")) {
+                        Toggle("Completed", isOn: $isCompleted.animation())
+                        
+                        if isCompleted {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Completed Date")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                dynamicDatePicker(
+                                    dateBinding: $completedAt,
+                                    timeFrame: selectedTimeFrame
+                                )
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+                
+                // MARK: - Time Frame & Target Date
                 Section(header: Text("Time Frame & Target Date")) {
-                    Picker("Time Frame", selection: $selectedTimeFrame) {
-                        ForEach(TimeFrame.allCases) { timeFrame in
-                            Text(timeFrame.title)
-                                .tag(timeFrame)
+                    if isCompleted {
+                        // 完了済み時は簡易表示に切り替え
+                        HStack {
+                            Text("Time Frame")
+                            Spacer()
+                            Text(selectedTimeFrame.title)
+                                .foregroundStyle(.secondary)
                         }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: selectedTimeFrame) { _, newTimeFrame in
-                        if !isEditing {
-                            showInTimeline = (newTimeFrame == .life || newTimeFrame == .year)
+                        
+                        HStack {
+                            Text("Target Date")
+                            Spacer()
+                            if let dueDate {
+                                Text(formattedDate(dueDate, timeFrame: selectedTimeFrame))
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text("None")
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
-                    }
-                    
-                    if let currentDueDate = dueDate {
-                        VStack(alignment: .leading, spacing: 10) {
-                            dynamicDatePicker(for: currentDueDate)
-                            
-                            Button(role: .destructive) {
+                    } else {
+                        Picker("Time Frame", selection: $selectedTimeFrame) {
+                            ForEach(TimeFrame.allCases) { timeFrame in
+                                Text(timeFrame.title)
+                                    .tag(timeFrame)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: selectedTimeFrame) { _, newTimeFrame in
+                            if !isEditing {
+                                showInTimeline = (newTimeFrame == .life || newTimeFrame == .year)
+                            }
+                        }
+                        
+                        if let currentDueDate = dueDate {
+                            VStack(alignment: .leading, spacing: 10) {
+                                dynamicDatePicker(
+                                    dateBinding: Binding(
+                                        get: { currentDueDate },
+                                        set: { dueDate = $0 }
+                                    ),
+                                    timeFrame: selectedTimeFrame
+                                )
+                                
+                                Button(role: .destructive) {
+                                    withAnimation {
+                                        dueDate = nil
+                                    }
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "xmark.circle")
+                                        Text("Clear Target Date")
+                                    }
+                                    .font(.subheadline)
+                                    .padding(.horizontal)
+                                }
+                                .padding(.top, 2)
+                            }
+                            .padding(.vertical, 4)
+                        } else {
+                            Button {
                                 withAnimation {
-                                    dueDate = nil
+                                    dueDate = Date()
                                 }
                             } label: {
-                                HStack {
-                                    Image(systemName: "xmark.circle")
-                                    Text("Clear Target Date")
-                                }
-                                .font(.subheadline)
-                                .padding(.horizontal)
+                                Label("Add Target Date", systemImage: "calendar.badge.plus")
+                                    .font(.subheadline)
                             }
-                            .padding(.top, 2)
-                        }
-                        .padding(.vertical, 4)
-                    } else {
-                        Button {
-                            withAnimation {
-                                dueDate = Date()
-                            }
-                        } label: {
-                            Label("Add Target Date", systemImage: "calendar.badge.plus")
-                                .font(.subheadline)
                         }
                     }
                 }
@@ -414,23 +451,19 @@ struct TaskFormSheet: View {
         )
     }
     
+    // MARK: - Dynamic Date Picker Component
     @ViewBuilder
-    private func dynamicDatePicker(for date: Date) -> some View {
-        let binding = Binding(
-            get: { date },
-            set: { dueDate = $0 }
-        )
-        
-        switch selectedTimeFrame {
+    private func dynamicDatePicker(dateBinding: Binding<Date>, timeFrame: TimeFrame) -> some View {
+        switch timeFrame {
         case .day:
             HStack(spacing: 12) {
-                datePickerChip(binding: binding)
+                datePickerChip(binding: dateBinding)
                 
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
                         .foregroundStyle(Color.accentColor)
                         .font(.subheadline)
-                    DatePicker("", selection: binding, displayedComponents: [.hourAndMinute])
+                    DatePicker("", selection: dateBinding, displayedComponents: [.hourAndMinute])
                         .datePickerStyle(.compact)
                         .labelsHidden()
                 }
@@ -442,12 +475,26 @@ struct TaskFormSheet: View {
             
         case .month, .year:
             HStack {
-                datePickerChip(binding: binding)
+                datePickerChip(binding: dateBinding)
                 Spacer()
             }
             
         case .life:
-            Picker("Target Year", selection: selectedYearBinding) {
+            let yearBinding = Binding<Int>(
+                get: {
+                    Calendar.current.component(.year, from: dateBinding.wrappedValue)
+                },
+                set: { newYear in
+                    let calendar = Calendar.current
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    components.year = newYear
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+            
+            Picker("Year", selection: yearBinding) {
                 ForEach(availableYears, id: \.self) { year in
                     Text("\(String(year))")
                         .tag(year)
@@ -474,6 +521,17 @@ struct TaskFormSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
     
+    private func formattedDate(_ date: Date, timeFrame: TimeFrame) -> String {
+        switch timeFrame {
+        case .life:
+            return date.formatted(.dateTime.year())
+        case .year, .month:
+            return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
+        case .day:
+            return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits).hour().minute())
+        }
+    }
+    
     private func saveTask() {
         addCurrentInputTag()
         
@@ -486,6 +544,8 @@ struct TaskFormSheet: View {
         if let task = taskToEdit {
             task.title = trimmedTitle
             task.taskDescription = trimmedDescription
+            task.isCompleted = isCompleted
+            task.completedAt = isCompleted ? completedAt : nil
             task.tags = tags
             task.timeFrame = selectedTimeFrame
             task.dueDate = dueDate
