@@ -25,6 +25,7 @@ struct TimelineView: View {
     
     @State private var currentDate: Date = Date()
     @State private var showingAddEventSheet: Bool = false
+    @State private var showingAddTaskSheet: Bool = false
     @State private var selectedEventForEdit: LifeEvent? = nil
     
     private var currentProfile: UserProfile {
@@ -126,12 +127,15 @@ struct TimelineView: View {
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
                 
-                floatingAddButton
+                floatingControlBar
                     .padding(.trailing, 20)
                     .padding(.bottom, 20)
             }
             .sheet(isPresented: $showingAddEventSheet) {
                 LifeEventFormSheet()
+            }
+            .sheet(isPresented: $showingAddTaskSheet) {
+                TaskFormSheet(selectedTimeFrame: .life)
             }
             .sheet(item: $selectedEventForEdit) { event in
                 LifeEventFormSheet(eventToEdit: event)
@@ -139,21 +143,36 @@ struct TimelineView: View {
         }
     }
     
-    // MARK: - Floating Add Button
+    // MARK: - Floating Control Bar
     @ViewBuilder
-    private var floatingAddButton: some View {
-        Button(action: {
-            showingAddEventSheet = true
-        }) {
-            Image(systemName: "calendar.badge.plus")
-                .font(.title3.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(width: 48, height: 48)
-                .background(Color.accentColor)
-                .clipShape(Circle())
-                .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
+    private var floatingControlBar: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                showingAddEventSheet = true
+            }) {
+                Image(systemName: "calendar.badge.plus")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(.orange)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
+            }
+            .buttonStyle(.plain)
+
+            Button(action: {
+                showingAddTaskSheet = true
+            }) {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 48, height: 48)
+                    .background(Color.accentColor)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 3)
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
     }
     
     // MARK: - Life Timeline Section
