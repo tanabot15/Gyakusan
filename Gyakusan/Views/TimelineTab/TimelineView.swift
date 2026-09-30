@@ -97,7 +97,7 @@ struct TimelineView: View {
     private var lifeTimelineSection: some View {
         VStack(spacing: 0) {
             ForEach(timelineGroups) { group in
-                HStack(alignment: .top, spacing: 16) {
+                HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(group.ageText)
                             .font(.subheadline)
@@ -153,6 +153,7 @@ struct TimelineView: View {
         .padding(.horizontal)
     }
     
+    // MARK: - Simplified Timeline Task Card
     private func timelineTaskCard(_ task: LimitTask) -> some View {
         HStack(spacing: 10) {
             Button {
@@ -168,51 +169,16 @@ struct TimelineView: View {
             }
             .buttonStyle(.plain)
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(task.title)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                    
-                    if task.timeFrame != .life {
-                        Text(task.timeFrame.title)
-                            .font(.caption2)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.gray.opacity(0.15))
-                            .clipShape(Capsule())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                HStack(spacing: 8) {
-                    if let completedAt = task.completedAt {
-                        Label(completedAt.formatted(date: .numeric, time: .omitted), systemImage: "checkmark.done")
-                            .font(.caption2)
-                            .foregroundStyle(.green)
-                    } else if let dueDate = task.dueDate {
-                        Label(dueDate.formatted(date: .numeric, time: .omitted), systemImage: "calendar")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    if !task.location.isEmpty {
-                        Label(task.location, systemImage: "location")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            Spacer()
+            Text(task.title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                .strikethrough(task.isCompleted, color: .secondary)
             
-            if task.isFlagged {
-                Image(systemName: "flag.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.orange)
-            }
+            Spacer()
         }
-        .padding(10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(Color(uiColor: .tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
