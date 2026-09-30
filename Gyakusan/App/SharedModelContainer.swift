@@ -12,7 +12,8 @@ enum SharedModelContainer {
     static func create() -> ModelContainer {
         let schema = Schema([
             LimitTask.self,
-            UserProfile.self
+            UserProfile.self,
+            LifeEvent.self
         ])
         
         let appGroupID = "group.com.suzuki.kenichiro.Gyakusan"

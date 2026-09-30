@@ -2,8 +2,6 @@
 //  GyakusanApp.swift
 //  Gyakusan
 //
-//  Created by Kenichiro Suzuki on 2026/07/22.
-//
 
 import SwiftUI
 import SwiftData
@@ -83,6 +81,32 @@ struct GyakusanApp: App {
         
         let calendar = Calendar.current
         let baseDate = Date()
+        
+        // MARK: - Sample Life Events
+        let event1 = LifeEvent(
+            title: "Joined First Company",
+            date: calendar.date(byAdding: .year, value: -5, to: baseDate) ?? baseDate, // 過去（5年前）
+            iconName: "briefcase.fill",
+            note: "Started career as a software developer."
+        )
+        
+        let event2 = LifeEvent(
+            title: "Marriage",
+            date: calendar.date(byAdding: .year, value: -2, to: baseDate) ?? baseDate, // 過去（2年前）
+            iconName: "heart.fill",
+            note: "Wedding ceremony with family and friends."
+        )
+        
+        let event3 = LifeEvent(
+            title: "Move to New Apartment",
+            date: calendar.date(byAdding: .month, value: 3, to: baseDate) ?? baseDate, // 未来（3ヶ月後）
+            iconName: "house.fill",
+            note: "Relocating to a larger space."
+        )
+        
+        context.insert(event1)
+        context.insert(event2)
+        context.insert(event3)
         
         // Helper: Ensure sequential createdAt dates so TodoListView sorts them top-to-bottom
         var timeOffset: TimeInterval = 0

@@ -30,6 +30,9 @@
 		D9BA15F1306BEFAF008B3FC5 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15F0306BEFAF008B3FC5 /* TaskRowView.swift */; };
 		D9BA15F3306BEFE3008B3FC5 /* QuickAddInlineRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15F2306BEFE3008B3FC5 /* QuickAddInlineRow.swift */; };
 		D9BA15F5306BF012008B3FC5 /* TaskSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15F4306BF012008B3FC5 /* TaskSectionHeader.swift */; };
+		D9BA15F7306CB869008B3FC5 /* LifeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15F6306CB869008B3FC5 /* LifeEvent.swift */; };
+		D9BA15F8306CB869008B3FC5 /* LifeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15F6306CB869008B3FC5 /* LifeEvent.swift */; };
+		D9BA15FC306CB8B7008B3FC5 /* LifeEventFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA15FB306CB8B7008B3FC5 /* LifeEventFormSheet.swift */; };
 		D9D57E4230406130004B29BA /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D57E4130406130004B29BA /* FocusTimerView.swift */; };
 		D9E0686B3010A63900E88132 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D9E068673010A63900E88132 /* Assets.xcassets */; };
 		D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068683010A63900E88132 /* MainTabView.swift */; };
@@ -95,6 +98,8 @@
 		D9BA15F0306BEFAF008B3FC5 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		D9BA15F2306BEFE3008B3FC5 /* QuickAddInlineRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddInlineRow.swift; sourceTree = "<group>"; };
 		D9BA15F4306BF012008B3FC5 /* TaskSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskSectionHeader.swift; sourceTree = "<group>"; };
+		D9BA15F6306CB869008B3FC5 /* LifeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeEvent.swift; sourceTree = "<group>"; };
+		D9BA15FB306CB8B7008B3FC5 /* LifeEventFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeEventFormSheet.swift; sourceTree = "<group>"; };
 		D9D57E4130406130004B29BA /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
 		D9E068593010A55D00E88132 /* Gyakusan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gyakusan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9E068673010A63900E88132 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -149,6 +154,7 @@
 			isa = PBXGroup;
 			children = (
 				D990D1B5303C010D001B3CDA /* TimelineView.swift */,
+				D9BA15FB306CB8B7008B3FC5 /* LifeEventFormSheet.swift */,
 			);
 			path = TimelineTab;
 			sourceTree = "<group>";
@@ -232,6 +238,7 @@
 				D9E068783010E0CB00E88132 /* LimitTask.swift */,
 				D9E0687A3010E0D400E88132 /* UserProfile.swift */,
 				D9E0687C3010E0DE00E88132 /* TimeFrame.swift */,
+				D9BA15F6306CB869008B3FC5 /* LifeEvent.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -418,6 +425,7 @@
 				D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */,
 				D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9BA15D4304ED917008B3FC5 /* LimitTask.swift in Sources */,
+				D9BA15F8306CB869008B3FC5 /* LifeEvent.swift in Sources */,
 				D9BA15E13057B396008B3FC5 /* FocusTimerAttributes.swift in Sources */,
 				D9BA15D2304ED77D008B3FC5 /* GyakusanWidget.swift in Sources */,
 				D9BA15D3304ED77D008B3FC5 /* GyakusanWidgetBundle.swift in Sources */,
@@ -432,6 +440,7 @@
 				D990D1B6303C010D001B3CDA /* TimelineView.swift in Sources */,
 				D9E0688C3010E19B00E88132 /* VisualizerView.swift in Sources */,
 				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
+				D9BA15FC306CB8B7008B3FC5 /* LifeEventFormSheet.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
 				D9E068793010E0CB00E88132 /* LimitTask.swift in Sources */,
 				D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */,
@@ -452,6 +461,7 @@
 				D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
 				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
+				D9BA15F7306CB869008B3FC5 /* LifeEvent.swift in Sources */,
 				D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
