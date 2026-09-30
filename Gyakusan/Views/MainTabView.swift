@@ -31,18 +31,18 @@ struct MainTabView: View {
                     Label("Visualizer", systemImage: "hourglass")
                 }
                 .tag(Tab.visualizer)
+
+            TimelineView()
+                .tabItem {
+                    Label("Timeline", systemImage: "calendar.day.timeline.left")
+                }
+                .tag(Tab.reflection)
             
             FocusTimerView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Pomodoro", systemImage: "timer")
                 }
                 .tag(Tab.focus)
-            
-            TimelineView()
-                .tabItem {
-                    Label("Timeline", systemImage: "calendar.day.timeline.left")
-                }
-                .tag(Tab.reflection)
             
             SettingsView()
                 .tabItem {
