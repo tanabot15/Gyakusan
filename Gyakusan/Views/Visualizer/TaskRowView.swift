@@ -18,6 +18,11 @@ struct TaskRowView: View {
         return !isCompletedState && dueDate < currentDate
     }
     
+    // 表示要素（dueDate, Flag, Tag, Location）が存在するか判定
+    private var hasSecondRowContent: Bool {
+        task.dueDate != nil || task.isFlagged || !task.tags.isEmpty || !task.location.isEmpty
+    }
+    
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Button(action: handleToggle) {
@@ -27,38 +32,58 @@ struct TaskRowView: View {
             }
             .buttonStyle(.plain)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(task.title)
                     .font(.body)
                     .strikethrough(isCompletedState, color: .secondary)
                     .foregroundStyle(isCompletedState ? .secondary : .primary)
                 
-                if task.dueDate != nil || !task.location.isEmpty || task.isFlagged {
-                    HStack(spacing: 16) {
-                        if task.isFlagged {
-                            HStack(spacing: 2) {
-                                Image(systemName: "flag.fill")
+                // dueDate -> Flag -> Tag -> Location
+                if hasSecondRowContent {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            // 1. dueDate
+                            if let dueDate = task.dueDate {
+                                HStack(spacing: 4) {
+                                    Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
+                                    Text(formattedDueDate(dueDate, timeFrame: task.timeFrame))
+                                }
+                                .foregroundStyle(isOverdue ? Color.red : Color.secondary)
                             }
-                            .foregroundStyle(.orange)
-                        }
-                        
-                        if let dueDate = task.dueDate {
-                            HStack(spacing: 4) {
-                                Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
-                                Text(formattedDueDate(dueDate, timeFrame: task.timeFrame))
+                            
+                            // 2. Flag
+                            if task.isFlagged {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "flag.fill")
+                                }
+                                .foregroundStyle(.orange)
                             }
-                            .foregroundStyle(isOverdue ? Color.red : Color.secondary)
-                        }
-                        
-                        if !task.location.isEmpty {
-                            HStack(spacing: 2) {
-                                Image(systemName: "location")
-                                Text(task.location)
+                            
+                            // 3. Tag (Capsuleで囲むUI)
+                            if !task.tags.isEmpty {
+                                ForEach(task.tags, id: \.self) { tag in
+                                    Text("#\(tag)")
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(Color.accentColor.opacity(0.12))
+                                        .foregroundStyle(Color.accentColor)
+                                        .clipShape(Capsule())
+                                }
                             }
-                            .foregroundStyle(.secondary)
+                            
+                            // 4. Location
+                            if !task.location.isEmpty {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "location")
+                                    Text(task.location)
+                                }
+                                .foregroundStyle(.secondary)
+                            }
                         }
+                        .font(.caption)
                     }
-                    .font(.caption)
                 }
             }
             Spacer()
@@ -98,7 +123,6 @@ struct TaskRowView: View {
         }
         
         if isCompletedState {
-            // Delay completion execution by 3 seconds for smooth animation
             pendingToggleTask = Task {
                 try? await Task.sleep(for: .seconds(3))
                 if !Task.isCancelled {
@@ -132,9 +156,11 @@ struct TaskRowView: View {
 
 // MARK: - Previews
 
-#Preview("Active") {
+#Preview("Full Meta Task") {
     let task = LimitTask(
         title: "Develop iOS App Prototype",
+        taskDescription: "Implement full features",
+        tags: ["SwiftUI", "Gyakusan"],
         timeFrameRawValue: TimeFrame.day.rawValue,
         dueDate: Date(),
         location: "Tokyo Studio",
@@ -146,13 +172,15 @@ struct TaskRowView: View {
         .background(Color(uiColor: .secondarySystemGroupedBackground))
 }
 
-#Preview("Overdue") {
+#Preview("Overdue with All Meta") {
     let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
     let task = LimitTask(
-        title: "Overdue Task Item",
+        title: "Submit App Store Review Request",
+        tags: ["Release", "Urgent"],
         timeFrameRawValue: TimeFrame.day.rawValue,
         dueDate: yesterday,
-        location: "Home Office"
+        location: "App Store Connect",
+        isFlagged: true
     )
     
     TaskRowView(task: task, currentDate: Date(), onToggle: {})
