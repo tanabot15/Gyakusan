@@ -13,7 +13,10 @@ struct CountdownHeaderView: View {
     let lifeStats: TimeCalculator.LifeStats?
     let taskProgressRatio: Double
     
-    @AppStorage("highlightColorHex") private var highlightColorHex: String = "#8E8E93"
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
     
     private var timeProgressRatio: Double {
         if timeFrame == .life {
@@ -50,7 +53,7 @@ struct CountdownHeaderView: View {
                             .foregroundStyle(.secondary)
                     }
                     ProgressView(value: timeProgressRatio, total: 1.0)
-                        .tint(Color(hex: highlightColorHex).opacity(0.6))
+                        .tint(Color(hex: highlightColorHex))
                 }
                 
                 // 2. タスク達成率のプログレスバー
@@ -65,7 +68,7 @@ struct CountdownHeaderView: View {
                             .font(.caption2)
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
-                            .foregroundStyle(Color(hex: highlightColorHex))
+                            .foregroundStyle(.secondary)
                     }
                     ProgressView(value: taskProgressRatio, total: 1.0)
                         .tint(Color(hex: highlightColorHex))
