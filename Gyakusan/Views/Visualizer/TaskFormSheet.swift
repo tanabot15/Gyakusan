@@ -151,6 +151,10 @@ struct TaskFormSheet: View {
                             if !isEditing {
                                 showInTimeline = (newTimeFrame == .life || newTimeFrame == .year)
                             }
+                            
+                            if let current = dueDate {
+                                dueDate = clampedDate(current, for: newTimeFrame)
+                            }
                         }
                         
                         if let currentDueDate = dueDate {
@@ -454,38 +458,122 @@ struct TaskFormSheet: View {
     // MARK: - Dynamic Date Picker Component
     @ViewBuilder
     private func dynamicDatePicker(dateBinding: Binding<Date>, timeFrame: TimeFrame) -> some View {
+        let calendar = Calendar.current
+        let now = Date()
+
         switch timeFrame {
         case .day:
-            HStack(spacing: 12) {
-                datePickerChip(binding: dateBinding)
-                
-                HStack(spacing: 6) {
-                    Image(systemName: "clock")
-                        .foregroundStyle(Color.accentColor)
-                        .font(.subheadline)
-                    DatePicker("", selection: dateBinding, displayedComponents: [.hourAndMinute])
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(uiColor: .tertiarySystemFill))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
-            
-        case .month, .year:
-            HStack {
-                datePickerChip(binding: dateBinding)
+            HStack(spacing: 8) {
+                // 固定の年月日表示（スラッシュ区切り・英語ロケール）
+                Text(now.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits)))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 時間選択
+                DatePicker("", selection: dateBinding, displayedComponents: [.hourAndMinute])
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(Color(uiColor: .tertiarySystemFill))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
                 Spacer()
             }
+
+        case .month:
+            let range = calendar.range(of: .day, in: .month, for: now) ?? 1..<31
+            let dayList = Array(range)
             
+            let dayBinding = Binding<Int>(
+                get: {
+                    calendar.component(.day, from: dateBinding.wrappedValue)
+                },
+                set: { newDay in
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    components.year = calendar.component(.year, from: now)
+                    components.month = calendar.component(.month, from: now)
+                    components.day = newDay
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+
+            HStack(spacing: 8) {
+                // 固定の年月表示（スラッシュ区切り・英語ロケール）
+                Text(now.formatted(.dateTime.year().month(.twoDigits)))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 日選択 Wheel Picker
+                Picker("Day", selection: dayBinding) {
+                    ForEach(dayList, id: \.self) { day in
+                        Text(String(format: "%02d", day)).tag(day)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
+                Spacer()
+            }
+
+        case .year:
+            let monthSymbols = calendar.shortMonthSymbols
+            
+            let monthBinding = Binding<Int>(
+                get: {
+                    calendar.component(.month, from: dateBinding.wrappedValue)
+                },
+                set: { newMonth in
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    components.year = calendar.component(.year, from: now)
+                    components.month = newMonth
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+
+            HStack(spacing: 8) {
+                // 固定の年表示
+                Text(String(calendar.component(.year, from: now)))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 月選択 Wheel Picker
+                Picker("Month", selection: monthBinding) {
+                    ForEach(1...12, id: \.self) { month in
+                        Text(monthSymbols[month - 1]).tag(month)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
+                Spacer()
+            }
+
         case .life:
             let yearBinding = Binding<Int>(
                 get: {
-                    Calendar.current.component(.year, from: dateBinding.wrappedValue)
+                    calendar.component(.year, from: dateBinding.wrappedValue)
                 },
                 set: { newYear in
-                    let calendar = Calendar.current
                     var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
                     components.year = newYear
                     if let updatedDate = calendar.date(from: components) {
@@ -493,10 +581,10 @@ struct TaskFormSheet: View {
                     }
                 }
             )
-            
+
             Picker("Year", selection: yearBinding) {
                 ForEach(availableYears, id: \.self) { year in
-                    Text("\(String(year))")
+                    Text(String(year))
                         .tag(year)
                 }
             }
@@ -529,6 +617,28 @@ struct TaskFormSheet: View {
             return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
         case .day:
             return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits).hour().minute())
+        }
+    }
+    
+    private func clampedDate(_ date: Date, for timeFrame: TimeFrame) -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch timeFrame {
+        case .day:
+            let start = calendar.startOfDay(for: now)
+            let end = calendar.date(byAdding: DateComponents(day: 1, second: -1), to: start) ?? now
+            return min(max(date, start), end)
+        case .month:
+            guard let interval = calendar.dateInterval(of: .month, for: now) else { return date }
+            let end = interval.end.addingTimeInterval(-1)
+            return min(max(date, interval.start), end)
+        case .year:
+            guard let interval = calendar.dateInterval(of: .year, for: now) else { return date }
+            let end = interval.end.addingTimeInterval(-1)
+            return min(max(date, interval.start), end)
+        case .life:
+            return date
         }
     }
     
