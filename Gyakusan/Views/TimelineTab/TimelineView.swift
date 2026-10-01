@@ -57,7 +57,7 @@ struct TimelineView: View {
         var undatedTasks: [LimitTask] = []
         
         for task in timelineTasks {
-            let targetDate: Date? = task.isCompleted ? (task.completedAt ?? task.createdAt) : task.dueDate
+            let targetDate: Date? = task.completedAt ?? task.dueDate
             if let date = targetDate {
                 let ageAtTask = calendar.dateComponents([.year], from: currentProfile.birthday, to: date).year ?? 0
                 tasksByAge[ageAtTask, default: []].append(task)
@@ -72,7 +72,8 @@ struct TimelineView: View {
         }
         
         let allAgesWithItems = Set(tasksByAge.keys).union(eventsByAge.keys).sorted()
-        let minAge = min(currentAge, allAgesWithItems.first ?? currentAge)
+        
+        let minAge = 0
         let maxAge = max(currentAge + 5, max(currentProfile.targetAge, allAgesWithItems.last ?? currentAge))
         
         var groups: [AgeGroup] = []
@@ -81,7 +82,7 @@ struct TimelineView: View {
             let tasks = tasksByAge[age] ?? []
             let events = eventsByAge[age] ?? []
             
-            if !tasks.isEmpty || !events.isEmpty || age == currentAge || age % 5 == 0 {
+            if !tasks.isEmpty || !events.isEmpty || age == currentAge || age % 10 == 0 {
                 groups.append(AgeGroup(
                     id: "\(age)",
                     age: age,
@@ -213,7 +214,6 @@ struct TimelineView: View {
                             .frame(maxHeight: .infinity)
                     }
                     
-                    // Right: Contents
                     VStack(alignment: .leading, spacing: 8) {
                         if group.isCurrentAge {
                             Text("PRESENT")
@@ -222,26 +222,19 @@ struct TimelineView: View {
                                 .foregroundStyle(presentColor)
                         }
                         
-                        if group.tasks.isEmpty && group.events.isEmpty {
-                            Text("No milestones")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .padding(.vertical, 4)
-                        } else {
-                            // Life Events Display (Right aligned)
-                            ForEach(group.events) { event in
-                                HStack {
-                                    Spacer(minLength: 0)
-                                    timelineEventCard(event)
-                                }
+                        // Life Events Display (Right aligned)
+                        ForEach(group.events) { event in
+                            HStack {
+                                Spacer(minLength: 0)
+                                timelineEventCard(event)
                             }
-                            
-                            // Tasks Display (Left aligned)
-                            ForEach(group.tasks) { task in
-                                HStack {
-                                    timelineTaskCard(task)
-                                    Spacer(minLength: 0)
-                                }
+                        }
+                        
+                        // Tasks Display (Left aligned)
+                        ForEach(group.tasks) { task in
+                            HStack {
+                                timelineTaskCard(task)
+                                Spacer(minLength: 0)
                             }
                         }
                     }
