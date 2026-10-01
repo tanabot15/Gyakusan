@@ -16,11 +16,6 @@ struct GyakusanApp: App {
     @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
     @StateObject private var purchaseManager = PurchaseManager.shared
-    
-    init() {
-        MobileAds.shared.start(completionHandler: nil)
-    }
-    
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     let sharedModelContainer: ModelContainer = SharedModelContainer.create()
@@ -49,6 +44,9 @@ struct GyakusanApp: App {
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
                 requestAppTrackingAuthorization()
+                Task {
+                    await purchaseManager.updatePurchasedStatus()
+                }
             }
         }
     }
@@ -87,21 +85,21 @@ struct GyakusanApp: App {
         // MARK: - Sample Life Events
         let event1 = LifeEvent(
             title: "Joined First Company",
-            date: calendar.date(byAdding: .year, value: -5, to: baseDate) ?? baseDate, // 過去（5年前）
+            date: calendar.date(byAdding: .year, value: -5, to: baseDate) ?? baseDate,
             iconName: "briefcase.fill",
             note: "Started career as a software developer."
         )
         
         let event2 = LifeEvent(
             title: "Marriage",
-            date: calendar.date(byAdding: .year, value: -2, to: baseDate) ?? baseDate, // 過去（2年前）
+            date: calendar.date(byAdding: .year, value: -2, to: baseDate) ?? baseDate,
             iconName: "heart.fill",
             note: "Wedding ceremony with family and friends."
         )
         
         let event3 = LifeEvent(
             title: "Move to New Apartment",
-            date: calendar.date(byAdding: .month, value: 3, to: baseDate) ?? baseDate, // 未来（3ヶ月後）
+            date: calendar.date(byAdding: .month, value: 3, to: baseDate) ?? baseDate,
             iconName: "house.fill",
             note: "Relocating to a larger space."
         )
@@ -110,14 +108,13 @@ struct GyakusanApp: App {
         context.insert(event2)
         context.insert(event3)
         
-        // Helper: Ensure sequential createdAt dates so TodoListView sorts them top-to-bottom
         var timeOffset: TimeInterval = 0
         func createDate() -> Date {
             timeOffset += 1
             return baseDate.addingTimeInterval(timeOffset)
         }
         
-        // MARK: - Group 1: Business & App Development (Related Group)
+        // MARK: - Group 1: Business & App Development
         let lifeTask1 = LimitTask(
             title: "Launch successful indie developer business",
             timeFrameRawValue: TimeFrame.life.rawValue,
@@ -150,7 +147,7 @@ struct GyakusanApp: App {
         )
         dayTask2.createdAt = createDate()
         
-        // MARK: - Group 2: Learning & Writing (Related Group)
+        // MARK: - Group 2: Learning & Writing
         let lifeTask2 = LimitTask(
             title: "Write and publish a non-fiction book",
             timeFrameRawValue: TimeFrame.life.rawValue,
@@ -181,7 +178,7 @@ struct GyakusanApp: App {
         dayTask3.isCompleted = true
         dayTask3.completedAt = calendar.date(byAdding: .hour, value: -1, to: baseDate)
         
-        // MARK: - Group 3: Global & Travel (Related Group)
+        // MARK: - Group 3: Global & Travel
         let lifeTask3 = LimitTask(
             title: "Travel to 10 different countries",
             timeFrameRawValue: TimeFrame.life.rawValue,
@@ -217,7 +214,7 @@ struct GyakusanApp: App {
         dayTask4.isCompleted = true
         dayTask4.completedAt = calendar.date(byAdding: .hour, value: -3, to: baseDate)
         
-        // MARK: - Group 4: Life & Home (Related Group)
+        // MARK: - Group 4: Life & Home
         let lifeTask5 = LimitTask(
             title: "Build a custom eco-friendly home",
             timeFrameRawValue: TimeFrame.life.rawValue,
@@ -257,15 +254,10 @@ struct GyakusanApp: App {
         )
         dayTask5.createdAt = createDate()
         
-        // Array of tasks strictly ordered by creation date
         let orderedSampleTasks = [
-            // Group 1
             lifeTask1, yearTask1, monthTask1, dayTask1, dayTask2,
-            // Group 2
             lifeTask2, yearTask2, monthTask2, dayTask3,
-            // Group 3
             lifeTask3, lifeTask4, yearTask3, monthTask3, dayTask4,
-            // Group 4
             lifeTask5, yearTask4, yearTask5, monthTask4, monthTask5, dayTask5
         ]
         

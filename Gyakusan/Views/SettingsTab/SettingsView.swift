@@ -108,9 +108,7 @@ struct SettingsView: View {
                     
                     // MARK: - Pomodoro Timer Settings (Pro Feature)
                     Section(
-                        header: HStack(spacing: 6) {
-                            Text("Pomodoro Timer")
-                        }
+                        header: Text("Pomodoro Timer")
                     ) {
                         if isProPurchased {
                             Stepper(value: $focusMinutes, in: 1...120) {
@@ -131,12 +129,10 @@ struct SettingsView: View {
                                 }
                             }
                         } else {
-                            HStack(spacing: 12) {                                
-                                proLockedRow(
-                                    title: "Custom Focus & Break Durations",
-                                    currentText: "\(focusMinutes)m / \(breakMinutes)m"
-                                )
-                            }
+                            proLockedRow(
+                                title: "Custom Focus & Break Durations",
+                                currentText: "\(focusMinutes)m / \(breakMinutes)m"
+                            )
                         }
                     }
                     
@@ -154,12 +150,10 @@ struct SettingsView: View {
                         if isProPurchased {
                             ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
                         } else {
-                            HStack(spacing: 12) {
-                                proLockedRow(
-                                    title: "Current Grid Color",
-                                    showColorPreview: true
-                                )
-                            }
+                            proLockedRow(
+                                title: "Current Grid Color",
+                                showColorPreview: true
+                            )
                         }
                     }
                     
@@ -184,11 +178,10 @@ struct SettingsView: View {
     
     // MARK: - UI Components for Pro Status
     
-    // Pro badge
     private var proBadge: some View {
         Text("PRO")
             .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(.black)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(
