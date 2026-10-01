@@ -34,13 +34,13 @@ struct PaywallView: View {
                 // Feature List
                 VStack(alignment: .leading, spacing: 16) {
                     featureRow(
-                        icon: "rectangle.inset.topthird.fill",
+                        icon: "eye.slash.fill",
                         title: "1. Remove All Ads",
                         description: "Eliminate banner ads across the app for a distraction-free experience."
                     )
                     
                     featureRow(
-                        icon: "timer",
+                        icon: "gauge.with.needle.fill",
                         title: "2. Custom Pomodoro Timer",
                         description: "Adjust focus and break durations down to the minute."
                     )

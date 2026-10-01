@@ -2,8 +2,6 @@
 //  SettingsView.swift
 //  Gyakusan
 //
-//  Created by Kenichiro Suzuki on 2026/07/22.
-//
 
 import SwiftUI
 import SwiftData
@@ -53,6 +51,7 @@ struct SettingsView: View {
                     .background(Color(uiColor: .systemGroupedBackground))
                 
                 Form {
+                    // MARK: - Pro Banner
                     Section {
                         Button {
                             isShowingPaywall = true
@@ -76,8 +75,10 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        .buttonStyle(.plain)
                     }
                     
+                    // MARK: - Profile Settings
                     Section(
                         header: Text("Profile"),
                         footer: Text("Set your birthday and target lifespan to calculate your life grid.")
@@ -105,29 +106,41 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // MARK: - Timer Settings
+                    // MARK: - Pomodoro Timer Settings (Pro Feature)
                     Section(
-                        header: Text("Pomodoro Timer")
-                    ) {
-                        Stepper(value: $focusMinutes, in: 1...120) {
-                            HStack {
-                                Text("Focus Duration")
-                                Spacer()
-                                Text("\(focusMinutes) min")
-                                    .foregroundStyle(.secondary)
-                            }
+                        header: HStack(spacing: 6) {
+                            Text("Pomodoro Timer")
                         }
-                        
-                        Stepper(value: $breakMinutes, in: 1...60) {
-                            HStack {
-                                Text("Break Duration")
-                                Spacer()
-                                Text("\(breakMinutes) min")
-                                    .foregroundStyle(.secondary)
+                    ) {
+                        if isProPurchased {
+                            Stepper(value: $focusMinutes, in: 1...120) {
+                                HStack {
+                                    Text("Focus Duration")
+                                    Spacer()
+                                    Text("\(focusMinutes) min")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            
+                            Stepper(value: $breakMinutes, in: 1...60) {
+                                HStack {
+                                    Text("Break Duration")
+                                    Spacer()
+                                    Text("\(breakMinutes) min")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 12) {                                
+                                proLockedRow(
+                                    title: "Custom Focus & Break Durations",
+                                    currentText: "\(focusMinutes)m / \(breakMinutes)m"
+                                )
                             }
                         }
                     }
                     
+                    // MARK: - Appearance Settings
                     Section(
                         header: Text("Appearance")
                     ) {
@@ -137,7 +150,17 @@ struct SettingsView: View {
                             Text("Dark").tag("dark")
                         }
                         
-                        ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
+                        // MARK: - Highlight Color (Pro Feature)
+                        if isProPurchased {
+                            ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
+                        } else {
+                            HStack(spacing: 12) {
+                                proLockedRow(
+                                    title: "Current Grid Color",
+                                    showColorPreview: true
+                                )
+                            }
+                        }
                     }
                     
                     Section(header: Text("About")) {
@@ -157,6 +180,55 @@ struct SettingsView: View {
                 PaywallView()
             }
         }
+    }
+    
+    // MARK: - UI Components for Pro Status
+    
+    // Pro badge
+    private var proBadge: some View {
+        Text("PRO")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(.yellow)
+            )
+    }
+    
+    private func proLockedRow(title: String, currentText: String? = nil, showColorPreview: Bool = false) -> some View {
+        Button {
+            isShowingPaywall = true
+        } label: {
+            HStack {
+                Text(title)
+                    .foregroundStyle(Color.primary)
+                
+                Spacer()
+                
+                if showColorPreview {
+                    Circle()
+                        .fill(Color(hex: highlightColorHex))
+                        .frame(width: 20, height: 20)
+                        .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 1))
+                } else if let currentText = currentText {
+                    Text(currentText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                                
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .font(.caption)
+                    proBadge
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                }
+                .foregroundStyle(.orange)
+            }
+        }
+        .buttonStyle(.plain)
     }
     
     private func loadProfile() {
