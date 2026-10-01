@@ -15,12 +15,19 @@ struct BannerAdView: View {
     
     @Environment(\.isPreview) private var isEnvironmentPreview
     
+    // Pro
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    @AppStorage("isProPurchased", store: sharedStore) private var isProPurchased: Bool = false
+    
     private var showPreviewPlaceholder: Bool {
         isPreview || isEnvironmentPreview
     }
     
+    @ViewBuilder
     var body: some View {
-        if showPreviewPlaceholder {
+        if isProPurchased {
+            EmptyView()
+        } else if showPreviewPlaceholder {
             previewAdPlaceholder
         } else {
             #if targetEnvironment(simulator)

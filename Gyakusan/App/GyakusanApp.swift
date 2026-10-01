@@ -15,6 +15,8 @@ struct GyakusanApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
     @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
+    @StateObject private var purchaseManager = PurchaseManager.shared
+    
     init() {
         MobileAds.shared.start(completionHandler: nil)
     }

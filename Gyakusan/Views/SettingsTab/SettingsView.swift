@@ -19,6 +19,9 @@ struct SettingsView: View {
     @AppStorage("highlightColorHex", store: sharedStore)
     private var highlightColorHex: String = "#8E8E93"
     
+    @AppStorage("isProPurchased", store: sharedStore)
+    private var isProPurchased: Bool = false
+    
     @AppStorage("selectedAppearance") private var selectedAppearance: String = "system"
     
     @AppStorage("focusTimerFocusMinutes") private var focusMinutes: Int = 25
@@ -26,6 +29,7 @@ struct SettingsView: View {
     
     @State private var birthday: Date = Date()
     @State private var targetAge: Int = 80
+    @State private var isShowingPaywall: Bool = false
     
     private var selectedColorBinding: Binding<Color> {
         Binding(
@@ -49,6 +53,31 @@ struct SettingsView: View {
                     .background(Color(uiColor: .systemGroupedBackground))
                 
                 Form {
+                    Section {
+                        Button {
+                            isShowingPaywall = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "crown.fill")
+                                    .foregroundStyle(.yellow)
+                                VStack(alignment: .leading) {
+                                    Text(isProPurchased ? "Gyakusan Pro Active" : "Upgrade to Gyakusan Pro")
+                                        .font(.headline)
+                                        .foregroundStyle(Color.primary)
+                                    Text(isProPurchased ? "All features unlocked" : "Remove Ads • Custom Timer • Highlight Color")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if !isProPurchased {
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    
                     Section(
                         header: Text("Profile"),
                         footer: Text("Set your birthday and target lifespan to calculate your life grid.")
@@ -115,7 +144,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("5.2")
+                            Text("5.3")
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -123,6 +152,9 @@ struct SettingsView: View {
             }
             .onAppear {
                 loadProfile()
+            }
+            .sheet(isPresented: $isShowingPaywall) {
+                PaywallView()
             }
         }
     }
