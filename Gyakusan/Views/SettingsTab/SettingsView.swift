@@ -179,15 +179,19 @@ struct SettingsView: View {
     // MARK: - UI Components for Pro Status
     
     private var proBadge: some View {
-        Text("PRO")
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.black)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(
-                Capsule()
-                    .fill(.yellow)
-            )
+        HStack {
+            Text("PRO")
+            Image(systemName: "lock.fill")
+                .font(.caption)
+        }
+        .font(.system(size: 10, weight: .bold))
+        .foregroundStyle(.white)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing))
+        )
     }
     
     private func proLockedRow(title: String, currentText: String? = nil, showColorPreview: Bool = false) -> some View {
@@ -212,9 +216,8 @@ struct SettingsView: View {
                 }
                                 
                 HStack(spacing: 4) {
-                    Image(systemName: "lock.fill")
-                        .font(.caption)
                     proBadge
+
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                 }
