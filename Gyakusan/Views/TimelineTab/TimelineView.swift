@@ -221,26 +221,22 @@ struct TimelineView: View {
                                 .foregroundStyle(presentColor)
                         }
                         
-                        // Life Events Display (Right aligned)
+                        // Life Events Display
                         ForEach(group.events) { event in
-                            HStack {
-                                VStack {
-                                    Spacer()
-                                        .frame(height: 8)
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(height: 1)
-                                    Spacer()
-                                }
+                            HStack(spacing: 0) {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(height: 1)
+                                
                                 timelineEventCard(event)
-                                Spacer(minLength: 0)
+                                    .layoutPriority(1)
                             }
                             .padding(.top, 2)
                         }
                         
-                        // Tasks Display (Left aligned)
+                        // Tasks Display
                         ForEach(group.tasks) { task in
-                            HStack {
+                            HStack(spacing: 0) {
                                 timelineTaskCard(task)
                                 Spacer(minLength: 0)
                             }
@@ -269,6 +265,7 @@ struct TimelineView: View {
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
                 
                 Image(systemName: event.iconName)
                     .font(.caption)
@@ -290,7 +287,6 @@ struct TimelineView: View {
             )
         }
         .buttonStyle(.plain)
-        .fixedSize(horizontal: true, vertical: false)
     }
     
     // MARK: - Timeline Task Card with NavigationLink
@@ -321,7 +317,6 @@ struct TimelineView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
-        .fixedSize(horizontal: true, vertical: false)
     }
 }
 

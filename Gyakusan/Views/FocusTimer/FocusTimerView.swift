@@ -44,11 +44,16 @@ struct FocusTimerView: View {
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let timerNotificationID = "FocusTimerNotification"
     
-    private var uncompletedDayTasks: [LimitTask] {
+    private var allUncompletedTasks: [LimitTask] {
         allTasks.filter { task in
-            !task.isCompleted &&
-            task.timeFrame == .day &&
-            task.isCurrentPeriod(for: .day)
+            !task.isCompleted && task.isCurrentPeriod(for: task.timeFrame)
+        }
+    }
+    
+    private var tasksByTimeFrame: [(TimeFrame, [LimitTask])] {
+        TimeFrame.allCases.compactMap { frame in
+            let tasks = allUncompletedTasks.filter { $0.timeFrame == frame }
+            return tasks.isEmpty ? nil : (frame, tasks)
         }
     }
     
@@ -158,12 +163,13 @@ struct FocusTimerView: View {
                 }
             }
             .onAppear {
+                // 他のタブからこのタブに戻った際にもタイマー状態を再計算・同期する
                 restoreTimerState()
                 if selectedPickerTaskID == nil {
-                    selectedPickerTaskID = uncompletedDayTasks.first?.id
+                    selectedPickerTaskID = allUncompletedTasks.first?.id
                 }
             }
-            .onChange(of: uncompletedDayTasks) { _, newTasks in
+            .onChange(of: allUncompletedTasks) { _, newTasks in
                 if let selectedID = selectedPickerTaskID, !newTasks.contains(where: { $0.id == selectedID }) {
                     selectedPickerTaskID = newTasks.first?.id
                 } else if selectedPickerTaskID == nil {
@@ -173,61 +179,77 @@ struct FocusTimerView: View {
         }
     }
     
-    // MARK: - Top Header Section (4 Equal Controls)
-        private var topHeaderSection: some View {
-            HStack(spacing: 12) {
-                Spacer()
-                    .frame(width: 12)
-                // 1. Play / Pause Main Button
-                Button(action: { toggleTimer() }) {
-                    Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(isRunning ? Color.orange : Color.accentColor)
-                        .clipShape(Circle())
-                        .shadow(color: (isRunning ? Color.orange : Color.accentColor).opacity(0.25), radius: 4, x: 0, y: 2)
+    // MARK: - Top Header Section (2-Row Layout)
+    private var topHeaderSection: some View {
+        VStack(spacing: 16) {
+            // Row 1: Controls & Giant Countdown Timer
+            HStack(alignment: .center, spacing: 12) {
+                HStack(spacing: 10) {
+                    // Play / Pause Main Button
+                    Button(action: { toggleTimer() }) {
+                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 48, height: 48)
+                            .background(isRunning ? Color.orange : Color(hex: highlightColorHex))
+                            .clipShape(Circle())
+                            .shadow(color: (isRunning ? Color.orange : Color(hex: highlightColorHex)).opacity(0.3), radius: 6, x: 0, y: 3)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // Mode Toggle
+                    Button(action: { toggleMode() }) {
+                        Image(systemName: timerMode.systemImageName)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 40, height: 40)
+                            .background(Color(uiColor: .secondarySystemBackground))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // Reset Button
+                    Button(action: { resetTimer(to: timerMode) }) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 40, height: 40)
+                            .background(Color(uiColor: .secondarySystemBackground))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                
-                // 2. Mode Toggle
-                Button(action: { toggleMode() }) {
-                    Image(systemName: timerMode.systemImageName)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 40, height: 40)
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-                
-                // 3. Reset Button
-                Button(action: { resetTimer(to: timerMode) }) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 36, height: 36)
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-                
-                Spacer()
-                    .frame(width: 8)
-                
-                // 4. Task Selection Menu (タスク設定ボタン)
-                taskMenuButton
                 
                 Spacer()
+                
+                // Countdown Clock Display
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(timeString(from: remainingSeconds))
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .fontDesign(.monospaced)
+                        .minimumScaleFactor(0.8)
+                        .foregroundStyle(isRunning ? Color.primary : Color.secondary)
+                    
+                    Text(timerMode.title.uppercased())
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.tertiary)
+                        .tracking(1)
+                }
             }
-            .padding(.horizontal)
+            
+            // Row 2: Task Selection Menu Bar
+            taskMenuButton
         }
+        .padding(.horizontal)
+    }
         
-    // MARK: - Task Menu Button Component
+    // MARK: - Task Menu Button Component (Multi-Timeframe Support)
     private var taskMenuButton: some View {
-        Menu {
-            if uncompletedDayTasks.isEmpty {
-                Text("No Day Tasks")
+        let themeColor = Color(hex: highlightColorHex)
+        
+        return Menu {
+            if allUncompletedTasks.isEmpty {
+                Text("No Active Tasks")
             } else {
                 if confirmedTask != nil {
                     Button(role: .destructive) {
@@ -240,111 +262,128 @@ struct FocusTimerView: View {
                     Divider()
                 }
                 
-                ForEach(uncompletedDayTasks) { task in
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            confirmedTask = task
-                            selectedPickerTaskID = task.id
-                        }
-                    } label: {
-                        HStack {
-                            Text(task.title)
-                            if confirmedTask?.id == task.id {
-                                Image(systemName: "checkmark")
+                ForEach(tasksByTimeFrame, id: \.0) { frame, tasks in
+                    Menu {
+                        ForEach(tasks) { task in
+                            Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    confirmedTask = task
+                                    selectedPickerTaskID = task.id
+                                }
+                            } label: {
+                                HStack {
+                                    Text(task.title)
+                                    if confirmedTask?.id == task.id {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
                         }
+                    } label: {
+                        Text(frame.title)
                     }
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: confirmedTask == nil ? "target" : "checkmark.circle.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(confirmedTask == nil ? Color.secondary : Color.accentColor)
-                
-                Text(confirmedTask?.title ?? "Set Task")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(confirmedTask == nil ? Color.secondary : Color.primary)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                confirmedTask == nil
-                ? Color(uiColor: .secondarySystemBackground)
-                : Color.accentColor.opacity(0.12)
-            )
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(confirmedTask == nil ? Color.clear : Color.accentColor.opacity(0.3), lineWidth: 1)
-            )
-        }
-    }
-    
-    private func focusedTaskBar(for task: LimitTask) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(task.isFlagged ? Color.orange : Color.accentColor)
-                .frame(width: 6, height: 6)
-            
-            Text(task.title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-            
-            Button(action: {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    confirmedTask = nil
+            HStack(spacing: 12) {
+                // Icon Header
+                ZStack {
+                    Circle()
+                        .fill(
+                            confirmedTask == nil
+                            ? Color.gray.opacity(0.12)
+                            : themeColor.opacity(0.18)
+                        )
+                        .frame(width: 34, height: 34)
+                    
+                    Image(systemName: confirmedTask == nil ? "target" : "checkmark.circle.fill")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(
+                            confirmedTask == nil
+                            ? Color.secondary
+                            : themeColor
+                        )
                 }
-            }) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                
+                // Task Label & Subtitle
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(confirmedTask == nil ? "Select Target Task" : "TARGET TASK")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(confirmedTask == nil ? Color.secondary.opacity(0.7) : themeColor)
+                            .tracking(0.6)
+                        
+                        if let frame = confirmedTask?.timeFrame {
+                            Text(frame.title.uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(themeColor.opacity(0.15))
+                                .foregroundStyle(themeColor)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    
+                    Text(confirmedTask?.title ?? "Tap to assign a target task")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(confirmedTask == nil ? Color.secondary : Color.primary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                // Action Icon
+                if confirmedTask != nil {
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            confirmedTask = nil
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(themeColor.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.tertiary)
+                }
             }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(Capsule())
-    }
-    
-    private var compactControls: some View {
-        HStack(spacing: 8) {
-            // Mode Toggle
-            Button(action: { toggleMode() }) {
-                Image(systemName: timerMode.systemImageName)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            
-            // Play / Pause Main Button
-            Button(action: { toggleTimer() }) {
-                Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(isRunning ? Color.orange : Color.accentColor)
-                    .clipShape(Circle())
-                    .shadow(color: (isRunning ? Color.orange : Color.accentColor).opacity(0.25), radius: 4, x: 0, y: 2)
-            }
-            .buttonStyle(.plain)
-            
-            // Reset Button
-            Button(action: { resetTimer(to: timerMode) }) {
-                Image(systemName: "arrow.clockwise")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                Group {
+                    if confirmedTask == nil {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color(uiColor: .secondarySystemBackground))
+                    } else {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [themeColor.opacity(0.12), themeColor.opacity(0.05)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                    }
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                        confirmedTask == nil
+                        ? Color.clear
+                        : themeColor.opacity(0.3),
+                        lineWidth: 1.2
+                    )
+            )
+            .shadow(
+                color: confirmedTask == nil ? Color.clear : themeColor.opacity(0.12),
+                radius: 8,
+                x: 0,
+                y: 3
+            )
         }
     }
     
@@ -426,6 +465,8 @@ struct FocusTimerView: View {
                 endActivity()
                 handleTimerFinished()
             }
+        } else {
+            isRunning = false
         }
     }
     
@@ -434,9 +475,10 @@ struct FocusTimerView: View {
             timerMode = mode
         }
         
-        if storedIsRunning && timerEndDateInterval > 0 {
-            syncTimerWithTargetDate()
-        } else {
+        // 保存された実行状態と完了予定時刻に基づいて同期を行う
+        syncTimerWithTargetDate()
+        
+        if !storedIsRunning && timerEndDateInterval == 0 {
             remainingSeconds = currentDefaultSeconds
         }
     }
@@ -494,94 +536,63 @@ struct FocusTimerView: View {
         }
     }
     
-    // MARK: - Refined Pure-Grid Timer Card
-    private var timerGridCard: some View {
-        let totalMin = currentTotalBlocks
-        let passedMin = passedMinuteBlocks
-        
-        let minColumns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
-        let secColumns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 10)
-        
-        return VStack(spacing: 20) {
-            // 1. Minutes Grid
-            VStack(alignment: .leading, spacing: 8) {
-                Text("MINUTES")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(.tertiary)
-                    .tracking(1)
-                
-                LazyVGrid(columns: minColumns, spacing: 8) {
-                    ForEach(0..<totalMin, id: \.self) { index in
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(minuteGridColor(for: index, passed: passedMin))
+    // MARK: - Minutes-Only Timer Card (With Progressive Fill Effect)
+        private var timerGridCard: some View {
+            let totalMin = currentTotalBlocks
+            let passedMin = passedMinuteBlocks
+            let minColumns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+            
+            // 1分内で経過した割合 (0.0 〜 1.0)
+            let progressInCurrentMinute = Double(currentSecondInBlock) / 60.0
+            
+            return VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("MINUTES GRID")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.tertiary)
+                            .tracking(1)
+                        Spacer()
+                    }
+                    
+                    LazyVGrid(columns: minColumns, spacing: 8) {
+                        ForEach(0..<totalMin, id: \.self) { index in
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Color(uiColor: .tertiarySystemFill))
+                                
+                                if index < passedMin {
+                                    // 経過済みのブロック（一時停止中も濃い表示を保持）
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(Color.primary)
+                                } else if index == passedMin && progressInCurrentMinute > 0 {
+                                    // 進行中のブロック（停止中も経過した秒数に応じた濃さを保持）
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(Color(hex: highlightColorHex))
+                                        .opacity(0.15 + (0.85 * progressInCurrentMinute))
+                                }
+                            }
                             .aspectRatio(1.0, contentMode: .fit)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(index == passedMin && isRunning ? Color(hex: highlightColorHex) : Color.clear, lineWidth: 1.5)
+                                    .stroke(index == passedMin && progressInCurrentMinute > 0 ? Color(hex: highlightColorHex) : Color.clear, lineWidth: 1.5)
                             )
-                            .animation(.easeInOut(duration: 0.2), value: passedMin)
+                            .animation(.linear(duration: 1.0), value: currentSecondInBlock)
+                        }
                     }
                 }
             }
-            
-            // 2. Seconds Grid (Square Grid - 60 Blocks)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("SECONDS")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.tertiary)
-                        .tracking(1)
-                    Spacer()
-                    if isRunning && passedMin < totalMin {
-                        RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                            .fill(Color(hex: highlightColorHex))
-                            .frame(width: 6, height: 6)
-                            .opacity(currentSecondInBlock % 2 == 0 ? 1.0 : 0.2)
-                    }
-                }
-                
-                LazyVGrid(columns: secColumns, spacing: 4) {
-                    ForEach(0..<60, id: \.self) { secIndex in
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .fill(secondGridColor(for: secIndex))
-                            .aspectRatio(1.0, contentMode: .fit)
-                            .animation(.easeOut(duration: 0.15), value: currentSecondInBlock)
-                    }
-                }
-            }
+            .padding(20)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
+            .padding(.horizontal)
         }
-        .padding(20)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
-        .padding(.horizontal)
-    }
     
-    // 分ブロックのカラーロジック
-    private func minuteGridColor(for index: Int, passed: Int) -> Color {
-        if index < passed {
-            return Color.primary
-        } else if index == passed && isRunning {
-            return Color(hex: highlightColorHex).opacity(0.8)
-        } else {
-            return Color(uiColor: .tertiarySystemFill)
-        }
-    }
-    
-    // 秒ブロックのカラーロジック（分ブロックと配色ロジックを完全一致化）
-    private func secondGridColor(for secIndex: Int) -> Color {
-        let currentSec = currentSecondInBlock
-        if passedMinuteBlocks >= currentTotalBlocks {
-            return Color.primary
-        }
-        
-        if secIndex < currentSec {
-            return Color.primary // 経過した秒：.primary
-        } else if secIndex == currentSec && isRunning {
-            return Color(hex: highlightColorHex) // 現在の秒：highlightColorHex
-        } else {
-            return Color(uiColor: .tertiarySystemFill) // 未経過：背景と同化する灰色
-        }
+    private func timeString(from totalSeconds: Int) -> String {
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
     
     private func toggleTimer() {
@@ -636,7 +647,7 @@ struct FocusTimerView: View {
                 
                 let now = Date()
                 
-                let sampleDayTasks: [LimitTask] = [
+                let sampleTasks: [LimitTask] = [
                     LimitTask(
                         title: "day task 1",
                         timeFrameRawValue: TimeFrame.day.rawValue,
@@ -644,17 +655,17 @@ struct FocusTimerView: View {
                         isFlagged: true
                     ),
                     LimitTask(
-                        title: "day task 2",
-                        timeFrameRawValue: TimeFrame.day.rawValue,
-                        dueDate: now.addingTimeInterval(3600)
+                        title: "month task 1",
+                        timeFrameRawValue: TimeFrame.month.rawValue,
+                        dueDate: now
                     ),
                     LimitTask(
-                        title: "day task 3",
-                        timeFrameRawValue: TimeFrame.day.rawValue
+                        title: "year task 1",
+                        timeFrameRawValue: TimeFrame.year.rawValue
                     )
                 ]
                 
-                for task in sampleDayTasks {
+                for task in sampleTasks {
                     context.insert(task)
                 }
                 
