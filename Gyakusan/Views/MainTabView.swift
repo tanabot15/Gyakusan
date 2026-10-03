@@ -20,6 +20,7 @@ struct MainTabView: View {
         case visualizer
         case timeline
         case focus
+        case activity
         case settings
     }
     
@@ -42,6 +43,12 @@ struct MainTabView: View {
                     Label("Pomodoro", systemImage: "timer")
                 }
                 .tag(Tab.focus)
+            
+            ActivityView()
+                .tabItem {
+                    Label("Activity", systemImage: "chart.line.uptrend.xyaxis")
+                }
+                .tag(Tab.activity)
             
             SettingsView()
                 .tabItem {
@@ -71,5 +78,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .modelContainer(for: [LimitTask.self, UserProfile.self], inMemory: true)
+        .modelContainer(for: [LimitTask.self, UserProfile.self, PomodoroLog.self], inMemory: true)
 }
