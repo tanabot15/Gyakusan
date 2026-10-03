@@ -13,7 +13,8 @@ enum SharedModelContainer {
         let schema = Schema([
             LimitTask.self,
             UserProfile.self,
-            LifeEvent.self
+            LifeEvent.self,
+            PomodoroLog.self
         ])
         
         let appGroupID = "group.com.suzuki.kenichiro.Gyakusan"

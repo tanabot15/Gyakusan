@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D910C56E3070C8EF00489582 /* PomodoroLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C56D3070C8EF00489582 /* PomodoroLog.swift */; };
+		D910C56F3070C8EF00489582 /* PomodoroLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C56D3070C8EF00489582 /* PomodoroLog.swift */; };
+		D910C5723070C93300489582 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C5713070C93300489582 /* ActivityView.swift */; };
 		D96D2FB33014D2FC0083DC1E /* AdMobConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */; };
 		D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */; };
 		D990D1033026CB39001B3CDA /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
@@ -82,6 +85,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D910C56D3070C8EF00489582 /* PomodoroLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroLog.swift; sourceTree = "<group>"; };
+		D910C5713070C93300489582 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
 		D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = AdMobConfig.plist; sourceTree = "<group>"; };
 		D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConfig.swift; sourceTree = "<group>"; };
 		D990D1023026CB39001B3CDA /* GridHighlightColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridHighlightColor.swift; sourceTree = "<group>"; };
@@ -151,6 +156,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D910C5703070C91700489582 /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				D910C5713070C93300489582 /* ActivityView.swift */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
 		D990D14C302BE290001B3CDA /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -250,6 +263,7 @@
 				D9E0687A3010E0D400E88132 /* UserProfile.swift */,
 				D9E0687C3010E0DE00E88132 /* TimeFrame.swift */,
 				D9BA15F6306CB869008B3FC5 /* LifeEvent.swift */,
+				D910C56D3070C8EF00489582 /* PomodoroLog.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -262,6 +276,7 @@
 				D9E068803010E11500E88132 /* Visualizer */,
 				D9D57E403040611D004B29BA /* FocusTimer */,
 				D990D1B4303C00EB001B3CDA /* TimelineTab */,
+				D910C5703070C91700489582 /* Activity */,
 				D9E068813010E11C00E88132 /* SettingsTab */,
 				D9E068723010AFDD00E88132 /* Utilities */,
 			);
@@ -436,6 +451,7 @@
 				D9BA15E33057B3C3008B3FC5 /* FocusTimerLiveActivity.swift in Sources */,
 				D9BA15D6304ED920008B3FC5 /* TimeFrame.swift in Sources */,
 				D9BA15D5304ED91C008B3FC5 /* UserProfile.swift in Sources */,
+				D910C56E3070C8EF00489582 /* PomodoroLog.swift in Sources */,
 				D9BA15DA304EDC22008B3FC5 /* GridHighlightColor.swift in Sources */,
 				D9BA15D9304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9BA15D4304ED917008B3FC5 /* LimitTask.swift in Sources */,
@@ -476,7 +492,9 @@
 				D9BA1604306E24B0008B3FC5 /* PaywallView.swift in Sources */,
 				D9BA15D8304ED9C7008B3FC5 /* SharedModelContainer.swift in Sources */,
 				D9E0686C3010A63900E88132 /* MainTabView.swift in Sources */,
+				D910C5723070C93300489582 /* ActivityView.swift in Sources */,
 				D9E0686D3010A63900E88132 /* GyakusanApp.swift in Sources */,
+				D910C56F3070C8EF00489582 /* PomodoroLog.swift in Sources */,
 				D9BA15F7306CB869008B3FC5 /* LifeEvent.swift in Sources */,
 				D9E068983010E1E800E88132 /* AdMobManager.swift in Sources */,
 			);

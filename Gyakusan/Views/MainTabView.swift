@@ -18,9 +18,8 @@ struct MainTabView: View {
     
     enum Tab {
         case visualizer
-        case tasks
+        case timeline
         case focus
-        case reflection
         case settings
     }
     
@@ -36,7 +35,7 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Timeline", systemImage: "calendar.day.timeline.left")
                 }
-                .tag(Tab.reflection)
+                .tag(Tab.timeline)
             
             FocusTimerView(selectedTab: $selectedTab)
                 .tabItem {

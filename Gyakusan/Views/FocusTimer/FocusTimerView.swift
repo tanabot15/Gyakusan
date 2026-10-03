@@ -163,7 +163,6 @@ struct FocusTimerView: View {
                 }
             }
             .onAppear {
-                // 他のタブからこのタブに戻った際にもタイマー状態を再計算・同期する
                 restoreTimerState()
                 if selectedPickerTaskID == nil {
                     selectedPickerTaskID = allUncompletedTasks.first?.id
@@ -423,6 +422,17 @@ struct FocusTimerView: View {
         }
     }
     
+    // MARK: - Pomodoro Log Save Helper
+    private func savePomodoroLog(durationMinutes: Int, taskTitle: String? = nil) {
+        let log = PomodoroLog(
+            completedAt: Date(),
+            durationMinutes: durationMinutes,
+            taskTitle: taskTitle
+        )
+        modelContext.insert(log)
+        try? modelContext.save()
+    }
+    
     // MARK: - Background & Notification Logic
     private func updateTimerState() {
         if timerEndDateInterval > 0 {
@@ -475,7 +485,6 @@ struct FocusTimerView: View {
             timerMode = mode
         }
         
-        // 保存された実行状態と完了予定時刻に基づいて同期を行う
         syncTimerWithTargetDate()
         
         if !storedIsRunning && timerEndDateInterval == 0 {
@@ -513,6 +522,11 @@ struct FocusTimerView: View {
     
     // MARK: - Timer Completion Handler
     private func handleTimerFinished() {
+        // ★ フォーカスモード終了時に PomodoroLog を保存
+        if timerMode == .focus {
+            savePomodoroLog(durationMinutes: focusMinutes, taskTitle: confirmedTask?.title)
+        }
+        
         if timerMode == .focus, let task = confirmedTask {
             completedTaskTarget = task
             isShowingTaskCompletionAlert = true
@@ -537,57 +551,54 @@ struct FocusTimerView: View {
     }
     
     // MARK: - Minutes-Only Timer Card (With Progressive Fill Effect)
-        private var timerGridCard: some View {
-            let totalMin = currentTotalBlocks
-            let passedMin = passedMinuteBlocks
-            let minColumns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
-            
-            // 1分内で経過した割合 (0.0 〜 1.0)
-            let progressInCurrentMinute = Double(currentSecondInBlock) / 60.0
-            
-            return VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("MINUTES GRID")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.tertiary)
-                            .tracking(1)
-                        Spacer()
-                    }
-                    
-                    LazyVGrid(columns: minColumns, spacing: 8) {
-                        ForEach(0..<totalMin, id: \.self) { index in
-                            ZStack {
+    private var timerGridCard: some View {
+        let totalMin = currentTotalBlocks
+        let passedMin = passedMinuteBlocks
+        let minColumns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 5)
+        
+        let progressInCurrentMinute = Double(currentSecondInBlock) / 60.0
+        
+        return VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("MINUTES GRID")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.tertiary)
+                        .tracking(1)
+                    Spacer()
+                }
+                
+                LazyVGrid(columns: minColumns, spacing: 8) {
+                    ForEach(0..<totalMin, id: \.self) { index in
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color(uiColor: .tertiarySystemFill))
+                            
+                            if index < passedMin {
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(Color(uiColor: .tertiarySystemFill))
-                                
-                                if index < passedMin {
-                                    // 経過済みのブロック（一時停止中も濃い表示を保持）
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Color.primary)
-                                } else if index == passedMin && progressInCurrentMinute > 0 {
-                                    // 進行中のブロック（停止中も経過した秒数に応じた濃さを保持）
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Color(hex: highlightColorHex))
-                                        .opacity(0.15 + (0.85 * progressInCurrentMinute))
-                                }
+                                    .fill(Color.primary)
+                            } else if index == passedMin && progressInCurrentMinute > 0 {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Color(hex: highlightColorHex))
+                                    .opacity(0.15 + (0.85 * progressInCurrentMinute))
                             }
-                            .aspectRatio(1.0, contentMode: .fit)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(index == passedMin && progressInCurrentMinute > 0 ? Color(hex: highlightColorHex) : Color.clear, lineWidth: 1.5)
-                            )
-                            .animation(.linear(duration: 1.0), value: currentSecondInBlock)
                         }
+                        .aspectRatio(1.0, contentMode: .fit)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(index == passedMin && progressInCurrentMinute > 0 ? Color(hex: highlightColorHex) : Color.clear, lineWidth: 1.5)
+                        )
+                        .animation(.linear(duration: 1.0), value: currentSecondInBlock)
                     }
                 }
             }
-            .padding(20)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
-            .padding(.horizontal)
         }
+        .padding(20)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Color.black.opacity(0.03), radius: 10, x: 0, y: 4)
+        .padding(.horizontal)
+    }
     
     private func timeString(from totalSeconds: Int) -> String {
         let minutes = totalSeconds / 60
@@ -642,7 +653,7 @@ struct FocusTimerView: View {
         static let container: ModelContainer = {
             do {
                 let config = ModelConfiguration(isStoredInMemoryOnly: true)
-                let container = try ModelContainer(for: LimitTask.self, configurations: config)
+                let container = try ModelContainer(for: LimitTask.self, PomodoroLog.self, configurations: config)
                 let context = container.mainContext
                 
                 let now = Date()
