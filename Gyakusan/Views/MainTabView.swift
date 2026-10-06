@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  MainTabView.swift
 //  Gyakusan
 //
 //  Created by Kenichiro Suzuki on 2026/07/22.
@@ -16,6 +16,8 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .visualizer
     @State private var showOnboarding: Bool = false
     
+    @State private var targetTaskForTimer: LimitTask? = nil
+    
     enum Tab {
         case visualizer
         case timeline
@@ -26,11 +28,14 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            VisualizerView()
-                .tabItem {
-                    Label("Visualizer", systemImage: "hourglass")
-                }
-                .tag(Tab.visualizer)
+            VisualizerView(
+                selectedTab: $selectedTab,
+                targetTaskForTimer: $targetTaskForTimer
+            )
+            .tabItem {
+                Label("Visualizer", systemImage: "hourglass")
+            }
+            .tag(Tab.visualizer)
 
             TimelineView()
                 .tabItem {
@@ -38,11 +43,14 @@ struct MainTabView: View {
                 }
                 .tag(Tab.timeline)
             
-            FocusTimerView(selectedTab: $selectedTab)
-                .tabItem {
-                    Label("Pomodoro", systemImage: "timer")
-                }
-                .tag(Tab.focus)
+            FocusTimerView(
+                selectedTab: $selectedTab,
+                targetTask: $targetTaskForTimer
+            )
+            .tabItem {
+                Label("Pomodoro", systemImage: "timer")
+            }
+            .tag(Tab.focus)
             
             ActivityView()
                 .tabItem {

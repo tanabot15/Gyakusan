@@ -47,7 +47,7 @@ struct PaywallView: View {
                     
                     featureRow(
                         icon: "paintpalette.fill",
-                        title: "3. Custom Highlight Color",
+                        title: "3. Custom Theme Color",
                         description: "Personalize grid and progress bar accent colors freely."
                     )
                 }

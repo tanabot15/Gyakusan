@@ -9,6 +9,11 @@ struct TaskRowView: View {
     let task: LimitTask
     var currentDate: Date = Date()
     var onToggle: () -> Void
+    var onStartTimer: ((LimitTask) -> Void)? = nil
+    
+    private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+    @AppStorage("highlightColorHex", store: sharedStore)
+    private var highlightColorHex: String = "#8E8E93"
     
     @State private var isCompletedState: Bool = false
     @State private var pendingToggleTask: Task<Void, Never>? = nil
@@ -18,9 +23,12 @@ struct TaskRowView: View {
         return !isCompletedState && dueDate < currentDate
     }
     
-    // 表示要素（dueDate, Flag, Tag, Location）が存在するか判定
     private var hasSecondRowContent: Bool {
         task.dueDate != nil || task.isFlagged || !task.tags.isEmpty || !task.location.isEmpty
+    }
+    
+    private var themeColor: Color {
+        Color(hex: highlightColorHex)
     }
     
     var body: some View {
@@ -86,7 +94,22 @@ struct TaskRowView: View {
                     }
                 }
             }
+            
             Spacer()
+            
+            if !isCompletedState, let onStartTimer = onStartTimer {
+                Button(action: {
+                    onStartTimer(task)
+                }) {
+                    Image(systemName: "timer")
+                        .font(.title3)
+                        .foregroundStyle(themeColor)
+                        .padding(6)
+                        .background(themeColor.opacity(0.12))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
         }
         .onAppear {
             isCompletedState = task.isCompleted
@@ -155,7 +178,6 @@ struct TaskRowView: View {
 }
 
 // MARK: - Previews
-
 #Preview("Full Meta Task") {
     let task = LimitTask(
         title: "Develop iOS App Prototype",
@@ -167,9 +189,14 @@ struct TaskRowView: View {
         isFlagged: true
     )
     
-    TaskRowView(task: task, currentDate: Date(), onToggle: {})
-        .padding()
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+    TaskRowView(
+        task: task,
+        currentDate: Date(),
+        onToggle: {},
+        onStartTimer: { _ in }
+    )
+    .padding()
+    .background(Color(uiColor: .secondarySystemGroupedBackground))
 }
 
 #Preview("Overdue with All Meta") {
@@ -183,7 +210,12 @@ struct TaskRowView: View {
         isFlagged: true
     )
     
-    TaskRowView(task: task, currentDate: Date(), onToggle: {})
-        .padding()
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+    TaskRowView(
+        task: task,
+        currentDate: Date(),
+        onToggle: {},
+        onStartTimer: { _ in }
+    )
+    .padding()
+    .background(Color(uiColor: .secondarySystemGroupedBackground))
 }

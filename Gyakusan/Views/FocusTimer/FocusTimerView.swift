@@ -2,8 +2,6 @@
 //  FocusTimerView.swift
 //  Gyakusan
 //
-//  Created by Kenichiro Suzuki on 2026/08/27.
-//
 
 import SwiftUI
 import SwiftData
@@ -13,6 +11,7 @@ import ActivityKit
 
 struct FocusTimerView: View {
     @Binding var selectedTab: MainTabView.Tab
+    @Binding var targetTask: LimitTask?
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -164,8 +163,19 @@ struct FocusTimerView: View {
             }
             .onAppear {
                 restoreTimerState()
-                if selectedPickerTaskID == nil {
+                if let task = targetTask {
+                    confirmedTask = task
+                    selectedPickerTaskID = task.id
+                } else if selectedPickerTaskID == nil {
                     selectedPickerTaskID = allUncompletedTasks.first?.id
+                }
+            }
+            .onChange(of: targetTask) { _, newTask in
+                if let task = newTask {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        confirmedTask = task
+                        selectedPickerTaskID = task.id
+                    }
                 }
             }
             .onChange(of: allUncompletedTasks) { _, newTasks in
@@ -254,6 +264,7 @@ struct FocusTimerView: View {
                     Button(role: .destructive) {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             confirmedTask = nil
+                            targetTask = nil
                         }
                     } label: {
                         Label("Clear Selected Task", systemImage: "xmark.circle")
@@ -267,6 +278,7 @@ struct FocusTimerView: View {
                             Button {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                                     confirmedTask = task
+                                    targetTask = task
                                     selectedPickerTaskID = task.id
                                 }
                             } label: {
@@ -336,6 +348,7 @@ struct FocusTimerView: View {
                     Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             confirmedTask = nil
+                            targetTask = nil
                         }
                     } label: {
                         Image(systemName: "xmark.circle.fill")
@@ -522,7 +535,6 @@ struct FocusTimerView: View {
     
     // MARK: - Timer Completion Handler
     private func handleTimerFinished() {
-        // ★ フォーカスモード終了時に PomodoroLog を保存
         if timerMode == .focus {
             savePomodoroLog(durationMinutes: focusMinutes, taskTitle: confirmedTask?.title)
         }
@@ -546,6 +558,7 @@ struct FocusTimerView: View {
         
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             confirmedTask = nil
+            targetTask = nil
             completedTaskTarget = nil
         }
     }
@@ -647,6 +660,7 @@ struct FocusTimerView: View {
     }
 }
 
+// MARK: - Previews
 #Preview {
     struct PreviewContainer {
         @MainActor
@@ -687,6 +701,9 @@ struct FocusTimerView: View {
         }()
     }
     
-    return FocusTimerView(selectedTab: .constant(.focus))
-        .modelContainer(PreviewContainer.container)
+    return FocusTimerView(
+        selectedTab: .constant(.focus),
+        targetTask: .constant(nil)
+    )
+    .modelContainer(PreviewContainer.container)
 }

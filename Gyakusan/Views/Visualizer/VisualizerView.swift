@@ -8,6 +8,9 @@ import SwiftData
 import Combine
 
 struct VisualizerView: View {
+    @Binding var selectedTab: MainTabView.Tab
+    @Binding var targetTaskForTimer: LimitTask?
+    
     @Environment(\.modelContext) private var modelContext
     
     private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
@@ -265,7 +268,17 @@ struct VisualizerView: View {
     @ViewBuilder
     private func taskRowContainer(for task: LimitTask) -> some View {
         HStack(spacing: 8) {
-            TaskRowView(task: task, currentDate: currentDate, onToggle: { saveContext() })
+            TaskRowView(
+                task: task,
+                currentDate: currentDate,
+                onToggle: { saveContext() },
+                onStartTimer: { selectedTask in
+                    targetTaskForTimer = selectedTask
+                    withAnimation {
+                        selectedTab = .focus
+                    }
+                }
+            )
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -484,7 +497,6 @@ struct VisualizerView: View {
 }
 
 // MARK: - Previews
-
 #Preview("VisualizerView") {
     struct PreviewContainer {
         @MainActor
@@ -556,7 +568,10 @@ struct VisualizerView: View {
         }()
     }
     
-    return VisualizerView()
-        .environment(\.isPreview, true)
-        .modelContainer(PreviewContainer.container)
+    return VisualizerView(
+        selectedTab: .constant(.visualizer),
+        targetTaskForTimer: .constant(nil)
+    )
+    .environment(\.isPreview, true)
+    .modelContainer(PreviewContainer.container)
 }

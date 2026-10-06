@@ -56,26 +56,41 @@ struct SettingsView: View {
                         Button {
                             isShowingPaywall = true
                         } label: {
-                            HStack {
+                            HStack(spacing: 12) {
                                 Image(systemName: "crown.fill")
-                                    .foregroundStyle(.yellow)
-                                VStack(alignment: .leading) {
+                                    .font(.title2)
+                                    .foregroundStyle(.white)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(isProPurchased ? "Gyakusan Pro Active" : "Upgrade to Gyakusan Pro")
                                         .font(.headline)
-                                        .foregroundStyle(Color.primary)
-                                    Text(isProPurchased ? "All features unlocked" : "Remove Ads • Custom Timer • Highlight Color")
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.white)
+                                    
+                                    Text(isProPurchased ? "All features unlocked" : "Remove Ads • Custom Timer • Custom Theme Color")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.white.opacity(0.9))
                                 }
+                                
                                 Spacer()
+                                
                                 if !isProPurchased {
                                     Image(systemName: "chevron.right")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.white.opacity(0.8))
                                 }
                             }
+                            .padding(.vertical, 4)
                         }
                         .buttonStyle(.plain)
+                        .listRowBackground(
+                            LinearGradient(
+                                colors: [.orange, .yellow],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                     }
                     
                     // MARK: - Profile Settings
@@ -151,7 +166,7 @@ struct SettingsView: View {
                             ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
                         } else {
                             proLockedRow(
-                                title: "Current Grid Color",
+                                title: "Theme Color",
                                 showColorPreview: true
                             )
                         }
@@ -161,7 +176,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("5.3")
+                            Text("5.4")
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -180,9 +195,9 @@ struct SettingsView: View {
     
     private var proBadge: some View {
         HStack {
-            Text("PRO")
             Image(systemName: "lock.fill")
                 .font(.caption)
+            Text("PRO")
         }
         .font(.system(size: 10, weight: .bold))
         .foregroundStyle(.white)
