@@ -7,7 +7,7 @@ import SwiftUI
 import SwiftData
 import Combine
 
-struct VisualizerView: View {
+struct TaskListView: View {
     @Binding var selectedTab: MainTabView.Tab
     @Binding var targetTaskForTimer: LimitTask?
     
@@ -651,7 +651,7 @@ struct VisualizerView: View {
         }()
     }
     
-    return VisualizerView(
+    return TaskListView(
         selectedTab: .constant(.visualizer),
         targetTaskForTimer: .constant(nil)
     )
