@@ -6,6 +6,7 @@
 import SwiftUI
 import SwiftData
 import Combine
+import WidgetKit
 
 struct TaskListView: View {
     @Binding var selectedTab: MainTabView.Tab
@@ -483,7 +484,12 @@ struct TaskListView: View {
     }
     
     private func saveContext() {
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch {
+            print("Failed to save context: \(error)")
+        }
     }
 }
 

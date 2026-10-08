@@ -13,6 +13,7 @@ struct GridMetrics {
     let passedCount: Int
     let title: String
     let unitText: String
+    let taskCounts: [Int: Int]
 }
 
 // MARK: - Timeline Entry
@@ -29,10 +30,10 @@ struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> LimitEntry {
         LimitEntry(
             date: Date(),
-            lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
-            yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-            monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
-            dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
+            lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs", taskCounts: [:]),
+            yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths", taskCounts: [2: 1, 5: 3]),
+            monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days", taskCounts: [3: 2, 8: 1]),
+            dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs", taskCounts: [10: 2, 11: 1])
         )
     }
 
@@ -66,43 +67,96 @@ struct Provider: TimelineProvider {
             birthday = profile.birthday
         }
         
+        // 完了済みタスクを取得
+        let taskDescriptor = FetchDescriptor<LimitTask>()
+        let allTasks = (try? context.fetch(taskDescriptor)) ?? []
+        let completedTasks = allTasks.filter { $0.isCompleted && $0.completedAt != nil }
+        
         let calendar = Calendar.current
         
-        // 1. Life Grid Metrics
+        // --- 1. Life Grid ---
         let passedYears = calendar.dateComponents([.year], from: birthday, to: date).year ?? 0
+        var lifeCounts: [Int: Int] = [:]
+        for task in completedTasks {
+            if let completedAt = task.completedAt {
+                let taskYear = calendar.component(.year, from: completedAt)
+                let taskMonth = calendar.component(.month, from: completedAt)
+                let birthYear = calendar.component(.year, from: birthday)
+                let yearOffset = taskYear - birthYear
+                if yearOffset >= 0 {
+                    let idx = (yearOffset * 12) + (taskMonth - 1)
+                    if idx < (targetAge * 12) { lifeCounts[idx, default: 0] += 1 }
+                }
+            }
+        }
         let lifeGrid = GridMetrics(
             totalCount: targetAge,
             passedCount: max(0, min(passedYears, targetAge)),
             title: "Life Grid",
-            unitText: "Yrs"
+            unitText: "Yrs",
+            taskCounts: lifeCounts
         )
         
-        // 2. Year Grid Metrics
+        // --- 2. Year Grid ---
+        let currentYear = calendar.component(.year, from: date)
         let month = calendar.component(.month, from: date)
+        var yearCounts: [Int: Int] = [:]
+        for task in completedTasks {
+            if let completedAt = task.completedAt,
+               calendar.component(.year, from: completedAt) == currentYear {
+                let m = calendar.component(.month, from: completedAt)
+                let d = calendar.component(.day, from: completedAt)
+                let idx = ((m - 1) * 31) + (d - 1)
+                yearCounts[idx, default: 0] += 1
+            }
+        }
         let yearGrid = GridMetrics(
             totalCount: 12,
             passedCount: max(0, month - 1),
             title: "Year Grid",
-            unitText: "Mths"
+            unitText: "Mths",
+            taskCounts: yearCounts
         )
         
-        // 3. Month Grid Metrics
+        // --- 3. Month Grid ---
+        let currentMonth = calendar.component(.month, from: date)
         let daysRange = calendar.range(of: .day, in: .month, for: date)
         let day = calendar.component(.day, from: date)
+        var monthCounts: [Int: Int] = [:]
+        for task in completedTasks {
+            if let completedAt = task.completedAt,
+               calendar.component(.year, from: completedAt) == currentYear,
+               calendar.component(.month, from: completedAt) == currentMonth {
+                let d = calendar.component(.day, from: completedAt)
+                let h = calendar.component(.hour, from: completedAt)
+                let idx = ((d - 1) * 24) + h
+                monthCounts[idx, default: 0] += 1
+            }
+        }
         let monthGrid = GridMetrics(
             totalCount: daysRange?.count ?? 30,
             passedCount: max(0, day - 1),
             title: "Month Grid",
-            unitText: "Days"
+            unitText: "Days",
+            taskCounts: monthCounts
         )
         
-        // 4. Day Grid Metrics (24 Hours)
+        // --- 4. Day Grid ---
         let hour = calendar.component(.hour, from: date)
+        var dayCounts: [Int: Int] = [:]
+        for task in completedTasks {
+            if let completedAt = task.completedAt,
+               calendar.isDate(completedAt, inSameDayAs: date) {
+                let h = calendar.component(.hour, from: completedAt)
+                dayCounts[h, default: 0] += 1
+            }
+        }
         let dayGrid = GridMetrics(
             totalCount: 24,
             passedCount: max(0, hour),
             title: "Day Grid",
-            unitText: "Hrs"
+            unitText: "Hrs",
+            taskCounts: dayCounts
         )
         
         return LimitEntry(
@@ -123,7 +177,10 @@ struct GyakusanWidgetEntryView: View {
     @AppStorage("highlightColorHex", store: UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan"))
     private var highlightColorHex: String = "#8E8E93"
 
-    // LimitGridViewと同等のレインボーグラデーション定義
+    private var themeColor: Color {
+        Color(hex: highlightColorHex)
+    }
+
     private var rainbowGradient: LinearGradient {
         LinearGradient(
             colors: [
@@ -166,7 +223,7 @@ struct GyakusanWidgetEntryView: View {
 
             Divider()
 
-            // Year Grid: 12×1 / Month Grid: 10×3 / Day Grid: 12×2
+            // Year / Month / Day Grids
             VStack(spacing: 4) {
                 gridView(metrics: entry.yearGrid, columnsCount: 12, titleFont: .caption2, countFont: .caption2, gridSpacing: 1.5)
                 
@@ -207,28 +264,48 @@ struct GyakusanWidgetEntryView: View {
                 spacing: gridSpacing
             ) {
                 ForEach(0..<metrics.totalCount, id: \.self) { index in
-                    cellShape(for: index, passedCount: metrics.passedCount)
+                    cellShape(for: index, metrics: metrics)
                         .aspectRatio(1.0, contentMode: .fit)
                 }
             }
         }
     }
 
-    // LimitGridViewと完全統一したカラーロジック
+    // LimitGridViewと完全に統一されたヒートマップ付きカラーロジック
     @ViewBuilder
-    private func cellShape(for index: Int, passedCount: Int) -> some View {
-        if index < passedCount {
-            // 過去: 明るいグレー
+    private func cellShape(for index: Int, metrics: GridMetrics) -> some View {
+        if index < metrics.passedCount {
+            // 過去マス: ベースグレー + ヒートマップオーバーレイ
+            let pastBaseColor = Color(white: 0.82)
+            let taskCount = metrics.taskCounts[index] ?? 0
+            
             RoundedRectangle(cornerRadius: 1)
-                .fill(Color(white: 0.82))
-        } else if index == passedCount {
-            // 現在: レインボーグラデーション
+                .fill(pastBaseColor)
+                .overlay(
+                    Group {
+                        if taskCount > 0 {
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(themeColor.opacity(heatmapOpacity(for: taskCount)))
+                        }
+                    }
+                )
+        } else if index == metrics.passedCount {
+            // 現在マス: レインボーグラデーション
             RoundedRectangle(cornerRadius: 1)
                 .fill(rainbowGradient)
         } else {
-            // 未来: ダークグレー
+            // 未来マス: ダークグレー
             RoundedRectangle(cornerRadius: 1)
                 .fill(Color(white: 0.18))
+        }
+    }
+
+    private func heatmapOpacity(for taskCount: Int) -> Double {
+        switch taskCount {
+        case 0: return 0.0
+        case 1: return 0.45
+        case 2: return 0.75
+        default: return 1.0
         }
     }
 }
@@ -248,7 +325,7 @@ struct GyakusanWidget: Widget {
             }
         }
         .configurationDisplayName("Limit Grid")
-        .description("Visualize your finite life and time grids.")
+        .description("Visualize your finite life and time grids with activity heatmaps.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -259,10 +336,10 @@ struct GyakusanWidget: Widget {
 } timeline: {
     LimitEntry(
         date: .now,
-        lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
-        yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
-        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
+        lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs", taskCounts: [:]),
+        yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths", taskCounts: [2: 1, 5: 3]),
+        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days", taskCounts: [3: 2, 8: 1]),
+        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs", taskCounts: [10: 2, 11: 1])
     )
 }
 
@@ -271,9 +348,9 @@ struct GyakusanWidget: Widget {
 } timeline: {
     LimitEntry(
         date: .now,
-        lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs"),
-        yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths"),
-        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days"),
-        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs")
+        lifeGrid: GridMetrics(totalCount: 80, passedCount: 32, title: "Life Grid", unitText: "Yrs", taskCounts: [:]),
+        yearGrid: GridMetrics(totalCount: 12, passedCount: 8, title: "Year Grid", unitText: "Mths", taskCounts: [2: 1, 5: 3]),
+        monthGrid: GridMetrics(totalCount: 30, passedCount: 12, title: "Month Grid", unitText: "Days", taskCounts: [3: 2, 8: 1]),
+        dayGrid: GridMetrics(totalCount: 24, passedCount: 13, title: "Day Grid", unitText: "Hrs", taskCounts: [10: 2, 11: 1])
     )
 }
