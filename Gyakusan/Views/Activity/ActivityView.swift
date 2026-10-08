@@ -95,7 +95,9 @@ struct ActivityView: View {
     
     // MARK: - Task Aggregation Helpers
     private func completedTaskCount(for timeFrame: TimeFrame, index: Int) -> Int {
-        let (_, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        let (isValid, _, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        guard isValid else { return 0 }
+        
         return allTasks.filter { task in
             guard task.isCompleted, let completedAt = task.completedAt else { return false }
             return completedAt >= startDate && completedAt <= endDate
@@ -103,7 +105,8 @@ struct ActivityView: View {
     }
     
     private func openJournal(for timeFrame: TimeFrame, index: Int) {
-        let (periodTitle, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        let (isValid, periodTitle, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        guard isValid else { return }
         
         let completedInInterval = allTasks.filter { task in
             guard task.isCompleted, let completedAt = task.completedAt else { return false }
@@ -124,40 +127,64 @@ struct ActivityView: View {
         )
     }
     
-    private func calculateInterval(for timeFrame: TimeFrame, index: Int) -> (title: String, start: Date, end: Date) {
+    private func calculateInterval(for timeFrame: TimeFrame, index: Int) -> (isValid: Bool, title: String, start: Date, end: Date) {
         let calendar = Calendar.current
         
         switch timeFrame {
         case .life:
+            // Life: 年月（index: 0 ... 959）
             let birthYear = calendar.component(.year, from: currentProfile.birthday)
-            let targetYear = birthYear + index
-            let start = calendar.date(from: DateComponents(year: targetYear, month: 1, day: 1)) ?? currentDate
-            let end = calendar.date(from: DateComponents(year: targetYear, month: 12, day: 31, hour: 23, minute: 59, second: 59)) ?? currentDate
-            return ("Age \(index) (\(targetYear))", start, end)
+            let yearOffset = index / 12
+            let monthIndex = (index % 12) + 1
+            let targetYear = birthYear + yearOffset
+            
+            let start = calendar.date(from: DateComponents(year: targetYear, month: monthIndex, day: 1)) ?? currentDate
+            let range = calendar.range(of: .day, in: .month, for: start)?.count ?? 30
+            let end = calendar.date(from: DateComponents(year: targetYear, month: monthIndex, day: range, hour: 23, minute: 59, second: 59)) ?? currentDate
+            let monthName = calendar.shortMonthSymbols[monthIndex - 1]
+            return (true, "Age \(yearOffset) - \(monthName) \(targetYear)", start, end)
             
         case .year:
-            let year = calendar.component(.year, from: currentDate)
-            let month = index + 1
-            let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? currentDate
-            let range = calendar.range(of: .day, in: .month, for: start)?.count ?? 30
-            let end = calendar.date(from: DateComponents(year: year, month: month, day: range, hour: 23, minute: 59, second: 59)) ?? currentDate
-            let monthName = calendar.shortMonthSymbols[index]
-            return ("\(monthName) \(year)", start, end)
+            // Year: 12ヶ月 × (16列 * 2行) = 1ヶ月32個のインデックス
+            let currentYear = calendar.component(.year, from: currentDate)
+            let monthIndex = (index / 32) + 1
+            let dayIndex = (index % 32) + 1
+            
+            let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex, day: 1)) ?? currentDate
+            let maxDaysInMonth = calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30
+            
+            if dayIndex > maxDaysInMonth {
+                return (false, "", currentDate, currentDate)
+            }
+            
+            let start = calendar.date(from: DateComponents(year: currentYear, month: monthIndex, day: dayIndex)) ?? currentDate
+            let end = calendar.date(byAdding: DateComponents(day: 1, second: -1), to: start) ?? currentDate
+            let monthName = calendar.shortMonthSymbols[monthIndex - 1]
+            return (true, "\(monthName) \(dayIndex), \(currentYear)", start, end)
             
         case .month:
-            let year = calendar.component(.year, from: currentDate)
-            let month = calendar.component(.month, from: currentDate)
-            let day = index + 1
-            let start = calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? currentDate
-            let end = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 23, minute: 59, second: 59)) ?? currentDate
-            return ("\(start.formatted(.dateTime.month(.abbreviated).day(.twoDigits)))", start, end)
+            // Month: 日時間（index: day * 24 + hour）
+            let currentYear = calendar.component(.year, from: currentDate)
+            let currentMonth = calendar.component(.month, from: currentDate)
+            
+            let dayIndex = (index / 24) + 1
+            let hourIndex = index % 24
+            
+            let start = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: dayIndex, hour: hourIndex)) ?? currentDate
+            let end = calendar.date(byAdding: DateComponents(hour: 1, second: -1), to: start) ?? currentDate
+            let hourStr = String(format: "%02d:00", hourIndex)
+            return (true, "\(start.formatted(.dateTime.month(.abbreviated).day(.twoDigits))) \(hourStr)", start, end)
             
         case .day:
+            // Day: 5分刻み（index: 0 ... 287 [24時間 * 12ブロック - 1]）
             let startOfDay = calendar.startOfDay(for: currentDate)
-            let start = calendar.date(byAdding: .hour, value: index, to: startOfDay) ?? currentDate
-            let end = calendar.date(byAdding: .minute, value: 59, to: start) ?? currentDate
-            let hourStr = String(format: "%02d:00", index)
-            return ("\(hourStr) (\(currentDate.formatted(.dateTime.month(.abbreviated).day(.twoDigits))))", start, end)
+            let minutesOffset = index * 5
+            let start = calendar.date(byAdding: .minute, value: minutesOffset, to: startOfDay) ?? currentDate
+            let end = calendar.date(byAdding: DateComponents(minute: 5, second: -1), to: start) ?? currentDate
+            
+            let startStr = start.formatted(date: .omitted, time: .shortened)
+            let endStr = end.addingTimeInterval(1).formatted(date: .omitted, time: .shortened)
+            return (true, "\(startStr) - \(endStr) (\(currentDate.formatted(.dateTime.month(.abbreviated).day(.twoDigits))))", start, end)
         }
     }
 }

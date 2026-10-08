@@ -27,61 +27,80 @@ struct LimitGridView: View {
     
     private var title: String {
         switch timeFrame {
-        case .life: return "Life Grid (Years)"
-        case .year: return "Year Grid (Months)"
-        case .month: return "Month Grid (Days)"
-        case .day: return "Day Grid (Hours)"
+        case .life: return "Life Grid"
+        case .year: return "Year Grid"
+        case .month: return "Month Grid"
+        case .day: return "Day Grid"
         }
     }
     
     private var totalCount: Int {
         switch timeFrame {
         case .life:
-            return lifeStats?.totalYears ?? 80
+            let totalYears = lifeStats?.totalYears ?? 80
+            return totalYears * 12
         case .year:
-            return 12
+            return 12 * 32 // 12ヶ月 × 32個 (16列 * 2行)
         case .month:
             let range = calendar.range(of: .day, in: .month, for: currentDate)
-            return range?.count ?? 30
+            let days = range?.count ?? 30
+            return days * 24
         case .day:
-            return 24
+            return 288 // 24時間 * 12 (5分ブロック)
         }
     }
     
     private var passedCount: Int {
         switch timeFrame {
         case .life:
-            return lifeStats?.gridPassedCount ?? 0
+            let passedYears = lifeStats?.passedYears ?? 0
+            let month = calendar.component(.month, from: currentDate)
+            return (passedYears * 12) + (month - 1)
         case .year:
             let month = calendar.component(.month, from: currentDate)
-            return max(0, month - 1)
+            let day = calendar.component(.day, from: currentDate)
+            return ((month - 1) * 32) + (day - 1)
         case .month:
             let day = calendar.component(.day, from: currentDate)
-            return max(0, day - 1)
+            let hour = calendar.component(.hour, from: currentDate)
+            return ((day - 1) * 24) + hour
         case .day:
             let hour = calendar.component(.hour, from: currentDate)
-            return hour
+            let minute = calendar.component(.minute, from: currentDate)
+            return (hour * 12) + (minute / 5)
         }
     }
     
-    private var unitText: String {
+    private var columnsCount: Int {
         switch timeFrame {
-        case .life: return "Years"
-        case .year: return "Months"
-        case .month: return "Days"
-        case .day: return "Hours"
+        case .life: return 24  // 横24列 (2年/行)
+        case .year: return 16  // 横16列 (1ヶ月につき2行)
+        case .month: return 24 // 横24列 (24時間/行)
+        case .day: return 12   // 横12列 (1時間＝12個の5分ブロック/行)
         }
     }
     
-    private var columns: [GridItem] {
-        let count: Int
+    private var rowCount: Int {
+        totalCount / columnsCount
+    }
+    
+    private var scalerWidth: CGFloat {
         switch timeFrame {
-        case .life: count = 10
-        case .year: count = 6
-        case .month: count = 7
-        case .day: count = 6
+        case .life: return 32
+        case .year: return 26
+        case .month: return 22
+        case .day: return 32
         }
-        return Array(repeating: GridItem(.flexible(), spacing: 6), count: count)
+    }
+    
+    // 全TimeFrameでグリッド間隔を2ptに統一
+    private var gridSpacing: CGFloat { 2.0 }
+    
+    private var cellCornerRadius: CGFloat {
+        switch timeFrame {
+        case .life, .month, .day: return 1.5
+        case .year: return 1.0
+        }
     }
     
     private var rainbowGradient: LinearGradient {
@@ -99,6 +118,7 @@ struct LimitGridView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // MARK: - Header & Legend
             HStack {
                 Text(title)
                     .font(.headline)
@@ -106,9 +126,7 @@ struct LimitGridView: View {
                 
                 Spacer()
                 
-                // MARK: - ヒートマップ凡例 (現在 + レベル別)
                 HStack(spacing: 8) {
-                    // 現在セル凡例
                     HStack(spacing: 3) {
                         RoundedRectangle(cornerRadius: 1.5)
                             .fill(rainbowGradient)
@@ -121,7 +139,6 @@ struct LimitGridView: View {
                     Divider()
                         .frame(height: 8)
                     
-                    // タスク達成度凡例
                     HStack(spacing: 3) {
                         Text("Less")
                             .font(.system(size: 9, weight: .medium))
@@ -142,16 +159,48 @@ struct LimitGridView: View {
             }
             .padding(.horizontal)
             
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(0..<totalCount, id: \.self) { index in
-                    let count = taskCountForIndex?(index) ?? 0
-                    
-                    cellView(for: index, taskCount: count)
-                        .aspectRatio(1.0, contentMode: .fit)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            onSelectIndex?(index)
+            // MARK: - Synchronized Scaler & Grid Row List
+            VStack(spacing: gridSpacing) {
+                ForEach(0..<rowCount, id: \.self) { rowIndex in
+                    HStack(spacing: 6) {
+                        // 左側スケーラー（各行のグリッド中央に完全同期）
+                        Group {
+                            if let text = scalerText(for: rowIndex) {
+                                Text(text)
+                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            } else {
+                                Color.clear
+                            }
                         }
+                        .frame(width: scalerWidth, alignment: .trailing)
+                        .frame(maxHeight: .infinity, alignment: .center)
+                        
+                        // 右側グリッド（画面横幅いっぱいに自動伸縮）
+                        HStack(spacing: gridSpacing) {
+                            ForEach(0..<columnsCount, id: \.self) { colIndex in
+                                let index = (rowIndex * columnsCount) + colIndex
+                                
+                                if isInvalidDateIndex(index) {
+                                    Color.clear
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1.0, contentMode: .fit)
+                                } else {
+                                    let count = taskCountForIndex?(index) ?? 0
+                                    
+                                    cellView(for: index, taskCount: count)
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1.0, contentMode: .fit)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            onSelectIndex?(index)
+                                        }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             .padding(.horizontal)
@@ -162,43 +211,83 @@ struct LimitGridView: View {
         .padding(.horizontal)
     }
     
+    // MARK: - Scaler Label Provider
+    private func scalerText(for rowIndex: Int) -> String? {
+        switch timeFrame {
+        case .life:
+            let age = rowIndex * 2
+            return age % 4 == 0 ? "\(age)y" : nil
+            
+        case .year:
+            if rowIndex % 2 == 0 {
+                let monthIndex = (rowIndex / 2)
+                if monthIndex < 12 {
+                    return calendar.shortMonthSymbols[monthIndex]
+                }
+            }
+            return nil
+            
+        case .month:
+            let day = rowIndex + 1
+            return (day == 1 || day % 5 == 0) ? "\(day)d" : nil
+            
+        case .day:
+            if rowIndex % 2 == 0 {
+                return String(format: "%02d:00", rowIndex)
+            }
+            return nil
+        }
+    }
+    
+    // MARK: - Invalid Date Helper for Year Grid
+    private func isInvalidDateIndex(_ index: Int) -> Bool {
+        guard timeFrame == .year else { return false }
+        
+        let currentYear = calendar.component(.year, from: currentDate)
+        let monthIndex = (index / 32) + 1
+        let dayIndex = (index % 32) + 1
+        
+        guard let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex, day: 1)),
+              let maxDays = calendar.range(of: .day, in: .month, for: monthStart)?.count else {
+            return false
+        }
+        
+        return dayIndex > maxDays
+    }
+    
     // MARK: - Grid Cell Renderer
     @ViewBuilder
     private func cellView(for index: Int, taskCount: Int) -> some View {
         if index == passedCount {
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
+            RoundedRectangle(cornerRadius: cellCornerRadius, style: .continuous)
                 .fill(rainbowGradient)
-                .shadow(color: Color.orange.opacity(0.35), radius: 4, x: 0, y: 2)
+                .shadow(color: Color.orange.opacity(0.35), radius: 3, x: 0, y: 1)
         } else if index < passedCount {
-            let baseColor = colorScheme == .dark
-                ? Color(white: 0.82)
-                : Color(white: 0.18)
+            let pastBaseColor = Color(white: 0.82)
             
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(baseColor)
+            RoundedRectangle(cornerRadius: cellCornerRadius, style: .continuous)
+                .fill(pastBaseColor)
                 .overlay(
                     Group {
                         if taskCount > 0 {
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            RoundedRectangle(cornerRadius: cellCornerRadius, style: .continuous)
                                 .fill(themeColor.opacity(heatmapOpacity(for: taskCount)))
                         }
                     }
                 )
         } else {
-            let futureColor = colorScheme == .dark
-                ? Color(white: 0.18)
-                : Color(white: 0.82)
+            let futureColor = Color(white: 0.18)
             
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
+            RoundedRectangle(cornerRadius: cellCornerRadius, style: .continuous)
                 .fill(futureColor)
         }
     }
     
     private func sampleLegendCell(taskCount: Int) -> some View {
-        let baseColor = colorScheme == .dark ? Color(white: 0.5) : Color(white: 0.5)
+        let pastBaseColor = Color(white: 0.82)
         
         return RoundedRectangle(cornerRadius: 1.5)
-            .fill(baseColor)
+            .fill(pastBaseColor)
             .overlay(
                 Group {
                     if taskCount > 0 {
@@ -221,14 +310,14 @@ struct LimitGridView: View {
 }
 
 // MARK: - Previews
-#Preview("Light Mode") {
+#Preview("Light Mode - Year") {
     ScrollView {
         VStack(spacing: 20) {
             LimitGridView(
-                timeFrame: .month,
+                timeFrame: .year,
                 lifeStats: nil,
                 currentDate: Date(),
-                taskCountForIndex: { index in index % 4 }
+                taskCountForIndex: { index in index % 7 }
             )
         }
         .padding(.vertical)
@@ -237,11 +326,11 @@ struct LimitGridView: View {
     .preferredColorScheme(.light)
 }
 
-#Preview("Dark Mode") {
+#Preview("Dark Mode - Day") {
     ScrollView {
         VStack(spacing: 20) {
             LimitGridView(
-                timeFrame: .month,
+                timeFrame: .day,
                 lifeStats: nil,
                 currentDate: Date(),
                 taskCountForIndex: { index in index % 4 }
