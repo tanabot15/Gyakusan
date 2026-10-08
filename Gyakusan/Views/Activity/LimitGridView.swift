@@ -40,7 +40,7 @@ struct LimitGridView: View {
             let totalYears = lifeStats?.totalYears ?? 80
             return totalYears * 12
         case .year:
-            return 12 * 32 // 12ヶ月 × 32個 (16列 * 2行)
+            return 12 * 31 // 12ヶ月 × 31日（マトリクス用インデックス上限）
         case .month:
             let range = calendar.range(of: .day, in: .month, for: currentDate)
             let days = range?.count ?? 30
@@ -59,7 +59,7 @@ struct LimitGridView: View {
         case .year:
             let month = calendar.component(.month, from: currentDate)
             let day = calendar.component(.day, from: currentDate)
-            return ((month - 1) * 32) + (day - 1)
+            return ((month - 1) * 31) + (day - 1)
         case .month:
             let day = calendar.component(.day, from: currentDate)
             let hour = calendar.component(.hour, from: currentDate)
@@ -74,14 +74,17 @@ struct LimitGridView: View {
     private var columnsCount: Int {
         switch timeFrame {
         case .life: return 24  // 横24列 (2年/行)
-        case .year: return 16  // 横16列 (1ヶ月につき2行)
+        case .year: return 16  // 最大16列 (1行目15列 / 2行目最大16列)
         case .month: return 24 // 横24列 (24時間/行)
         case .day: return 12   // 横12列 (1時間＝12個の5分ブロック/行)
         }
     }
     
     private var rowCount: Int {
-        totalCount / columnsCount
+        switch timeFrame {
+        case .year: return 24 // 12ヶ月 × 2行 = 24行
+        default: return totalCount / columnsCount
+        }
     }
     
     private var scalerWidth: CGFloat {
@@ -93,8 +96,10 @@ struct LimitGridView: View {
         }
     }
     
-    // 全TimeFrameでグリッド間隔を2ptに統一
-    private var gridSpacing: CGFloat { 2.0 }
+    // Day Grid のみグリッド間隔を大きめ（3.5pt）に設定
+    private var gridSpacing: CGFloat {
+        timeFrame == .day ? 3.5 : 2.0
+    }
     
     private var cellCornerRadius: CGFloat {
         switch timeFrame {
@@ -178,26 +183,12 @@ struct LimitGridView: View {
                         .frame(width: scalerWidth, alignment: .trailing)
                         .frame(maxHeight: .infinity, alignment: .center)
                         
-                        // 右側グリッド（画面横幅いっぱいに自動伸縮）
+                        // 右側グリッド（該当行のマス目セット）
                         HStack(spacing: gridSpacing) {
-                            ForEach(0..<columnsCount, id: \.self) { colIndex in
-                                let index = (rowIndex * columnsCount) + colIndex
-                                
-                                if isInvalidDateIndex(index) {
-                                    Color.clear
-                                        .frame(maxWidth: .infinity)
-                                        .aspectRatio(1.0, contentMode: .fit)
-                                } else {
-                                    let count = taskCountForIndex?(index) ?? 0
-                                    
-                                    cellView(for: index, taskCount: count)
-                                        .frame(maxWidth: .infinity)
-                                        .aspectRatio(1.0, contentMode: .fit)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            onSelectIndex?(index)
-                                        }
-                                }
+                            if timeFrame == .year {
+                                yearRowView(rowIndex: rowIndex)
+                            } else {
+                                standardRowView(rowIndex: rowIndex)
                             }
                         }
                     }
@@ -209,6 +200,59 @@ struct LimitGridView: View {
         .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal)
+    }
+    
+    // MARK: - Year Grid 専用の行レンダラー (1行目: 15列 / 2行目: 余り列)
+    @ViewBuilder
+    private func yearRowView(rowIndex: Int) -> some View {
+        let monthIndex = rowIndex / 2 // 0 ... 11 (1月〜12月)
+        let isSecondRow = (rowIndex % 2) == 1
+        
+        let currentYear = calendar.component(.year, from: currentDate)
+        let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex + 1, day: 1)) ?? currentDate
+        let daysInMonth = calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30
+        
+        // 1行目は15日固定、2行目は残りの日数（15日, 16日, 13日, 14日など）
+        let daysInThisRow = isSecondRow ? max(0, daysInMonth - 15) : min(15, daysInMonth)
+        let startDayOffset = isSecondRow ? 15 : 0
+        
+        ForEach(0..<16, id: \.self) { colIndex in
+            if colIndex < daysInThisRow {
+                let dayNumber = startDayOffset + colIndex + 1
+                let flatIndex = (monthIndex * 31) + (dayNumber - 1)
+                let count = taskCountForIndex?(flatIndex) ?? 0
+                
+                cellView(for: flatIndex, taskCount: count)
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(1.0, contentMode: .fit)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onSelectIndex?(flatIndex)
+                    }
+            } else {
+                // 日数が存在しない空欄マス（透明）
+                Color.clear
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(1.0, contentMode: .fit)
+            }
+        }
+    }
+    
+    // MARK: - 通常の行レンダラー (Life / Month / Day)
+    @ViewBuilder
+    private func standardRowView(rowIndex: Int) -> some View {
+        ForEach(0..<columnsCount, id: \.self) { colIndex in
+            let index = (rowIndex * columnsCount) + colIndex
+            let count = taskCountForIndex?(index) ?? 0
+            
+            cellView(for: index, taskCount: count)
+                .frame(maxWidth: .infinity)
+                .aspectRatio(1.0, contentMode: .fit)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onSelectIndex?(index)
+                }
+        }
     }
     
     // MARK: - Scaler Label Provider
@@ -237,22 +281,6 @@ struct LimitGridView: View {
             }
             return nil
         }
-    }
-    
-    // MARK: - Invalid Date Helper for Year Grid
-    private func isInvalidDateIndex(_ index: Int) -> Bool {
-        guard timeFrame == .year else { return false }
-        
-        let currentYear = calendar.component(.year, from: currentDate)
-        let monthIndex = (index / 32) + 1
-        let dayIndex = (index % 32) + 1
-        
-        guard let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex, day: 1)),
-              let maxDays = calendar.range(of: .day, in: .month, for: monthStart)?.count else {
-            return false
-        }
-        
-        return dayIndex > maxDays
     }
     
     // MARK: - Grid Cell Renderer

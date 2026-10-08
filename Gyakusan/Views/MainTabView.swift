@@ -33,13 +33,13 @@ struct MainTabView: View {
                 targetTaskForTimer: $targetTaskForTimer
             )
             .tabItem {
-                Label("Tasks", systemImage: "checklist")
+                Label("Tasks", systemImage: "list.bullet.below.rectangle")
             }
             .tag(Tab.taskList)
             
             ActivityView()
                 .tabItem {
-                    Label("Activity", systemImage: "chart.line.uptrend.xyaxis")
+                    Label("Activity", systemImage: "square.grid.4x3.fill")
                 }
                 .tag(Tab.activity)
 

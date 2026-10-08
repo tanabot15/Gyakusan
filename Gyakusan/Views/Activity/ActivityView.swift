@@ -42,23 +42,13 @@ struct ActivityView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 8)
                 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        LimitGridView(
-                            timeFrame: selectedTimeFrame,
-                            lifeStats: selectedTimeFrame == .life ? lifeStats : nil,
-                            currentDate: currentDate,
-                            taskCountForIndex: { index in
-                                completedTaskCount(for: selectedTimeFrame, index: index)
-                            },
-                            onSelectIndex: { index in
-                                openJournal(for: selectedTimeFrame, index: index)
-                            }
-                        )
+                TabView(selection: $selectedTimeFrame) {
+                    ForEach(TimeFrame.allCases) { timeFrame in
+                        timeFrameContentView(for: timeFrame)
+                            .tag(timeFrame)
                     }
-                    .padding(.vertical, 16)
-                    .padding(.bottom, 32)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .sheet(item: $selectedJournalItem) { item in
@@ -71,6 +61,28 @@ struct ActivityView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
+        }
+    }
+    
+    // MARK: - TimeFrame Content View (各タブの中身)
+    @ViewBuilder
+    private func timeFrameContentView(for timeFrame: TimeFrame) -> some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                LimitGridView(
+                    timeFrame: timeFrame,
+                    lifeStats: timeFrame == .life ? lifeStats : nil,
+                    currentDate: currentDate,
+                    taskCountForIndex: { index in
+                        completedTaskCount(for: timeFrame, index: index)
+                    },
+                    onSelectIndex: { index in
+                        openJournal(for: timeFrame, index: index)
+                    }
+                )
+            }
+            .padding(.vertical, 16)
+            .padding(.bottom, 32)
         }
     }
     
@@ -145,10 +157,10 @@ struct ActivityView: View {
             return (true, "Age \(yearOffset) - \(monthName) \(targetYear)", start, end)
             
         case .year:
-            // Year: 12ヶ月 × (16列 * 2行) = 1ヶ月32個のインデックス
+            // Year: 12ヶ月 × 31日インデックス (index: monthIndex * 31 + dayIndex)
             let currentYear = calendar.component(.year, from: currentDate)
-            let monthIndex = (index / 32) + 1
-            let dayIndex = (index % 32) + 1
+            let monthIndex = (index / 31) + 1
+            let dayIndex = (index % 31) + 1
             
             let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex, day: 1)) ?? currentDate
             let maxDaysInMonth = calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30
