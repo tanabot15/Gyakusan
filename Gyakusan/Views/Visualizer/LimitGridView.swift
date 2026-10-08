@@ -1,8 +1,6 @@
 //
-//  LifeGridView.swift
+//  LimitGridView.swift
 //  Gyakusan
-//
-//  Created by Kenichiro Suzuki on 2026/07/22.
 //
 
 import SwiftUI
@@ -11,6 +9,8 @@ struct LimitGridView: View {
     let timeFrame: TimeFrame
     let lifeStats: TimeCalculator.LifeStats?
     let currentDate: Date
+    var hasCompletedTask: ((Int) -> Bool)? = nil
+    var onSelectIndex: ((Int) -> Void)? = nil
     
     private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
     
@@ -94,9 +94,23 @@ struct LimitGridView: View {
             
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(0..<totalCount, id: \.self) { index in
+                    let isCompletedExist = hasCompletedTask?(index) ?? false
+                    
                     RoundedRectangle(cornerRadius: 3)
                         .fill(gridColor(for: index))
                         .aspectRatio(1.0, contentMode: .fit)
+                        .overlay(
+                            Group {
+                                if isCompletedExist {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .stroke(Color(hex: highlightColorHex), lineWidth: 3)
+                                }
+                            }
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onSelectIndex?(index)
+                        }
                 }
             }
             .padding(.horizontal)
@@ -118,31 +132,59 @@ struct LimitGridView: View {
     }
 }
 
-#Preview("Year Grid View") {
-    LimitGridView(
-        timeFrame: .year,
-        lifeStats: nil,
-        currentDate: Date()
-    )
-    .padding(.vertical)
-    .background(Color(uiColor: .systemGroupedBackground))
-}
-
-#Preview("Life Grid View") {
-    let mockLifeStats = TimeCalculator.LifeStats(
-        totalYears: 80,
-        passedYears: 32,
-        remainingYears: 48,
-        remainingMonths: 2,
-        remainingDays: 17520,
-        progressPercentage: 40.0
-    )
+// MARK: - Previews
+#Preview("LimitGridView Status Comparison") {
+    struct PreviewWrapper: View {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // テスト用の Theme Color (Teal/Green) をセット
+        init() {
+            let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
+            sharedStore?.set("#00A896", forKey: "highlightColorHex")
+        }
+        
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // 1. タスク未完了（通常表示）
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("1. Standard Grid (No Completed Tasks)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal)
+                        
+                        LimitGridView(
+                            timeFrame: .year,
+                            lifeStats: nil,
+                            currentDate: now,
+                            hasCompletedTask: { _ in false }
+                        )
+                    }
+                    
+                    // 2. 特定の月・日・時間に完了タスクあり（枠線表示）
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("2. With Completed Tasks (Index 1, 3, 4, 7)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal)
+                        
+                        LimitGridView(
+                            timeFrame: .year,
+                            lifeStats: nil,
+                            currentDate: now,
+                            hasCompletedTask: { index in
+                                // 過去(1, 3)、現在(4 = 10月/PassedCount 9)、未来(7) に完了タスクが存在するダミー状態
+                                [1, 3, 9, 11].contains(index)
+                            }
+                        )
+                    }
+                }
+                .padding(.vertical)
+            }
+            .background(Color(uiColor: .systemGroupedBackground))
+        }
+    }
     
-    LimitGridView(
-        timeFrame: .life,
-        lifeStats: mockLifeStats,
-        currentDate: Date()
-    )
-    .padding(.vertical)
-    .background(Color(uiColor: .systemGroupedBackground))
+    return PreviewWrapper()
 }

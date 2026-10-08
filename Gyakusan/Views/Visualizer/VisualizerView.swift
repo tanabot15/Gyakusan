@@ -28,6 +28,9 @@ struct VisualizerView: View {
     @State private var isShowingAddTaskSheet: Bool = false
     @State private var selectedTaskToEdit: LimitTask? = nil
     
+    // Grid Journal State (Identifiable型で状態管理)
+    @State private var selectedJournalItem: GridJournalItem? = nil
+    
     @State private var isCompletedExpanded: Bool = false
     @State private var isEditingMode: Bool = false
     
@@ -86,7 +89,24 @@ struct VisualizerView: View {
             .sheet(item: $selectedTaskToEdit) { task in
                 TaskFormSheet(taskToEdit: task)
             }
+            .sheet(item: $selectedJournalItem) { item in
+                GridJournalSheet(
+                    timeFrame: selectedTimeFrame,
+                    index: item.index,
+                    periodTitle: item.title,
+                    completedTasks: item.tasks
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
+    }
+    
+    // MARK: - Identifiable Item for Grid Journal Sheet
+    struct GridJournalItem: Identifiable {
+        let id = UUID()
+        let title: String
+        let tasks: [LimitTask]
+        let index: Int
     }
     
     // MARK: - Segmented Picker
@@ -122,7 +142,13 @@ struct VisualizerView: View {
                         LimitGridView(
                             timeFrame: timeFrame,
                             lifeStats: timeFrame == .life ? lifeStats : nil,
-                            currentDate: currentDate
+                            currentDate: currentDate,
+                            hasCompletedTask: { index in
+                                hasCompletedTasks(for: timeFrame, index: index)
+                            },
+                            onSelectIndex: { index in
+                                openJournal(for: timeFrame, index: index)
+                            }
                         )
                     }
                     .padding(.vertical)
@@ -153,7 +179,7 @@ struct VisualizerView: View {
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
                     } else {
-                        // Uncompleted Tasks (including overdue)
+                        // Uncompleted Tasks
                         ForEach(uncompleted) { task in
                             taskRowContainer(for: task)
                                 .listRowSeparator(.hidden)
@@ -234,7 +260,6 @@ struct VisualizerView: View {
                             }
                         }
                         
-                        // Bottom margin spacer to prevent overlapping with floating buttons
                         Color.clear
                             .frame(height: 80)
                             .listRowInsets(EdgeInsets())
@@ -261,6 +286,64 @@ struct VisualizerView: View {
                     }
                 }
             }
+        }
+    }
+    
+    // MARK: - Grid Journal Helpers
+    private func hasCompletedTasks(for timeFrame: TimeFrame, index: Int) -> Bool {
+        let (_, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        return allTasks.contains { task in
+            guard task.isCompleted, let completedAt = task.completedAt else { return false }
+            return completedAt >= startDate && completedAt <= endDate
+        }
+    }
+    
+    // MARK: - Open Grid Journal Logic
+    private func openJournal(for timeFrame: TimeFrame, index: Int) {
+        let (periodTitle, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
+        
+        let completedInInterval = allTasks.filter { task in
+            guard task.isCompleted, let completedAt = task.completedAt else { return false }
+            return completedAt >= startDate && completedAt <= endDate
+        }
+        
+        selectedJournalItem = GridJournalItem(title: periodTitle, tasks: completedInInterval, index: index)
+    }
+    
+    private func calculateInterval(for timeFrame: TimeFrame, index: Int) -> (title: String, start: Date, end: Date) {
+        let calendar = Calendar.current
+        
+        switch timeFrame {
+        case .life:
+            let birthYear = calendar.component(.year, from: currentProfile.birthday)
+            let targetYear = birthYear + index
+            let start = calendar.date(from: DateComponents(year: targetYear, month: 1, day: 1)) ?? currentDate
+            let end = calendar.date(from: DateComponents(year: targetYear, month: 12, day: 31, hour: 23, minute: 59, second: 59)) ?? currentDate
+            return ("Age \(index) (\(targetYear))", start, end)
+            
+        case .year:
+            let year = calendar.component(.year, from: currentDate)
+            let month = index + 1
+            let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? currentDate
+            let range = calendar.range(of: .day, in: .month, for: start)?.count ?? 30
+            let end = calendar.date(from: DateComponents(year: year, month: month, day: range, hour: 23, minute: 59, second: 59)) ?? currentDate
+            let monthName = calendar.shortMonthSymbols[index]
+            return ("\(monthName) \(year)", start, end)
+            
+        case .month:
+            let year = calendar.component(.year, from: currentDate)
+            let month = calendar.component(.month, from: currentDate)
+            let day = index + 1
+            let start = calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? currentDate
+            let end = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 23, minute: 59, second: 59)) ?? currentDate
+            return ("\(start.formatted(.dateTime.month(.abbreviated).day(.twoDigits)))", start, end)
+            
+        case .day:
+            let startOfDay = calendar.startOfDay(for: currentDate)
+            let start = calendar.date(byAdding: .hour, value: index, to: startOfDay) ?? currentDate
+            let end = calendar.date(byAdding: .minute, value: 59, to: start) ?? currentDate
+            let hourStr = String(format: "%02d:00", index)
+            return ("\(hourStr) (\(currentDate.formatted(.dateTime.month(.abbreviated).day(.twoDigits))))", start, end)
         }
     }
     

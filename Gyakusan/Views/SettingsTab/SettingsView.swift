@@ -61,7 +61,7 @@ struct SettingsView: View {
                                     .font(.title2)
                                     .foregroundStyle(.white)
                                 
-                                VStack(alignment: .leading, spacing: 2) {
+                                VStack(alignment: .leading, spacing: 3) {
                                     Text(isProPurchased ? "Gyakusan Pro Active" : "Upgrade to Gyakusan Pro")
                                         .font(.headline)
                                         .fontWeight(.bold)
@@ -69,7 +69,8 @@ struct SettingsView: View {
                                     
                                     Text(isProPurchased ? "All features unlocked" : "Remove Ads • Custom Timer • Custom Theme Color")
                                         .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.9))
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.white)
                                 }
                                 
                                 Spacer()
@@ -77,8 +78,8 @@ struct SettingsView: View {
                                 if !isProPurchased {
                                     Image(systemName: "chevron.right")
                                         .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(.white.opacity(0.8))
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.white)
                                 }
                             }
                             .padding(.vertical, 4)
@@ -86,7 +87,7 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         .listRowBackground(
                             LinearGradient(
-                                colors: [.orange, .yellow],
+                                colors: [Color.orange, Color(red: 0.95, green: 0.35, blue: 0.1)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -163,7 +164,7 @@ struct SettingsView: View {
                         
                         // MARK: - Highlight Color (Pro Feature)
                         if isProPurchased {
-                            ColorPicker("Current Grid Color", selection: selectedColorBinding, supportsOpacity: false)
+                            ColorPicker("Theme Color", selection: selectedColorBinding, supportsOpacity: false)
                         } else {
                             proLockedRow(
                                 title: "Theme Color",
@@ -176,7 +177,7 @@ struct SettingsView: View {
                         HStack {
                             Text("Version")
                             Spacer()
-                            Text("5.4")
+                            Text("5.5")
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -194,18 +195,24 @@ struct SettingsView: View {
     // MARK: - UI Components for Pro Status
     
     private var proBadge: some View {
-        HStack {
+        HStack(spacing: 3) {
             Image(systemName: "lock.fill")
-                .font(.caption)
+                .font(.system(size: 9, weight: .bold))
             Text("PRO")
+                .font(.system(size: 10, weight: .black))
         }
-        .font(.system(size: 10, weight: .bold))
         .foregroundStyle(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3.5)
         .background(
             Capsule()
-                .fill(LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing))
+                .fill(
+                    LinearGradient(
+                        colors: [Color.orange, Color(red: 0.95, green: 0.35, blue: 0.1)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
         )
     }
     
@@ -230,13 +237,14 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                                 
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
                     proBadge
 
                     Image(systemName: "chevron.right")
                         .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.tertiary)
                 }
-                .foregroundStyle(.orange)
             }
         }
         .buttonStyle(.plain)

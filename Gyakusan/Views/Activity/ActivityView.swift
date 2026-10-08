@@ -18,6 +18,9 @@ struct ActivityView: View {
     
     @State private var currentDate: Date = Date()
     
+    // Daily Journal Sheet State
+    @State private var selectedJournalItem: DailyJournalItem? = nil
+    
     private var themeColor: Color {
         Color(hex: highlightColorHex)
     }
@@ -35,7 +38,6 @@ struct ActivityView: View {
             stats[day] = (pomodoros: current.pomodoros + 1, tasks: current.tasks)
         }
         
-        // isCompleted かつ completedAt が nil でないタスクを安全に取り出す
         for task in allTasks where task.isCompleted {
             if let completedAt = task.completedAt {
                 let day = calendar.startOfDay(for: completedAt)
@@ -52,7 +54,6 @@ struct ActivityView: View {
         var streak = 0
         var checkDate = calendar.startOfDay(for: currentDate)
         
-        // 今日何もない場合は昨日からカウント
         let todayStats = dailyStats[checkDate] ?? (pomodoros: 0, tasks: 0)
         if todayStats.pomodoros == 0 && todayStats.tasks == 0 {
             guard let yesterday = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
@@ -105,7 +106,23 @@ struct ActivityView: View {
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("Activity")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(item: $selectedJournalItem) { item in
+                DailyJournalSheet(
+                    date: item.date,
+                    pomodoroLogs: item.logs,
+                    completedTasks: item.tasks
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
+    }
+    
+    // MARK: - Identifiable Item for Daily Journal Sheet
+    struct DailyJournalItem: Identifiable {
+        let id = UUID()
+        let date: Date
+        let logs: [PomodoroLog]
+        let tasks: [LimitTask]
     }
     
     // MARK: - Summary Stats Card
@@ -189,17 +206,14 @@ struct ActivityView: View {
                         .foregroundStyle(.tertiary)
                         .tracking(1)
                     
-                    Text("\(calendar.component(.year, from: currentDate))")
+                    Text(calendar.component(.year, from: currentDate), format: .number.grouping(.never))
                         .font(.headline.weight(.bold))
                         .foregroundStyle(.primary)
                 }
                 
                 Spacer()
                 
-                // 凡例 (Legend)
-                // 凡例 (Legend)
                 HStack(spacing: 8) {
-                    // 今日マークの凡例
                     HStack(spacing: 3) {
                         Circle()
                             .fill(themeColor)
@@ -213,7 +227,6 @@ struct ActivityView: View {
                         .fill(Color.secondary.opacity(0.3))
                         .frame(width: 1, height: 10)
                     
-                    // 濃淡の凡例
                     HStack(spacing: 4) {
                         Text("Less")
                             .font(.system(size: 9, weight: .medium))
@@ -257,21 +270,17 @@ struct ActivityView: View {
         let monthName = monthDate.formatted(.dateTime.month(.abbreviated))
         let daysInMonth = daysInMonth(for: monthDate)
         
-        // 前半 (1〜16日) と 後半 (17〜31日) に分割
         let firstHalf = Array(daysInMonth.prefix(16))
         let secondHalf = daysInMonth.count > 16 ? Array(daysInMonth.suffix(from: 16)) : []
         
         return HStack(alignment: .top, spacing: 8) {
-            // 月名ラベル（固定幅）
             Text(monthName)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .frame(width: 32, alignment: .leading)
                 .padding(.top, 2)
             
-            // グリッド2段レイアウト
             VStack(spacing: 4) {
-                // 1段目: 1日 〜 16日（16列固定）
                 HStack(spacing: 4) {
                     ForEach(firstHalf, id: \.self) { dayDate in
                         let stat = dailyStats[calendar.startOfDay(for: dayDate)] ?? (pomodoros: 0, tasks: 0)
@@ -285,13 +294,11 @@ struct ActivityView: View {
                     }
                 }
                 
-                // 2段目: 17日 〜 末日（最大15列、幅合わせのため16列枠を確保）
                 HStack(spacing: 4) {
                     ForEach(secondHalf, id: \.self) { dayDate in
                         let stat = dailyStats[calendar.startOfDay(for: dayDate)] ?? (pomodoros: 0, tasks: 0)
                         cellView(pomodoros: stat.pomodoros, tasks: stat.tasks, date: dayDate)
                     }
-                    // 16列幅に合わせてスペーサー（Clear）を充填
                     if secondHalf.count < 16 {
                         ForEach(0..<(16 - secondHalf.count), id: \.self) { _ in
                             Color.clear
@@ -329,11 +336,9 @@ struct ActivityView: View {
             .overlay(
                 Group {
                     if tasks > 0 {
-                        // タスク達成時: themeColor を使用した太枠線
                         RoundedRectangle(cornerRadius: 2.5, style: .continuous)
                             .stroke(themeColor, lineWidth: 1.5)
                     } else if isFuture {
-                        // 未来: 破線枠
                         RoundedRectangle(cornerRadius: 2.5, style: .continuous)
                             .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 0.5, dash: [2]))
                     } else {
@@ -350,6 +355,29 @@ struct ActivityView: View {
                         .offset(y: -12)
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if let date = date, !isFuture {
+                    openDailyJournal(for: date)
+                }
+            }
+    }
+    
+    // MARK: - Open Daily Journal Logic
+    private func openDailyJournal(for date: Date) {
+        let targetStart = calendar.startOfDay(for: date)
+        guard let targetEnd = calendar.date(byAdding: DateComponents(day: 1, second: -1), to: targetStart) else { return }
+        
+        let logsForDay = pomodoroLogs.filter { log in
+            log.completedAt >= targetStart && log.completedAt <= targetEnd
+        }
+        
+        let tasksForDay = allTasks.filter { task in
+            guard task.isCompleted, let completedAt = task.completedAt else { return false }
+            return completedAt >= targetStart && completedAt <= targetEnd
+        }
+        
+        selectedJournalItem = DailyJournalItem(date: date, logs: logsForDay, tasks: tasksForDay)
     }
     
     // MARK: - Date Calculation Helpers
@@ -400,7 +428,6 @@ struct ActivityView: View {
                 let container = try ModelContainer(for: LimitTask.self, PomodoroLog.self, configurations: config)
                 let context = container.mainContext
                 
-                // 1. themeColor の確認用にテスト用カラー（ティール/グリーン系）をセット
                 let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
                 sharedStore?.set("#00A896", forKey: "highlightColorHex")
                 
@@ -408,7 +435,6 @@ struct ActivityView: View {
                 let now = Date()
                 let today = calendar.startOfDay(for: now)
                 
-                // 2. 「今日」の状態テスト: ポモドーロ2回 + タスク完了1件（太枠 + 上部ドット）
                 let todayTask = LimitTask(title: "Today Task", timeFrameRawValue: TimeFrame.day.rawValue)
                 todayTask.isCompleted = true
                 todayTask.completedAt = now
@@ -417,13 +443,10 @@ struct ActivityView: View {
                 context.insert(PomodoroLog(completedAt: now, durationMinutes: 25))
                 context.insert(PomodoroLog(completedAt: now, durationMinutes: 25))
                 
-                // 3. 「過去」の状態テスト
-                // 1日前: ポモドーロ1回のみ（淡いテーマ色 fill）
                 if let date1 = calendar.date(byAdding: .day, value: -1, to: today) {
                     context.insert(PomodoroLog(completedAt: date1, durationMinutes: 25))
                 }
                 
-                // 2日前: タスク完了あり・ポモドーロなし（透過 fill + themeColor太枠）
                 if let date2 = calendar.date(byAdding: .day, value: -2, to: today) {
                     let task = LimitTask(title: "Past Task", timeFrameRawValue: TimeFrame.day.rawValue)
                     task.isCompleted = true
@@ -431,7 +454,6 @@ struct ActivityView: View {
                     context.insert(task)
                 }
                 
-                // 3日前: ポモドーロ3回 + タスク完了あり（中濃度のテーマ色 fill + themeColor太枠）
                 if let date3 = calendar.date(byAdding: .day, value: -3, to: today) {
                     let task = LimitTask(title: "Past Task 2", timeFrameRawValue: TimeFrame.day.rawValue)
                     task.isCompleted = true
@@ -443,14 +465,11 @@ struct ActivityView: View {
                     }
                 }
                 
-                // 4日前: ポモドーロ5回（濃いテーマ色 fill）
                 if let date4 = calendar.date(byAdding: .day, value: -4, to: today) {
                     for _ in 0..<5 {
                         context.insert(PomodoroLog(completedAt: date4, durationMinutes: 25))
                     }
                 }
-                
-                // 4. 「未来」の状態は currentDate 以降の日付として自動的に破線枠表示になります
                 
                 return container
             } catch {
