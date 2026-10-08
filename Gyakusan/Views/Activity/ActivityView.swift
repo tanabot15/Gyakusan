@@ -23,6 +23,8 @@ struct ActivityView: View {
     @State private var currentDate: Date = Date()
     @State private var selectedJournalItem: GridJournalItem? = nil
     
+    @State private var taskCountCache: [Int: Int] = [:]
+    
     private var currentProfile: UserProfile {
         userProfiles.first ?? UserProfile()
     }
@@ -61,6 +63,16 @@ struct ActivityView: View {
                 )
                 .presentationDetents([.medium, .large])
             }
+            // タスクやTimeFrameの変更時にキャッシュを更新
+            .onAppear {
+                rebuildTaskCountCache()
+            }
+            .onChange(of: selectedTimeFrame) { _, _ in
+                rebuildTaskCountCache()
+            }
+            .onChange(of: allTasks) { _, _ in
+                rebuildTaskCountCache()
+            }
         }
     }
     
@@ -74,7 +86,8 @@ struct ActivityView: View {
                     lifeStats: timeFrame == .life ? lifeStats : nil,
                     currentDate: currentDate,
                     taskCountForIndex: { index in
-                        completedTaskCount(for: timeFrame, index: index)
+                        // $O(1)$ でキャッシュ辞書から超高速参照
+                        taskCountCache[index] ?? 0
                     },
                     onSelectIndex: { index in
                         openJournal(for: timeFrame, index: index)
@@ -105,17 +118,69 @@ struct ActivityView: View {
         .pickerStyle(.segmented)
     }
     
-    // MARK: - Task Aggregation Helpers
-    private func completedTaskCount(for timeFrame: TimeFrame, index: Int) -> Int {
-        let (isValid, _, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
-        guard isValid else { return 0 }
+    // MARK: - Performance Optimized Cache Builder
+    /// 全タスクを1回だけ計算・集計して [Index: Count] 辞書を事前に作成
+    private func rebuildTaskCountCache() {
+        var newCache: [Int: Int] = [:]
+        let calendar = Calendar.current
+        let timeFrame = selectedTimeFrame
         
-        return allTasks.filter { task in
-            guard task.isCompleted, let completedAt = task.completedAt else { return false }
-            return completedAt >= startDate && completedAt <= endDate
-        }.count
+        // 完了済みで完了日時の存在するタスクのみを対象
+        let completedTasks = allTasks.filter { $0.isCompleted && $0.completedAt != nil }
+        
+        for task in completedTasks {
+            guard let completedAt = task.completedAt else { continue }
+            if let index = gridIndex(for: completedAt, timeFrame: timeFrame, calendar: calendar) {
+                newCache[index, default: 0] += 1
+            }
+        }
+        
+        self.taskCountCache = newCache
     }
     
+    /// 日付から対応するグリッドインデックス（GridIndex）を高速逆算するヘルパー関数
+    private func gridIndex(for date: Date, timeFrame: TimeFrame, calendar: Calendar) -> Int? {
+        switch timeFrame {
+        case .life:
+            let birthYear = calendar.component(.year, from: currentProfile.birthday)
+            let year = calendar.component(.year, from: date)
+            let month = calendar.component(.month, from: date)
+            let yearOffset = year - birthYear
+            
+            guard yearOffset >= 0 else { return nil }
+            let index = (yearOffset * 12) + (month - 1)
+            let totalYears = lifeStats.totalYears
+            return index < (totalYears * 12) ? index : nil
+            
+        case .year:
+            let currentYear = calendar.component(.year, from: currentDate)
+            let taskYear = calendar.component(.year, from: date)
+            guard currentYear == taskYear else { return nil }
+            
+            let month = calendar.component(.month, from: date)
+            let day = calendar.component(.day, from: date)
+            return ((month - 1) * 31) + (day - 1)
+            
+        case .month:
+            let currentYear = calendar.component(.year, from: currentDate)
+            let currentMonth = calendar.component(.month, from: currentDate)
+            let taskYear = calendar.component(.year, from: date)
+            let taskMonth = calendar.component(.month, from: date)
+            guard currentYear == taskYear && currentMonth == taskMonth else { return nil }
+            
+            let day = calendar.component(.day, from: date)
+            let hour = calendar.component(.hour, from: date)
+            return ((day - 1) * 24) + hour
+            
+        case .day:
+            guard calendar.isDate(date, inSameDayAs: currentDate) else { return nil }
+            let hour = calendar.component(.hour, from: date)
+            let minute = calendar.component(.minute, from: date)
+            return (hour * 12) + (minute / 5)
+        }
+    }
+    
+    // MARK: - Journal Opening
     private func openJournal(for timeFrame: TimeFrame, index: Int) {
         let (isValid, periodTitle, startDate, endDate) = calculateInterval(for: timeFrame, index: index)
         guard isValid else { return }
@@ -144,7 +209,6 @@ struct ActivityView: View {
         
         switch timeFrame {
         case .life:
-            // Life: 年月（index: 0 ... 959）
             let birthYear = calendar.component(.year, from: currentProfile.birthday)
             let yearOffset = index / 12
             let monthIndex = (index % 12) + 1
@@ -157,7 +221,6 @@ struct ActivityView: View {
             return (true, "Age \(yearOffset) - \(monthName) \(targetYear)", start, end)
             
         case .year:
-            // Year: 12ヶ月 × 31日インデックス (index: monthIndex * 31 + dayIndex)
             let currentYear = calendar.component(.year, from: currentDate)
             let monthIndex = (index / 31) + 1
             let dayIndex = (index % 31) + 1
@@ -175,7 +238,6 @@ struct ActivityView: View {
             return (true, "\(monthName) \(dayIndex), \(currentYear)", start, end)
             
         case .month:
-            // Month: 日時間（index: day * 24 + hour）
             let currentYear = calendar.component(.year, from: currentDate)
             let currentMonth = calendar.component(.month, from: currentDate)
             
@@ -188,7 +250,6 @@ struct ActivityView: View {
             return (true, "\(start.formatted(.dateTime.month(.abbreviated).day(.twoDigits))) \(hourStr)", start, end)
             
         case .day:
-            // Day: 5分刻み（index: 0 ... 287 [24時間 * 12ブロック - 1]）
             let startOfDay = calendar.startOfDay(for: currentDate)
             let minutesOffset = index * 5
             let start = calendar.date(byAdding: .minute, value: minutesOffset, to: startOfDay) ?? currentDate
