@@ -114,7 +114,7 @@ struct GridJournalSheet: View {
 }
 
 // MARK: - Previews
-#Preview("With Completed and Scheduled Tasks") {
+#Preview("With Tasks") {
     let now = Date()
     let calendar = Calendar.current
     
