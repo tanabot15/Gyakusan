@@ -13,13 +13,13 @@ import AdSupport
 struct MainTabView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
 
-    @State private var selectedTab: Tab = .visualizer
+    @State private var selectedTab: Tab = .taskList
     @State private var showOnboarding: Bool = false
     
     @State private var targetTaskForTimer: LimitTask? = nil
     
     enum Tab {
-        case visualizer
+        case taskList
         case timeline
         case focus
         case activity
@@ -28,14 +28,20 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            VisualizerView(
+            TaskListView(
                 selectedTab: $selectedTab,
                 targetTaskForTimer: $targetTaskForTimer
             )
             .tabItem {
-                Label("Visualizer", systemImage: "hourglass")
+                Label("Tasks", systemImage: "checklist")
             }
-            .tag(Tab.visualizer)
+            .tag(Tab.taskList)
+            
+            ActivityView()
+                .tabItem {
+                    Label("Activity", systemImage: "chart.line.uptrend.xyaxis")
+                }
+                .tag(Tab.activity)
 
             TimelineView()
                 .tabItem {
@@ -51,13 +57,7 @@ struct MainTabView: View {
                 Label("Pomodoro", systemImage: "timer")
             }
             .tag(Tab.focus)
-            
-            ActivityView()
-                .tabItem {
-                    Label("Activity", systemImage: "chart.line.uptrend.xyaxis")
-                }
-                .tag(Tab.activity)
-            
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")

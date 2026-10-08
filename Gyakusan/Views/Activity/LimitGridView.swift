@@ -9,13 +9,17 @@ struct LimitGridView: View {
     let timeFrame: TimeFrame
     let lifeStats: TimeCalculator.LifeStats?
     let currentDate: Date
-    var hasCompletedTask: ((Int) -> Bool)? = nil
+    var taskCountForIndex: ((Int) -> Int)? = nil
     var onSelectIndex: ((Int) -> Void)? = nil
     
     private static let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
     
     @AppStorage("highlightColorHex", store: sharedStore)
     private var highlightColorHex: String = "#8E8E93"
+    
+    private var themeColor: Color {
+        Color(hex: highlightColorHex)
+    }
     
     private var calendar: Calendar { .current }
     
@@ -86,27 +90,49 @@ struct LimitGridView: View {
                     .foregroundStyle(.primary)
                 
                 Spacer()
-                Text("\(passedCount) / \(totalCount) \(unitText)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 4) {
+                    Text("Less")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                    
+                    HStack(spacing: 2) {
+                        gridCellColor(taskCount: 0)
+                            .frame(width: 8, height: 8)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                        gridCellColor(taskCount: 1)
+                            .frame(width: 8, height: 8)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                        gridCellColor(taskCount: 2)
+                            .frame(width: 8, height: 8)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                        gridCellColor(taskCount: 3)
+                            .frame(width: 8, height: 8)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                    }
+                    
+                    Text("More")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                }
             }
             .padding(.horizontal)
             
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(0..<totalCount, id: \.self) { index in
-                    let isCompletedExist = hasCompletedTask?(index) ?? false
+                    let count = taskCountForIndex?(index) ?? 0
                     
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(gridColor(for: index))
+                        .fill(gridCellColor(taskCount: count))
                         .aspectRatio(1.0, contentMode: .fit)
-                        .overlay(
-                            Group {
-                                if isCompletedExist {
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .stroke(Color(hex: highlightColorHex), lineWidth: 3)
-                                }
+                        .overlay(alignment: .top) {
+                            if index == passedCount {
+                                Circle()
+                                    .fill(themeColor)
+                                    .frame(width: 6, height: 6)
+                                    .offset(y: -8)
                             }
-                        )
+                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             onSelectIndex?(index)
@@ -121,70 +147,24 @@ struct LimitGridView: View {
         .padding(.horizontal)
     }
     
-    private func gridColor(for index: Int) -> Color {
-        if index < passedCount {
-            return Color.primary
-        } else if index == passedCount {
-            return Color(hex: highlightColorHex)
-        } else {
+    private func gridCellColor(taskCount: Int) -> Color {
+        if taskCount == 0 {
             return Color(uiColor: .systemGray5)
+        } else if taskCount == 1 {
+            return themeColor.opacity(0.35)
+        } else if taskCount == 2 {
+            return themeColor.opacity(0.65)
+        } else {
+            return themeColor // 3個以上
         }
     }
 }
 
-// MARK: - Previews
-#Preview("LimitGridView Status Comparison") {
-    struct PreviewWrapper: View {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        // テスト用の Theme Color (Teal/Green) をセット
-        init() {
-            let sharedStore = UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan")
-            sharedStore?.set("#00A896", forKey: "highlightColorHex")
-        }
-        
-        var body: some View {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // 1. タスク未完了（通常表示）
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("1. Standard Grid (No Completed Tasks)")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal)
-                        
-                        LimitGridView(
-                            timeFrame: .year,
-                            lifeStats: nil,
-                            currentDate: now,
-                            hasCompletedTask: { _ in false }
-                        )
-                    }
-                    
-                    // 2. 特定の月・日・時間に完了タスクあり（枠線表示）
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("2. With Completed Tasks (Index 1, 3, 4, 7)")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal)
-                        
-                        LimitGridView(
-                            timeFrame: .year,
-                            lifeStats: nil,
-                            currentDate: now,
-                            hasCompletedTask: { index in
-                                // 過去(1, 3)、現在(4 = 10月/PassedCount 9)、未来(7) に完了タスクが存在するダミー状態
-                                [1, 3, 9, 11].contains(index)
-                            }
-                        )
-                    }
-                }
-                .padding(.vertical)
-            }
-            .background(Color(uiColor: .systemGroupedBackground))
-        }
-    }
-    
-    return PreviewWrapper()
+#Preview("LimitGridView") {
+    LimitGridView(
+        timeFrame: .month,
+        lifeStats: nil,
+        currentDate: Date(),
+        taskCountForIndex: { index in index % 4 }
+    )
 }

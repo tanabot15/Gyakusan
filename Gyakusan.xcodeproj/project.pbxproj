@@ -11,7 +11,6 @@
 		D910C56F3070C8EF00489582 /* PomodoroLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C56D3070C8EF00489582 /* PomodoroLog.swift */; };
 		D910C5723070C93300489582 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C5713070C93300489582 /* ActivityView.swift */; };
 		D910C5A030775FFF00489582 /* GridJournalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C59F30775FFF00489582 /* GridJournalSheet.swift */; };
-		D910C5A23077648900489582 /* DailyJournalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910C5A13077648900489582 /* DailyJournalSheet.swift */; };
 		D96D2FB33014D2FC0083DC1E /* AdMobConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */; };
 		D96D2FB53014F3D40083DC1E /* AdMobConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */; };
 		D990D1033026CB39001B3CDA /* GridHighlightColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D990D1023026CB39001B3CDA /* GridHighlightColor.swift */; };
@@ -52,7 +51,7 @@
 		D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0687C3010E0DE00E88132 /* TimeFrame.swift */; };
 		D9E068843010E16400E88132 /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068833010E16400E88132 /* BannerAdView.swift */; };
 		D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068853010E16D00E88132 /* TimeFramePicker.swift */; };
-		D9E0688C3010E19B00E88132 /* VisualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* VisualizerView.swift */; };
+		D9E0688C3010E19B00E88132 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688B3010E19B00E88132 /* TaskListView.swift */; };
 		D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688D3010E1A400E88132 /* LimitGridView.swift */; };
 		D9E068903010E1B700E88132 /* CountdownHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */; };
 		D9E068923010E1C000E88132 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E068913010E1C000E88132 /* SettingsView.swift */; };
@@ -90,7 +89,6 @@
 		D910C56D3070C8EF00489582 /* PomodoroLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroLog.swift; sourceTree = "<group>"; };
 		D910C5713070C93300489582 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
 		D910C59F30775FFF00489582 /* GridJournalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridJournalSheet.swift; sourceTree = "<group>"; };
-		D910C5A13077648900489582 /* DailyJournalSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyJournalSheet.swift; sourceTree = "<group>"; };
 		D96D2FB23014D2FC0083DC1E /* AdMobConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = AdMobConfig.plist; sourceTree = "<group>"; };
 		D96D2FB43014F3D40083DC1E /* AdMobConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobConfig.swift; sourceTree = "<group>"; };
 		D990D1023026CB39001B3CDA /* GridHighlightColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridHighlightColor.swift; sourceTree = "<group>"; };
@@ -129,7 +127,7 @@
 		D9E0687C3010E0DE00E88132 /* TimeFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFrame.swift; sourceTree = "<group>"; };
 		D9E068833010E16400E88132 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
 		D9E068853010E16D00E88132 /* TimeFramePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFramePicker.swift; sourceTree = "<group>"; };
-		D9E0688B3010E19B00E88132 /* VisualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualizerView.swift; sourceTree = "<group>"; };
+		D9E0688B3010E19B00E88132 /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
 		D9E0688D3010E1A400E88132 /* LimitGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitGridView.swift; sourceTree = "<group>"; };
 		D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownHeaderView.swift; sourceTree = "<group>"; };
 		D9E068913010E1C000E88132 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -164,7 +162,8 @@
 			isa = PBXGroup;
 			children = (
 				D910C5713070C93300489582 /* ActivityView.swift */,
-				D910C5A13077648900489582 /* DailyJournalSheet.swift */,
+				D9E0688D3010E1A400E88132 /* LimitGridView.swift */,
+				D910C59F30775FFF00489582 /* GridJournalSheet.swift */,
 			);
 			path = Activity;
 			sourceTree = "<group>";
@@ -177,13 +176,13 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		D990D1B4303C00EB001B3CDA /* TimelineTab */ = {
+		D990D1B4303C00EB001B3CDA /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
 				D990D1B5303C010D001B3CDA /* TimelineView.swift */,
 				D9BA15FB306CB8B7008B3FC5 /* LifeEventFormSheet.swift */,
 			);
-			path = TimelineTab;
+			path = Timeline;
 			sourceTree = "<group>";
 		};
 		D9BA15B4304ED6C7008B3FC5 /* Frameworks */ = {
@@ -279,10 +278,10 @@
 				D9E068683010A63900E88132 /* MainTabView.swift */,
 				D9E0687E3010E0EE00E88132 /* Components */,
 				D9E068803010E11500E88132 /* Visualizer */,
-				D9D57E403040611D004B29BA /* FocusTimer */,
-				D990D1B4303C00EB001B3CDA /* TimelineTab */,
 				D910C5703070C91700489582 /* Activity */,
-				D9E068813010E11C00E88132 /* SettingsTab */,
+				D990D1B4303C00EB001B3CDA /* Timeline */,
+				D9D57E403040611D004B29BA /* FocusTimer */,
+				D9E068813010E11C00E88132 /* Settings */,
 				D9E068723010AFDD00E88132 /* Utilities */,
 			);
 			path = Views;
@@ -315,6 +314,7 @@
 			children = (
 				D9E068833010E16400E88132 /* BannerAdView.swift */,
 				D9E068853010E16D00E88132 /* TimeFramePicker.swift */,
+				D990D1023026CB39001B3CDA /* GridHighlightColor.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -322,25 +322,22 @@
 		D9E068803010E11500E88132 /* Visualizer */ = {
 			isa = PBXGroup;
 			children = (
-				D9E0688B3010E19B00E88132 /* VisualizerView.swift */,
+				D9E0688B3010E19B00E88132 /* TaskListView.swift */,
 				D9E068933010E1CA00E88132 /* TaskFormSheet.swift */,
 				D9E0688F3010E1B700E88132 /* CountdownHeaderView.swift */,
-				D9E0688D3010E1A400E88132 /* LimitGridView.swift */,
-				D990D1023026CB39001B3CDA /* GridHighlightColor.swift */,
 				D9BA15F0306BEFAF008B3FC5 /* TaskRowView.swift */,
 				D9BA15F2306BEFE3008B3FC5 /* QuickAddInlineRow.swift */,
 				D9BA15F4306BF012008B3FC5 /* TaskSectionHeader.swift */,
-				D910C59F30775FFF00489582 /* GridJournalSheet.swift */,
 			);
 			path = Visualizer;
 			sourceTree = "<group>";
 		};
-		D9E068813010E11C00E88132 /* SettingsTab */ = {
+		D9E068813010E11C00E88132 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
 				D9E068913010E1C000E88132 /* SettingsView.swift */,
 			);
-			path = SettingsTab;
+			path = Settings;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -474,7 +471,7 @@
 			files = (
 				D9E068863010E16D00E88132 /* TimeFramePicker.swift in Sources */,
 				D990D1B6303C010D001B3CDA /* TimelineView.swift in Sources */,
-				D9E0688C3010E19B00E88132 /* VisualizerView.swift in Sources */,
+				D9E0688C3010E19B00E88132 /* TaskListView.swift in Sources */,
 				D9E0688E3010E1A400E88132 /* LimitGridView.swift in Sources */,
 				D9BA15FC306CB8B7008B3FC5 /* LifeEventFormSheet.swift in Sources */,
 				D9E0687D3010E0DE00E88132 /* TimeFrame.swift in Sources */,
@@ -488,7 +485,6 @@
 				D9E068773010E08C00E88132 /* AppDelegate.swift in Sources */,
 				D990D14E302BE2C9001B3CDA /* OnboardingView.swift in Sources */,
 				D9BA15F1306BEFAF008B3FC5 /* TaskRowView.swift in Sources */,
-				D910C5A23077648900489582 /* DailyJournalSheet.swift in Sources */,
 				D9E068943010E1CA00E88132 /* TaskFormSheet.swift in Sources */,
 				D9BA15F3306BEFE3008B3FC5 /* QuickAddInlineRow.swift in Sources */,
 				D9BA15F5306BF012008B3FC5 /* TaskSectionHeader.swift in Sources */,
@@ -526,7 +522,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -546,7 +542,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 5.5;
+				MARKETING_VERSION = 5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -571,7 +567,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = GyakusanWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -591,7 +587,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
-				MARKETING_VERSION = 5.5;
+				MARKETING_VERSION = 5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan.GyakusanWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -739,7 +735,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -759,7 +755,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.5;
+				MARKETING_VERSION = 5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -783,7 +779,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Gyakusan/Gyakusan.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = D86GFNUD35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -803,7 +799,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 5.5;
+				MARKETING_VERSION = 5.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suzuki.kenichiro.Gyakusan;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
