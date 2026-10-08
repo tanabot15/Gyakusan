@@ -123,6 +123,20 @@ struct GyakusanWidgetEntryView: View {
     @AppStorage("highlightColorHex", store: UserDefaults(suiteName: "group.com.suzuki.kenichiro.Gyakusan"))
     private var highlightColorHex: String = "#8E8E93"
 
+    // LimitGridViewと同等のレインボーグラデーション定義
+    private var rainbowGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.55, green: 0.20, blue: 0.85),
+                Color(red: 0.95, green: 0.25, blue: 0.60),
+                Color(red: 1.00, green: 0.50, blue: 0.25),
+                Color(red: 1.00, green: 0.85, blue: 0.30)
+            ],
+            startPoint: .bottomLeading,
+            endPoint: .topTrailing
+        )
+    }
+
     var body: some View {
         if family == .systemMedium {
             mediumView
@@ -193,21 +207,28 @@ struct GyakusanWidgetEntryView: View {
                 spacing: gridSpacing
             ) {
                 ForEach(0..<metrics.totalCount, id: \.self) { index in
-                    RoundedRectangle(cornerRadius: 1)
-                        .fill(gridColor(for: index, passedCount: metrics.passedCount))
+                    cellShape(for: index, passedCount: metrics.passedCount)
                         .aspectRatio(1.0, contentMode: .fit)
                 }
             }
         }
     }
 
-    private func gridColor(for index: Int, passedCount: Int) -> Color {
+    // LimitGridViewと完全統一したカラーロジック
+    @ViewBuilder
+    private func cellShape(for index: Int, passedCount: Int) -> some View {
         if index < passedCount {
-            return Color.primary
+            // 過去: 明るいグレー
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color(white: 0.82))
         } else if index == passedCount {
-            return Color(hex: highlightColorHex)
+            // 現在: レインボーグラデーション
+            RoundedRectangle(cornerRadius: 1)
+                .fill(rainbowGradient)
         } else {
-            return Color(uiColor: .systemGray3)
+            // 未来: ダークグレー
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color(white: 0.18))
         }
     }
 }
