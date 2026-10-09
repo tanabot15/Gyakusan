@@ -197,8 +197,14 @@ struct LimitGridView: View {
             .padding(.horizontal)
         }
         .padding(.vertical, 12)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.primary.opacity(colorScheme == .light ? 0.06 : 0.0), lineWidth: 1)
+        )
         .padding(.horizontal)
     }
     
