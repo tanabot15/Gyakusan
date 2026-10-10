@@ -179,6 +179,12 @@ struct TimelineView: View {
     // MARK: - Life Timeline Section
     private var lifeTimelineSection: some View {
         VStack(spacing: 0) {
+            Text("Timeline")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.vertical, 8)
+            
             ForEach(timelineGroups) { group in
                 HStack(alignment: .top, spacing: 8) {
                     // Left: Age & Year
