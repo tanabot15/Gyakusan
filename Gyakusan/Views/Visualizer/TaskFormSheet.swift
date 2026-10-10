@@ -2,8 +2,6 @@
 //  TaskFormSheet.swift
 //  Gyakusan
 //
-//  Created by Kenichiro Suzuki on 2026/07/22.
-//
 
 import SwiftUI
 import SwiftData
@@ -464,7 +462,7 @@ struct TaskFormSheet: View {
         switch timeFrame {
         case .day:
             HStack(spacing: 8) {
-                // 固定の年月日表示（スラッシュ区切り・英語ロケール）
+                // 固定の年月日表示（スラッシュ区切り）
                 Text(now.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits)))
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -506,7 +504,7 @@ struct TaskFormSheet: View {
             )
 
             HStack(spacing: 8) {
-                // 固定の年月表示（スラッシュ区切り・英語ロケール）
+                // 固定の年月表示
                 Text(now.formatted(.dateTime.year().month(.twoDigits)))
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -530,6 +528,7 @@ struct TaskFormSheet: View {
 
         case .year:
             let monthSymbols = calendar.shortMonthSymbols
+            let currentYear = calendar.component(.year, from: now)
             
             let monthBinding = Binding<Int>(
                 get: {
@@ -537,8 +536,26 @@ struct TaskFormSheet: View {
                 },
                 set: { newMonth in
                     var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
-                    components.year = calendar.component(.year, from: now)
+                    components.year = currentYear
                     components.month = newMonth
+                    let testDate = calendar.date(from: DateComponents(year: currentYear, month: newMonth, day: 1)) ?? now
+                    let maxDays = calendar.range(of: .day, in: .month, for: testDate)?.count ?? 30
+                    components.day = min(components.day ?? 1, maxDays)
+                    
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+            
+            let dayBinding = Binding<Int>(
+                get: {
+                    calendar.component(.day, from: dateBinding.wrappedValue)
+                },
+                set: { newDay in
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    components.year = currentYear
+                    components.day = newDay
                     if let updatedDate = calendar.date(from: components) {
                         dateBinding.wrappedValue = updatedDate
                     }
@@ -547,7 +564,7 @@ struct TaskFormSheet: View {
 
             HStack(spacing: 8) {
                 // 固定の年表示
-                Text(String(calendar.component(.year, from: now)))
+                Text(String(currentYear))
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -565,10 +582,30 @@ struct TaskFormSheet: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
 
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 日選択 Wheel Picker
+                let selectedMonth = calendar.component(.month, from: dateBinding.wrappedValue)
+                let testDate = calendar.date(from: DateComponents(year: currentYear, month: selectedMonth, day: 1)) ?? now
+                let daysInMonth = calendar.range(of: .day, in: .month, for: testDate)?.count ?? 30
+                
+                Picker("Day", selection: dayBinding) {
+                    ForEach(1...daysInMonth, id: \.self) { day in
+                        Text(String(format: "%02d", day)).tag(day)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
                 Spacer()
             }
 
         case .life:
+            let monthSymbols = calendar.shortMonthSymbols
+            
+            // 年 Binding
             let yearBinding = Binding<Int>(
                 get: {
                     calendar.component(.year, from: dateBinding.wrappedValue)
@@ -576,21 +613,92 @@ struct TaskFormSheet: View {
                 set: { newYear in
                     var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
                     components.year = newYear
+                    let selectedMonth = components.month ?? 1
+                    let testDate = calendar.date(from: DateComponents(year: newYear, month: selectedMonth, day: 1)) ?? now
+                    let maxDays = calendar.range(of: .day, in: .month, for: testDate)?.count ?? 30
+                    components.day = min(components.day ?? 1, maxDays)
+                    
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+            
+            // 月 Binding
+            let monthBinding = Binding<Int>(
+                get: {
+                    calendar.component(.month, from: dateBinding.wrappedValue)
+                },
+                set: { newMonth in
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    let currentSelectedYear = components.year ?? calendar.component(.year, from: now)
+                    components.month = newMonth
+                    let testDate = calendar.date(from: DateComponents(year: currentSelectedYear, month: newMonth, day: 1)) ?? now
+                    let maxDays = calendar.range(of: .day, in: .month, for: testDate)?.count ?? 30
+                    components.day = min(components.day ?? 1, maxDays)
+                    
+                    if let updatedDate = calendar.date(from: components) {
+                        dateBinding.wrappedValue = updatedDate
+                    }
+                }
+            )
+            
+            // 日 Binding
+            let dayBinding = Binding<Int>(
+                get: {
+                    calendar.component(.day, from: dateBinding.wrappedValue)
+                },
+                set: { newDay in
+                    var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dateBinding.wrappedValue)
+                    components.day = newDay
                     if let updatedDate = calendar.date(from: components) {
                         dateBinding.wrappedValue = updatedDate
                     }
                 }
             )
 
-            Picker("Year", selection: yearBinding) {
-                ForEach(availableYears, id: \.self) { year in
-                    Text(String(year))
-                        .tag(year)
+            HStack(spacing: 4) {
+                // 年選択 Wheel Picker
+                Picker("Year", selection: yearBinding) {
+                    ForEach(availableYears, id: \.self) { year in
+                        Text(String(year)).tag(year)
+                    }
                 }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 月選択 Wheel Picker
+                Picker("Month", selection: monthBinding) {
+                    ForEach(1...12, id: \.self) { month in
+                        Text(monthSymbols[month - 1]).tag(month)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
+
+                Text("/")
+                    .foregroundStyle(.tertiary)
+
+                // 日選択 Wheel Picker
+                let currentYearVal = calendar.component(.year, from: dateBinding.wrappedValue)
+                let currentMonthVal = calendar.component(.month, from: dateBinding.wrappedValue)
+                let testDate = calendar.date(from: DateComponents(year: currentYearVal, month: currentMonthVal, day: 1)) ?? now
+                let daysInMonth = calendar.range(of: .day, in: .month, for: testDate)?.count ?? 30
+                
+                Picker("Day", selection: dayBinding) {
+                    ForEach(1...daysInMonth, id: \.self) { day in
+                        Text(String(format: "%02d", day)).tag(day)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                .clipped()
             }
-            .pickerStyle(.wheel)
-            .frame(maxHeight: 120)
-            .clipped()
         }
     }
     
@@ -612,7 +720,7 @@ struct TaskFormSheet: View {
     private func formattedDate(_ date: Date, timeFrame: TimeFrame) -> String {
         switch timeFrame {
         case .life:
-            return date.formatted(.dateTime.year())
+            return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
         case .year, .month:
             return date.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits))
         case .day:
