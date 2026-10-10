@@ -19,6 +19,11 @@ struct LimitGridView: View {
     @AppStorage("highlightColorHex", store: sharedStore)
     private var highlightColorHex: String = "#8E8E93"
     
+    // Pinch Zoom States
+    @State private var currentScale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var isPinching: Bool = false
+    
     private var themeColor: Color {
         Color(hex: highlightColorHex)
     }
@@ -123,11 +128,39 @@ struct LimitGridView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // MARK: - Header & Legend
+            // MARK: - Header & Legend & Zoom Reset Badge
             HStack {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
+                    // Zoom Scale Indicator / Quick Reset Button
+                    if abs(currentScale - 1.0) > 0.05 {
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                currentScale = 1.0
+                                lastScale = 1.0
+                            }
+                        } label: {
+                            HStack(spacing: 2) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 8, weight: .bold))
+                                Text(String(format: "%.0f%%", currentScale * 100))
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 9))
+                            }
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundStyle(Color.accentColor)
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                }
                 
                 Spacer()
                 
@@ -164,7 +197,7 @@ struct LimitGridView: View {
             }
             .padding(.horizontal)
             
-            // MARK: - Synchronized Scaler & Grid Row List
+            // MARK: - Synchronized Scaler & Grid Row List (Interactive Zoomable Canvas)
             VStack(spacing: gridSpacing) {
                 ForEach(0..<rowCount, id: \.self) { rowIndex in
                     HStack(spacing: 6) {
@@ -195,6 +228,19 @@ struct LimitGridView: View {
                 }
             }
             .padding(.horizontal)
+            .scaleEffect(currentScale, anchor: .center) // Pinch Scale Transform
+            .gesture(zoomPinchGesture) // Continuous Magnification Pinch
+            .onTapGesture(count: 2) { // Double tap to toggle zoom 100% <-> 150%
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    if currentScale > 1.1 {
+                        currentScale = 1.0
+                        lastScale = 1.0
+                    } else {
+                        currentScale = 1.5
+                        lastScale = 1.5
+                    }
+                }
+            }
         }
         .padding(.vertical, 12)
         .background(
@@ -208,6 +254,25 @@ struct LimitGridView: View {
         .padding(.horizontal)
     }
     
+    // MARK: - Interactive Pinch Zoom Gesture Logic
+    private var zoomPinchGesture: some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                isPinching = true
+                let delta = value.magnification
+                let newScale = lastScale * delta
+                // Scale range limited between 0.8x and 2.5x
+                currentScale = min(max(newScale, 0.8), 2.5)
+            }
+            .onEnded { _ in
+                lastScale = currentScale
+                // Small delay to prevent accidental cell tap right after releasing pinch
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    isPinching = false
+                }
+            }
+    }
+    
     // MARK: - Year Grid 専用の行レンダラー (1行目: 15列 / 2行目: 余り列)
     @ViewBuilder
     private func yearRowView(rowIndex: Int) -> some View {
@@ -218,7 +283,6 @@ struct LimitGridView: View {
         let monthStart = calendar.date(from: DateComponents(year: currentYear, month: monthIndex + 1, day: 1)) ?? currentDate
         let daysInMonth = calendar.range(of: .day, in: .month, for: monthStart)?.count ?? 30
         
-        // 1行目は15日固定、2行目は残りの日数（15日, 16日, 13日, 14日など）
         let daysInThisRow = isSecondRow ? max(0, daysInMonth - 15) : min(15, daysInMonth)
         let startDayOffset = isSecondRow ? 15 : 0
         
@@ -233,10 +297,11 @@ struct LimitGridView: View {
                     .aspectRatio(1.0, contentMode: .fit)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        onSelectIndex?(flatIndex)
+                        if !isPinching {
+                            onSelectIndex?(flatIndex)
+                        }
                     }
             } else {
-                // 日数が存在しない空欄マス（透明）
                 Color.clear
                     .frame(maxWidth: .infinity)
                     .aspectRatio(1.0, contentMode: .fit)
@@ -256,7 +321,9 @@ struct LimitGridView: View {
                 .aspectRatio(1.0, contentMode: .fit)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    onSelectIndex?(index)
+                    if !isPinching {
+                        onSelectIndex?(index)
+                    }
                 }
         }
     }
